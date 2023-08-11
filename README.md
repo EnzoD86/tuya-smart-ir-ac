@@ -1,5 +1,7 @@
 # Home Assistant Tuya IR Air Conditioner Integration
 
+> TBD: Insert YouTube Video embed
+
 This is a custom integration to control IR-based air conditioners from Tuya via Home Assistant.
 
 ![Example Image](https://github.com/DavidIlie/tuya-smart-ir-ac/assets/47594764/c91995e3-474c-47df-83f6-eaf64371a1d4)
