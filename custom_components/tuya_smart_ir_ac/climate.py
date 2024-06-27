@@ -14,13 +14,13 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE,
 )
-from homeassistant.const import UnitOfTemperature, STATE_UNKNOWN
+from homeassistant.const import UnitOfTemperature, STATE_UNKNOWN, STATE_UNAVAILABLE
 from homeassistant.components.climate import ClimateEntity
 
 from .const import VALID_MODES
 from .api import TuyaAPI
 
-_LOGGER = logging.getLogger("tuya_hack")
+_LOGGER = logging.getLogger(__package__)
 
 ACCESS_ID = "access_id"
 ACCESS_SECRET = "access_secret"
@@ -61,7 +61,7 @@ def setup_platform(
 
 class TuyaThermostat(ClimateEntity):
     def __init__(self, climate, hass):
-        _LOGGER.info(pformat(climate))
+        #_LOGGER.debug(pformat(climate))
         self._api = TuyaAPI(
             hass,
             climate[ACCESS_ID],
@@ -90,7 +90,7 @@ class TuyaThermostat(ClimateEntity):
 
     @property
     def min_temp(self):
-        return 15
+        return 18
 
     @property
     def max_temp(self):
@@ -100,7 +100,7 @@ class TuyaThermostat(ClimateEntity):
     def current_temperature(self):
         sensor_state = self.hass.states.get(self._sensor_name)
         _LOGGER.info("SENSOR STATE ", sensor_state)
-        if sensor_state and sensor_state.state != STATE_UNKNOWN:
+        if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             return float(sensor_state.state)
         return float(self._api._temperature) if self._api._temperature else None
 
@@ -128,7 +128,7 @@ class TuyaThermostat(ClimateEntity):
             else "High"
             if self._api._wind == "3"
             else "Automatic"
-            if self._api._wind == "1"
+            if self._api._wind == "0"
             else None
         )
 
@@ -168,5 +168,5 @@ class TuyaThermostat(ClimateEntity):
                     if self._api._power == "0":
                         await self._api.async_turn_on()
                     await self._api.async_set_fan_speed(0)
-                    await self._api.async_set_hvac_mode(mode)
+                    await self._api.async_set_hvac_mode(hvac_mode)
                 break
