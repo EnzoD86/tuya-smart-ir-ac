@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 import logging
 from pprint import pformat
 
-_LOGGER = logging.getLogger("tuya_hack")
+_LOGGER = logging.getLogger(__package__)
 
 
 class TuyaAPI:
@@ -62,7 +62,7 @@ class TuyaAPI:
         for mode, mode_name in VALID_MODES.items():
             if hvac_mode == mode_name:
                 _LOGGER.info(mode)
-                await self.send_command("mode", mode)
+                await self.send_command("mode", str(mode))
                 break
 
     async def get_status(self):
