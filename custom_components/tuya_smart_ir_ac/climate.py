@@ -13,8 +13,15 @@ from homeassistant.components.climate.const import (
     HVACMode,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE,
+    DEFAULT_MIN_TEMP,
+    DEFAULT_MAX_TEMP
 )
-from homeassistant.const import UnitOfTemperature, STATE_UNKNOWN, STATE_UNAVAILABLE
+from homeassistant.const import (
+    UnitOfTemperature, 
+    STATE_UNKNOWN, 
+    STATE_UNAVAILABLE,
+    CONF_UNIQUE_ID
+)
 from homeassistant.components.climate import ClimateEntity
 
 from .const import VALID_MODES
@@ -22,21 +29,30 @@ from .api import TuyaAPI
 
 _LOGGER = logging.getLogger(__package__)
 
-ACCESS_ID = "access_id"
-ACCESS_SECRET = "access_secret"
-REMOTE_ID = "remote_id"
-AC_ID = "ac_id"
-NAME = "name"
-SENSOR = "sensor"
+CONF_ACCESS_ID = "access_id"
+CONF_ACCESS_SECRET = "access_secret"
+CONF_REMOTE_ID = "remote_id"
+CONF_AC_ID = "ac_id"
+CONF_NAME = "name"
+CONF_SENSOR = "sensor"
+CONF_TEMP_MIN = "min_temp"
+CONF_TEMP_MAX = "max_temp"
+CONF_TEMP_STEP = "temp_step"
+
+DEFAULT_PRECISION = 1.0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(ACCESS_ID): cv.string,
-        vol.Required(ACCESS_SECRET): cv.string,
-        vol.Required(REMOTE_ID): cv.string,
-        vol.Required(AC_ID): cv.string,
-        vol.Required(NAME): cv.string,
-        vol.Required(SENSOR): cv.string,
+        vol.Required(CONF_ACCESS_ID): cv.string,
+        vol.Required(CONF_ACCESS_SECRET): cv.string,
+        vol.Required(CONF_REMOTE_ID): cv.string,
+        vol.Required(CONF_AC_ID): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_SENSOR): cv.string,
+        vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
+        vol.Optional(CONF_UNIQUE_ID): cv.string
     }
 )
 
@@ -48,12 +64,16 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     climate = {
-        "access_id": config[ACCESS_ID],
-        "access_secret": config[ACCESS_SECRET],
-        "remote_id": config[REMOTE_ID],
-        "ac_id": config[AC_ID],
-        "name": config[NAME],
-        "sensor": config[SENSOR]
+        "access_id": config[CONF_ACCESS_ID],
+        "access_secret": config[CONF_ACCESS_SECRET],
+        "remote_id": config[CONF_REMOTE_ID],
+        "ac_id": config[CONF_AC_ID],
+        "name": config[CONF_NAME],
+        "sensor": config[CONF_SENSOR],
+        "min_temp": config.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP),
+        "max_temp": config.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP),
+        "temp_step": config.get(CONF_TEMP_STEP, DEFAULT_PRECISION),
+        "unique_id": config.get(CONF_UNIQUE_ID, None)
     }
 
     add_entities([TuyaThermostat(climate, hass)])
@@ -64,13 +84,17 @@ class TuyaThermostat(ClimateEntity):
         #_LOGGER.debug(pformat(climate))
         self._api = TuyaAPI(
             hass,
-            climate[ACCESS_ID],
-            climate[ACCESS_SECRET],
-            climate[AC_ID],
-            climate[REMOTE_ID],
+            climate[CONF_ACCESS_ID],
+            climate[CONF_ACCESS_SECRET],
+            climate[CONF_AC_ID],
+            climate[CONF_REMOTE_ID],
         )
-        self._sensor_name = climate[SENSOR]
-        self._name = climate[NAME]
+        self._sensor_name = climate[CONF_SENSOR]
+        self._name = climate[CONF_NAME]
+        self._min_temp = climate.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP)
+        self._max_temp = climate.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP)
+        self._temp_step = climate.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
+        self._unique_id = climate.get(CONF_UNIQUE_ID, None)
 
     @property
     def name(self):
@@ -78,7 +102,7 @@ class TuyaThermostat(ClimateEntity):
 
     @property
     def unique_id(self):
-        return "tuya_hack_01"
+        return self._unique_id
 
     @property
     def temperature_unit(self):
@@ -90,11 +114,15 @@ class TuyaThermostat(ClimateEntity):
 
     @property
     def min_temp(self):
-        return 18
+        return self._min_temp
 
     @property
     def max_temp(self):
-        return 30
+        return self._max_temp
+
+    @property  
+    def target_temperature_step(self):
+        return self._temp_step
 
     @property
     def current_temperature(self):
