@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.components.climate import ClimateEntity
 
-from .const import VALID_MODES
+from .const import TUYA_HVAC_MODES, TUYA_FAN_MODES
 from .api import TuyaAPI
 
 _LOGGER = logging.getLogger(__package__)
@@ -140,42 +140,19 @@ class TuyaThermostat(ClimateEntity):
     def hvac_mode(self):
         if self._api._power == "0":
             return HVACMode.OFF
-        return VALID_MODES.get(str(self._api._mode), None)
+        return TUYA_HVAC_MODES.get(str(self._api._mode), None)
 
     @property
     def hvac_modes(self):
-        return list(VALID_MODES.values())
+        return list(TUYA_HVAC_MODES.values())
 
     @property
     def fan_mode(self):
-        return (
-            "Low"
-            if self._api._wind == "1"
-            else "Medium"
-            if self._api._wind == "2"
-            else "High"
-            if self._api._wind == "3"
-            else "Automatic"
-            if self._api._wind == "0"
-            else None
-        )
+        return TUYA_FAN_MODES.get(str(self._api._wind), None) 
 
     @property
     def fan_modes(self):
-        return list(["Low", "Medium", "High", "Automatic"])
-
-    async def async_set_fan_mode(self, fan_mode):
-        if fan_mode == "Low":
-            await self._api.send_command("wind", "1")
-        elif fan_mode == "Medium":
-            await self._api.send_command("wind", "2")
-        elif fan_mode == "High":
-            await self._api.send_command("wind", "3")
-        elif fan_mode == "Automatic":
-            await self._api.send_command("wind", "0")
-        else:
-            await self._api.send_command("wind", "0")
-            _LOGGER.warning("Invalid fan mode.")
+        return list(TUYA_FAN_MODES.values())
 
     async def async_update(self):
         await self._api.async_update()
@@ -186,15 +163,22 @@ class TuyaThermostat(ClimateEntity):
         if temperature is not None:
             await self._api.async_set_temperature(float(temperature))
 
+    async def async_set_fan_mode(self, fan_mode):
+        _LOGGER.info("SETTING FAN MODE TO " + fan_mode)
+        for mode, mode_name in TUYA_FAN_MODES.items():
+            if fan_mode == mode_name:
+                await self._api.async_set_fan_speed(mode)
+                break
+
     async def async_set_hvac_mode(self, hvac_mode):
         _LOGGER.info("SETTING HVAC MODE TO " + hvac_mode)
-        for mode, mode_name in VALID_MODES.items():
+        for mode, mode_name in TUYA_HVAC_MODES.items():
             if hvac_mode == mode_name:
                 if mode == "5":
                     await self._api.async_turn_off()
                 else:
-                    if self._api._power == "0":
-                        await self._api.async_turn_on()
-                    await self._api.async_set_fan_speed(0)
-                    await self._api.async_set_hvac_mode(hvac_mode)
+                    #if self._api._power == "0":
+                    #    await self._api.async_turn_on()
+                    #await self._api.async_set_fan_speed(0)
+                    await self._api.async_set_hvac_mode(mode)
                 break
