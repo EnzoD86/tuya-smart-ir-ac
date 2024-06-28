@@ -1,6 +1,7 @@
 # Home Assistant Tuya IR Air Conditioner Integration
 
 Tested with the following devices:
+
 ![image](https://github.com/EnzoD86/tuya-smart-ir-ac/assets/61162811/d887c8a1-9e66-4552-835e-bbe333482a85)
 
 
