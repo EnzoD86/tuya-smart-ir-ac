@@ -2,7 +2,7 @@
    "domain": "tuya_smart_ir_ac",
    "name": "Air Conditioner via IR",
    "codeowners": [],
-   "documentation": "https://davidilie.com",
+   "documentation": "https://github.com/EnzoD86/tuya-smart-ir-ac",
    "integration_type": "entity",
    "iot_class": "cloud_polling",
    "requirements": ["tuya-connector-python==0.1.2"],
