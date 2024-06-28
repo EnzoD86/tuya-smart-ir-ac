@@ -10,7 +10,7 @@ This is a custom integration to control IR-based air conditioners from Tuya via 
 ![image](https://github.com/EnzoD86/tuya-smart-ir-ac/assets/61162811/271d82ba-d460-4352-9a4d-054e7e607758)
 
 
-> > **WARNING:** This is by no means a custom component which I can assure works with everything, this is tailored to my needs and is a fork of [DavidIlie's](https://github.com/DavidIlie) project (which I thank for the idea and inspiration).
+>  **WARNING:** This is by no means a custom component which I can assure works with everything, this is tailored to my needs and is a fork of [DavidIlie's](https://github.com/DavidIlie) project (which I thank because it was an excellent starting point to then implement what was needed for my needs).
 
 ## Adding it to Home Assistant via yaml configuration
 
