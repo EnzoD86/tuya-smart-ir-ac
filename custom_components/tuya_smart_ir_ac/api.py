@@ -1,5 +1,4 @@
 from tuya_connector import TuyaOpenAPI
-from .const import VALID_MODES
 from homeassistant.core import HomeAssistant
 
 import logging
@@ -45,11 +44,13 @@ class TuyaAPI:
         _LOGGER.info(pformat("ASYNC_UPDATE " + str(status)))
 
     async def async_set_fan_speed(self, fan_speed):
-        _LOGGER.info(fan_speed)
-        await self.send_command("wind", str(fan_speed))
+        if self._power == "1":
+            _LOGGER.info(fan_speed)
+            await self.send_command("wind", str(fan_speed))
 
     async def async_set_temperature(self, temperature):
-        await self.send_command("temp", str(temperature))
+        if self._power == "1":
+            await self.send_command("temp", str(temperature))
 
     async def async_turn_on(self):
         await self.send_command("power", "1")
@@ -58,12 +59,7 @@ class TuyaAPI:
         await self.send_command("power", "0")
 
     async def async_set_hvac_mode(self, hvac_mode):
-        _LOGGER.info(hvac_mode)
-        for mode, mode_name in VALID_MODES.items():
-            if hvac_mode == mode_name:
-                _LOGGER.info(mode)
-                await self.send_command("mode", str(mode))
-                break
+        await self.send_command("mode", str(hvac_mode))
 
     async def get_status(self):
         url = f"/v2.0/infrareds/{self.ir_remote_device_id}/remotes/{self.thermostat_device_id}/ac/status"
