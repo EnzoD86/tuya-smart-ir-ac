@@ -33,4 +33,4 @@ climate:
 
 ## Contributions are welcome!
 
-Open a pull request, every contribution is welcome.
+If this repository can help anyone, any contribution is welcome.
