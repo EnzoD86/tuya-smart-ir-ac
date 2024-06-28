@@ -1,26 +1,31 @@
 # Home Assistant Tuya IR Air Conditioner Integration
 
-[![YouTube Video](https://img.youtube.com/vi/A8ICsEnGfkg/0.jpg)](https://www.youtube.com/watch?v=A8ICsEnGfkg)
+Tested with the following devices:
+![image](https://github.com/EnzoD86/tuya-smart-ir-ac/assets/61162811/d887c8a1-9e66-4552-835e-bbe333482a85)
+
 
 This is a custom integration to control IR-based air conditioners from Tuya via Home Assistant.
 
-![Example Image](https://github.com/DavidIlie/tuya-smart-ir-ac/assets/47594764/c91995e3-474c-47df-83f6-eaf64371a1d4)
+![image](https://github.com/EnzoD86/tuya-smart-ir-ac/assets/61162811/271d82ba-d460-4352-9a4d-054e7e607758)
 
-> **WARNING:** This is by no means a custom component which I can assure works with everything, this is tailored to my needs as part of my initial project which you can find [here](https://davidilie.com) but I hope to work on making it more broad and also a standard repository with a good dev environment. Maybe someone can help me out here.
 
-## Adding it to Home Assistant
+> > **WARNING:** This is by no means a custom component which I can assure works with everything, this is tailored to my needs and is a fork of [DavidIlie's](https://github.com/DavidIlie) project (which I thank for the idea and inspiration).
 
-I don't know how to create a UI (SOMETHING TODO) so here is the basic configuration for HA:
+## Adding it to Home Assistant via yaml configuration
 
 ```yaml
 climate:
    - platform: tuya_smart_ir_ac
-     name: "Thermostat"
-     sensor: "sensor.whatever_sensor_you_have"
+     unique_id: conditioner_id
+     name: "conditioner name"
      access_id: ""
      access_secret: ""
      remote_id: ""
      ac_id: ""
+     sensor: "sensor.whatever_sensor_you_have"
+     min_temp: 18
+     max_temp: 30
+     temp_step: 1
 ```
 
 **You can find the IDs from the Tuya Iot Website!**
