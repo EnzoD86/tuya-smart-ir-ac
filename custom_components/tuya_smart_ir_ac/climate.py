@@ -158,9 +158,14 @@ class TuyaThermostat(ClimateEntity):
         await self._api.async_update()
         self.async_write_ha_state()
 
+    async def async_turn_on(self):
+        _LOGGER.info("TURN ON")
+        await self._api.async_turn_on()
+
     async def async_set_temperature(self, **kwargs):
         temperature = kwargs.get("temperature")
         if temperature is not None:
+            _LOGGER.info("SETTING TEMPERATURE TO " + str(temperature))
             await self._api.async_set_temperature(float(temperature))
 
     async def async_set_fan_mode(self, fan_mode):
