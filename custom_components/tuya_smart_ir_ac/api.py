@@ -44,13 +44,11 @@ class TuyaAPI:
         _LOGGER.info(pformat("ASYNC_UPDATE " + str(status)))
 
     async def async_set_fan_speed(self, fan_speed):
-        if self._power == "1":
-            _LOGGER.info(fan_speed)
-            await self.send_command("wind", str(fan_speed))
+        _LOGGER.info(fan_speed)
+        await self.send_command("wind", str(fan_speed))
 
     async def async_set_temperature(self, temperature):
-        if self._power == "1":
-            await self.send_command("temp", str(temperature))
+        await self.send_command("temp", str(temperature))
 
     async def async_turn_on(self):
         await self.send_command("power", "1")
