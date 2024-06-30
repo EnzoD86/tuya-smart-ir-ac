@@ -1,6 +1,6 @@
 {
    "domain": "tuya_smart_ir_ac",
-   "name": "Air Conditioner via IR",
+   "name": "Tuya AC via IR",
    "codeowners": [],
    "documentation": "https://github.com/EnzoD86/tuya-smart-ir-ac",
    "integration_type": "entity",
