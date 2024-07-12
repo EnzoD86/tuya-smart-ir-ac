@@ -182,5 +182,5 @@ class TuyaThermostat(ClimateEntity):
                 if mode == "5":
                     await self._api.async_turn_off()
                 else:
-                    await self._api.async_set_hvac_mode(mode)
+                    await self._api.async_init(power = "1", mode = mode, temp = self._api._temperature, wind = "0")
                 break
