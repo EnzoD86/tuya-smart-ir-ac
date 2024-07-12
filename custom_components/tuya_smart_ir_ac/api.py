@@ -58,6 +58,10 @@ class TuyaAPI:
 
     async def async_set_hvac_mode(self, hvac_mode):
         await self.send_command("mode", str(hvac_mode))
+        
+    async def async_init(self, power, mode, temp, wind):
+        cmd = { "power": power, "mode": mode, "temp": temp, "wind": wind }
+        await self.send_multiple_command(cmd)
 
     async def get_status(self):
         url = f"/v2.0/infrareds/{self.ir_remote_device_id}/remotes/{self.thermostat_device_id}/ac/status"
@@ -84,6 +88,18 @@ class TuyaAPI:
                     "value": value,
                 },
             )
+            _LOGGER.info(pformat("SEND_COMMAND_END " + str(data)))
+            return data
+        except Exception as e:
+            _LOGGER.error(f"Error sending command: {e}")
+            return False
+
+    async def send_multiple_command(self, command):
+        url = f"/v2.0/infrareds/{self.ir_remote_device_id}/air-conditioners/{self.thermostat_device_id}/scenes/command"
+        _LOGGER.info(url)
+        try:
+            _LOGGER.info(pformat("SEND_COMMAND " + str(command)))
+            data = await self.hass.async_add_executor_job(self.openapi.post, url, command)
             _LOGGER.info(pformat("SEND_COMMAND_END " + str(data)))
             return data
         except Exception as e:
