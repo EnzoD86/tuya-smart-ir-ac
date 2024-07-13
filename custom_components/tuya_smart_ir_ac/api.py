@@ -43,6 +43,12 @@ class TuyaAPI:
             self._wind = status.get("wind")
         _LOGGER.info(pformat("ASYNC_UPDATE " + str(status)))
 
+    async def async_turn_on(self):
+        await self.send_command("power", "1")
+
+    async def async_turn_off(self):
+        await self.send_command("power", "0")
+
     async def async_set_fan_speed(self, fan_speed):
         _LOGGER.info(fan_speed)
         await self.send_command("wind", str(fan_speed))
@@ -50,16 +56,10 @@ class TuyaAPI:
     async def async_set_temperature(self, temperature):
         await self.send_command("temp", str(temperature))
 
-    async def async_turn_on(self):
-        await self.send_command("power", "1")
-
-    async def async_turn_off(self):
-        await self.send_command("power", "0")
-
     async def async_set_hvac_mode(self, hvac_mode):
         await self.send_command("mode", str(hvac_mode))
         
-    async def async_init(self, power, mode, temp, wind):
+    async def async_set_multiple(self, power, mode, temp, wind):
         cmd = { "power": power, "mode": mode, "temp": temp, "wind": wind }
         await self.send_multiple_command(cmd)
 
