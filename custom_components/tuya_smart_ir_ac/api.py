@@ -26,10 +26,10 @@ class TuyaAPI:
         openapi.connect()
         self.openapi = openapi
 
-        self._temperature = "0"
-        self._mode = "0"
-        self._power = "0"
-        self._wind = "0"
+        self._temperature = None
+        self._mode = None
+        self._power = None
+        self._wind = None
 
     async def async_init(self):
         await self.update()
