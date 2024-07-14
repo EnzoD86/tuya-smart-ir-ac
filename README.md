@@ -23,7 +23,7 @@ climate:
      infrared_id: ""
      unique_id: conditioner_id
      name: "conditioner name"
-     temp_sensor: "sensor.temperature"
+     temp_sensor: "sensor.temperature_name"
      min_temp: 18
      max_temp: 30
      temp_step: 1
