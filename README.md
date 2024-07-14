@@ -17,12 +17,12 @@ This is a custom integration to control IR-based air conditioners from Tuya via 
 ```yaml
 climate:
    - platform: tuya_smart_ir_ac
-     unique_id: conditioner_id
-     name: "conditioner name"
      access_id: ""
      access_secret: ""
-     remote_id: ""
-     ac_id: ""
+     climate_id: ""
+     infrared_id: ""
+     unique_id: conditioner_id
+     name: "conditioner name"
      sensor: "sensor.whatever_sensor_you_have"
      min_temp: 18
      max_temp: 30
