@@ -11,8 +11,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate.const import (
     HVACMode,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE,
+    ClimateEntityFeature,
     DEFAULT_MIN_TEMP,
     DEFAULT_MAX_TEMP
 )
@@ -110,7 +109,7 @@ class TuyaThermostat(ClimateEntity):
 
     @property
     def supported_features(self):
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+        return ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
 
     @property
     def min_temp(self):
