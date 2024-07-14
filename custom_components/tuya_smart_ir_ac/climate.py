@@ -114,11 +114,8 @@ class TuyaClimate(ClimateEntity):
     @property
     def current_temperature(self):
         sensor_state = self.hass.states.get(self._temp_sensor_name)
-        _LOGGER.info("SENSOR STATE ", sensor_state)
+        _LOGGER.info("TEMPERATURE SENSOR STATE ", sensor_state)
         return float(sensor_state.state) if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE] else None
-        #if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            #return float(sensor_state.state)
-        #return float(self._api._temperature) if self._api._temperature else None
 
     @property
     def target_temperature(self):
