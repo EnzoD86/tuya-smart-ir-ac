@@ -33,7 +33,7 @@ CONF_ACCESS_SECRET = "access_secret"
 CONF_INFRARED_ID = "infrared_id"
 CONF_CLIMATE_ID = "climate_id"
 CONF_NAME = "name"
-CONF_SENSOR = "sensor"
+CONF_TEMP_SENSOR = "temp_sensor"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_STEP = "temp_step"
@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_INFRARED_ID): cv.string,
         vol.Required(CONF_CLIMATE_ID): cv.string,
         vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_SENSOR): cv.string,
+        vol.Optional(CONF_TEMP_SENSOR): cv.string,
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
@@ -76,8 +76,8 @@ class TuyaClimate(ClimateEntity):
             config[CONF_CLIMATE_ID],
             config[CONF_INFRARED_ID],
         )
-        self._sensor_name = config[CONF_SENSOR]
-        self._name = config[CONF_NAME]
+        self._name = config.get(CONF_NAME)
+        self._temp_sensor_name = config.get(CONF_TEMP_SENSOR, None)
         self._min_temp = config.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP)
         self._max_temp = config.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP)
         self._temp_step = config.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
@@ -113,11 +113,12 @@ class TuyaClimate(ClimateEntity):
 
     @property
     def current_temperature(self):
-        sensor_state = self.hass.states.get(self._sensor_name)
+        sensor_state = self.hass.states.get(self._temp_sensor_name)
         _LOGGER.info("SENSOR STATE ", sensor_state)
-        if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            return float(sensor_state.state)
-        return float(self._api._temperature) if self._api._temperature else None
+        return float(sensor_state.state) if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE] else None
+        #if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            #return float(sensor_state.state)
+        #return float(self._api._temperature) if self._api._temperature else None
 
     @property
     def target_temperature(self):
