@@ -13,13 +13,13 @@ class TuyaAPI:
         hass: HomeAssistant,
         access_id,
         access_secret,
-        thermostat_device_id,
-        ir_remote_device_id,
+        climate_id,
+        infrared_id,
     ):
         self.access_id = access_id
         self.access_secret = access_secret
-        self.thermostat_device_id = thermostat_device_id
-        self.ir_remote_device_id = ir_remote_device_id
+        self.climate_id = climate_id
+        self.infrared_id = infrared_id
         self.hass = hass
 
         openapi = TuyaOpenAPI("https://openapi.tuyaeu.com", access_id, access_secret)
@@ -64,7 +64,7 @@ class TuyaAPI:
         await self.send_multiple_command(cmd)
 
     async def get_status(self):
-        url = f"/v2.0/infrareds/{self.ir_remote_device_id}/remotes/{self.thermostat_device_id}/ac/status"
+        url = f"/v2.0/infrareds/{self.infrared_id}/remotes/{self.climate_id}/ac/status"
         _LOGGER.info(url)
         try:
             data = await self.hass.async_add_executor_job(self.openapi.get, url)
@@ -76,7 +76,7 @@ class TuyaAPI:
         return None
 
     async def send_command(self, code, value):
-        url = f"/v2.0/infrareds/{self.ir_remote_device_id}/air-conditioners/{self.thermostat_device_id}/command"
+        url = f"/v2.0/infrareds/{self.infrared_id}/air-conditioners/{self.climate_id}/command"
         _LOGGER.info(url)
         try:
             _LOGGER.info(pformat("SEND_COMMAND_CODE_THEN_VAL " + code + " " + value))
@@ -95,7 +95,7 @@ class TuyaAPI:
             return False
 
     async def send_multiple_command(self, command):
-        url = f"/v2.0/infrareds/{self.ir_remote_device_id}/air-conditioners/{self.thermostat_device_id}/scenes/command"
+        url = f"/v2.0/infrareds/{self.infrared_id}/air-conditioners/{self.climate_id}/scenes/command"
         _LOGGER.info(url)
         try:
             _LOGGER.info(pformat("SEND_COMMAND " + str(command)))
