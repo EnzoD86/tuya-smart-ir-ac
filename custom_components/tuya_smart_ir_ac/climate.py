@@ -30,8 +30,8 @@ _LOGGER = logging.getLogger(__package__)
 
 CONF_ACCESS_ID = "access_id"
 CONF_ACCESS_SECRET = "access_secret"
-CONF_REMOTE_ID = "remote_id"
-CONF_AC_ID = "ac_id"
+CONF_INFRARED_ID = "infrared_id"
+CONF_CLIMATE_ID = "climate_id"
 CONF_NAME = "name"
 CONF_SENSOR = "sensor"
 CONF_TEMP_MIN = "min_temp"
@@ -44,8 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ACCESS_ID): cv.string,
         vol.Required(CONF_ACCESS_SECRET): cv.string,
-        vol.Required(CONF_REMOTE_ID): cv.string,
-        vol.Required(CONF_AC_ID): cv.string,
+        vol.Required(CONF_INFRARED_ID): cv.string,
+        vol.Required(CONF_CLIMATE_ID): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_SENSOR): cv.string,
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
@@ -62,38 +62,26 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    climate = {
-        "access_id": config[CONF_ACCESS_ID],
-        "access_secret": config[CONF_ACCESS_SECRET],
-        "remote_id": config[CONF_REMOTE_ID],
-        "ac_id": config[CONF_AC_ID],
-        "name": config[CONF_NAME],
-        "sensor": config[CONF_SENSOR],
-        "min_temp": config.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP),
-        "max_temp": config.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP),
-        "temp_step": config.get(CONF_TEMP_STEP, DEFAULT_PRECISION),
-        "unique_id": config.get(CONF_UNIQUE_ID, None)
-    }
 
-    add_entities([TuyaThermostat(climate, hass)])
+    add_entities([TuyaClimate(hass, config)])
 
 
-class TuyaThermostat(ClimateEntity):
-    def __init__(self, climate, hass):
-        #_LOGGER.debug(pformat(climate))
+class TuyaClimate(ClimateEntity):
+    def __init__(self, hass, config):
+        #_LOGGER.debug(pformat(config))
         self._api = TuyaAPI(
             hass,
-            climate[CONF_ACCESS_ID],
-            climate[CONF_ACCESS_SECRET],
-            climate[CONF_AC_ID],
-            climate[CONF_REMOTE_ID],
+            config[CONF_ACCESS_ID],
+            config[CONF_ACCESS_SECRET],
+            config[CONF_CLIMATE_ID],
+            config[CONF_INFRARED_ID],
         )
-        self._sensor_name = climate[CONF_SENSOR]
-        self._name = climate[CONF_NAME]
-        self._min_temp = climate.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP)
-        self._max_temp = climate.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP)
-        self._temp_step = climate.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
-        self._unique_id = climate.get(CONF_UNIQUE_ID, None)
+        self._sensor_name = config[CONF_SENSOR]
+        self._name = config[CONF_NAME]
+        self._min_temp = config.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP)
+        self._max_temp = config.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP)
+        self._temp_step = config.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
+        self._unique_id = config.get(CONF_UNIQUE_ID, None)
 
     @property
     def name(self):
