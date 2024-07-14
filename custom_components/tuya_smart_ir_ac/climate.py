@@ -19,6 +19,7 @@ from homeassistant.const import (
     UnitOfTemperature, 
     STATE_UNKNOWN, 
     STATE_UNAVAILABLE,
+    CONF_NAME,
     CONF_UNIQUE_ID
 )
 from homeassistant.components.climate import ClimateEntity
@@ -32,7 +33,6 @@ CONF_ACCESS_ID = "access_id"
 CONF_ACCESS_SECRET = "access_secret"
 CONF_INFRARED_ID = "infrared_id"
 CONF_CLIMATE_ID = "climate_id"
-CONF_NAME = "name"
 CONF_TEMP_SENSOR = "temp_sensor"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_MAX = "max_temp"
