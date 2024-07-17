@@ -27,6 +27,7 @@ climate:
      min_temp: 18
      max_temp: 30
      temp_step: 1
+     tuya_api_url: "https://openapi.tuyaus.com"
 ```
 
 **You can find the IDs from the Tuya Iot Website!**

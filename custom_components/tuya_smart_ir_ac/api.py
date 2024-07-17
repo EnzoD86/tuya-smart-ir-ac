@@ -15,14 +15,16 @@ class TuyaAPI:
         access_secret,
         climate_id,
         infrared_id,
+        tuya_api_url,
     ):
         self.access_id = access_id
         self.access_secret = access_secret
         self.climate_id = climate_id
         self.infrared_id = infrared_id
         self.hass = hass
+        self.tuya_api_url = tuya_api_url
 
-        openapi = TuyaOpenAPI("https://openapi.tuyaeu.com", access_id, access_secret)
+        openapi = TuyaOpenAPI(tuya_api_url, access_id, access_secret)
         openapi.connect()
         self.openapi = openapi
 

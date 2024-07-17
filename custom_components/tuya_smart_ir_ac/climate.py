@@ -37,8 +37,10 @@ CONF_TEMP_SENSOR = "temp_sensor"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_STEP = "temp_step"
+CONF_TUYA_API_URL = "tuya_api_url"
 
 DEFAULT_PRECISION = 1.0
+DEFAULT_TUYA_API_URL = "https://openapi.tuyaeu.com"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -51,6 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
+        vol.Optional(CONF_TUYA_API_URL, default=DEFAULT_TUYA_API_URL): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string
     }
 )
@@ -75,6 +78,7 @@ class TuyaClimate(ClimateEntity):
             config[CONF_ACCESS_SECRET],
             config[CONF_CLIMATE_ID],
             config[CONF_INFRARED_ID],
+            config[CONF_TUYA_API_URL],
         )
         self._name = config.get(CONF_NAME)
         self._temp_sensor_name = config.get(CONF_TEMP_SENSOR, None)

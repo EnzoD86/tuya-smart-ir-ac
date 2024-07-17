@@ -18,6 +18,7 @@ Tested with the following devices:
 | min_temp      | `float`  | Minimum set point available.         | No  |
 | max_temp      | `float`  | Maximum set point available.         | No  |
 | temp_step     | `float`  | Step size for temperature set point. | No  |
+| tuya_api_url  | `string` | default: "https://openapi.tuyaeu.com"<br>for US server: "https://openapi.tuyaus.com" | No  |
 
 ### Example
 ```yaml
@@ -33,4 +34,5 @@ climate:
      min_temp: 18
      max_temp: 30
      temp_step: 1
+     tuya_api_url: "https://openapi.tuyaus.com"
 ```
