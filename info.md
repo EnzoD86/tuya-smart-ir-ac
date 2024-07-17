@@ -19,6 +19,7 @@ Tested with the following devices:
 | max_temp      | `float`  | Maximum set point available.         | No  |
 | temp_step     | `float`  | Step size for temperature set point. | No  |
 
+### Example
 ```yaml
 climate:
    - platform: tuya_smart_ir_ac
@@ -26,8 +27,8 @@ climate:
      access_secret: ""
      climate_id: ""
      infrared_id: ""
-     unique_id: conditioner_id
      name: "conditioner name"
+     unique_id: conditioner_id
      temp_sensor: "sensor.temperature_name"
      min_temp: 18
      max_temp: 30
