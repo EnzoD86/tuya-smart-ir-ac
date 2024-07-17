@@ -11,7 +11,7 @@ Tested with the following devices:
 | access_id     | `string` | Tuya access ID.                      | Yes |
 | access_secret | `string` | Tuya access secret.                  | Yes |
 | climate_id    | `string` | Air conditioner ID.                  | Yes |
-| infrared_id   | `string` | Ifrared ID.                          | Yes |
+| infrared_id   | `string` | Infrared ID.                         | Yes |
 | name          | `string` | The name of the climate device.      | Yes |
 | unique_id     | `string` | The unique id of the climate entity. | No  |
 | temp_sensor   | `string` | Name of the temperature sensor.      | No  |
