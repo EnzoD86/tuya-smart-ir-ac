@@ -38,6 +38,7 @@ CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_STEP = "temp_step"
 CONF_TUYA_API_URL = "tuya_api_url"
+CONF_HUMIDITY_SENSOR = "humidity_sensor"
 
 DEFAULT_PRECISION = 1.0
 DEFAULT_TUYA_API_URL = "https://openapi.tuyaeu.com"
@@ -54,6 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
         vol.Optional(CONF_TUYA_API_URL, default=DEFAULT_TUYA_API_URL): cv.string,
+        vol.Optional(CONF_HUMIDITY_SENSOR): cv.entity_id,
         vol.Optional(CONF_UNIQUE_ID): cv.string
     }
 )
@@ -85,6 +87,7 @@ class TuyaClimate(ClimateEntity):
         self._min_temp = config.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP)
         self._max_temp = config.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP)
         self._temp_step = config.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
+        self._humidity_sensor_name = config.get(CONF_HUMIDITY_SENSOR, None)
         self._unique_id = config.get(CONF_UNIQUE_ID, None)
 
     @property
@@ -119,6 +122,12 @@ class TuyaClimate(ClimateEntity):
     def current_temperature(self):
         sensor_state = self.hass.states.get(self._temp_sensor_name)
         _LOGGER.info("TEMPERATURE SENSOR STATE ", sensor_state)
+        return float(sensor_state.state) if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE] else None
+
+    @property
+    def current_humidity(self):
+        sensor_state = self.hass.states.get(self._humidity_sensor_name)
+        _LOGGER.info("HUMIDITY SENSOR STATE ", sensor_state)
         return float(sensor_state.state) if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE] else None
 
     @property

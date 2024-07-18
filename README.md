@@ -24,6 +24,7 @@ climate:
      unique_id: conditioner_id
      name: "conditioner name"
      temp_sensor: "sensor.temperature_name"
+     humidity_sensor: "sensor.name_humidity"
      min_temp: 18
      max_temp: 30
      temp_step: 1

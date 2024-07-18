@@ -18,6 +18,7 @@ Tested with the following devices:
 | min_temp      | `float`  | Minimum set point available.         | No  |
 | max_temp      | `float`  | Maximum set point available.         | No  |
 | temp_step     | `float`  | Step size for temperature set point. | No  |
+| humidity_sensor | `string` | Name of the humidity sensor.       | No  |
 | tuya_api_url  | `string` | default: "https://openapi.tuyaeu.com"<br>for US server: "https://openapi.tuyaus.com" | No  |
 
 ### Example
@@ -31,6 +32,7 @@ climate:
      name: "conditioner name"
      unique_id: conditioner_id
      temp_sensor: "sensor.temperature_name"
+     humidity_sensor: "sensor.name_humidity"
      min_temp: 18
      max_temp: 30
      temp_step: 1
