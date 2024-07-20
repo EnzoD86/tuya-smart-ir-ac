@@ -27,8 +27,6 @@
 | IN    | India       |
 | CN    | China       |
 
-***It is important to write the country in all capital letters!!!**
-
 ### Example
 ```yaml
 climate:
