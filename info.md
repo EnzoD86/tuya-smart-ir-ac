@@ -21,6 +21,17 @@ Tested with the following devices:
 | max_temp             | `float`  | Maximum set point available.         | No       | 35      |
 | temp_step            | `float`  | Step size for temperature set point. | No       | 1       |
 
+
+### Tuya Server
+
+| ID    | Country             |
+| ----- | ------------------- | 
+| EU    | Europe Data Center  |
+| US    | America Data Center |
+| IN    | India Data Center   |
+| CN    | China Data Center   |
+
+
 ### Example
 ```yaml
 climate:

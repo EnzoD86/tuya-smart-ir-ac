@@ -17,18 +17,18 @@ This is a custom integration to control IR-based air conditioners from Tuya via 
 ```yaml
 climate:
    - platform: tuya_smart_ir_ac
+     tuya_server: "EU"
      access_id: ""
      access_secret: ""
      climate_id: ""
      infrared_id: ""
-     unique_id: conditioner_id
      name: "conditioner name"
-     temp_sensor: "sensor.temperature_name"
-     humidity_sensor: "sensor.name_humidity"
+     unique_id: conditioner_id
+     temperature_sensor: "sensor.temperature_name"
+     humidity_sensor: "sensor.humidity_name"
      min_temp: 18
      max_temp: 30
      temp_step: 1
-     tuya_api_url: "https://openapi.tuyaus.com"
 ```
 
 **You can find the IDs from the Tuya Iot Website!**
