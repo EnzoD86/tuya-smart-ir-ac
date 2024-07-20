@@ -6,35 +6,35 @@ Tested with the following devices:
 
 ## Configuration
 
-|Name|Type|Description|Required|
-| ------------- | -------- | ------------------------------------ |---- |
-| access_id     | `string` | Tuya access ID.                      | Yes |
-| access_secret | `string` | Tuya access secret.                  | Yes |
-| climate_id    | `string` | Air conditioner ID.                  | Yes |
-| infrared_id   | `string` | Infrared ID.                         | Yes |
-| name          | `string` | The name of the climate device.      | Yes |
-| unique_id     | `string` | The unique id of the climate entity. | No  |
-| temp_sensor   | `string` | Name of the temperature sensor.      | No  |
-| min_temp      | `float`  | Minimum set point available.         | No  |
-| max_temp      | `float`  | Maximum set point available.         | No  |
-| temp_step     | `float`  | Step size for temperature set point. | No  |
-| humidity_sensor | `string` | Name of the humidity sensor.       | No  |
-| tuya_api_url  | `string` | default: "https://openapi.tuyaeu.com"<br>for US server: "https://openapi.tuyaus.com" | No  |
+| Name                 | Type     | Description                          | Required | Default |
+| -------------------- | -------- | ------------------------------------ | -------- | ------- |
+| tuya_server          | `string` | Tuya server: EU, US, IN, CN          | No       | EU      |
+| access_id            | `string` | Tuya access ID.                      | Yes      |         |
+| access_secret        | `string` | Tuya access secret.                  | Yes      |         |
+| climate_id           | `string` | Air conditioner ID.                  | Yes      |         |
+| infrared_id          | `string` | Infrared ID.                         | Yes      |         |
+| name                 | `string` | The name of the climate device.      | Yes      |         |
+| unique_id            | `string` | The unique id of the climate entity. | No       |         |
+| temperature_sensor   | `string` | Name of the temperature sensor.      | No       |         |
+| humidity_sensor      | `string` | Name of the humidity sensor.         | No       |         |
+| min_temp             | `float`  | Minimum set point available.         | No       | 7       |
+| max_temp             | `float`  | Maximum set point available.         | No       | 35      |
+| temp_step            | `float`  | Step size for temperature set point. | No       | 1       |
 
 ### Example
 ```yaml
 climate:
    - platform: tuya_smart_ir_ac
+     tuya_server: "EU"
      access_id: ""
      access_secret: ""
      climate_id: ""
      infrared_id: ""
      name: "conditioner name"
      unique_id: conditioner_id
-     temp_sensor: "sensor.temperature_name"
-     humidity_sensor: "sensor.name_humidity"
+     temperature_sensor: "sensor.temperature_name"
+     humidity_sensor: "sensor.humidity_name"
      min_temp: 18
      max_temp: 30
      temp_step: 1
-     tuya_api_url: "https://openapi.tuyaus.com"
 ```
