@@ -44,3 +44,15 @@ climate:
      temp_step: 1
      country: "EU"
 ```
+
+### Debug
+It is possible to activate debug mode by adding the following lines in your configuration.yaml file:
+
+```yaml
+logger:
+  # Begging of lines to add
+  logs:
+    custom_components.tuya_smart_ir_ac: debug
+  # End of lines to add
+```
+Home Assistant needs to be restarted after this change.
