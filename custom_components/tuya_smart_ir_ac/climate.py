@@ -38,6 +38,8 @@ CONF_HUMIDITY_SENSOR = "humidity_sensor"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_STEP = "temp_step"
+CONF_TUYA_API_URL = "tuya_api_url"
+CONF_HUMIDITY_SENSOR = "humidity_sensor"
 
 DEFAULT_PRECISION = 1.0
 DEFAULT_TUYA_SERVER = "EU"
@@ -78,7 +80,7 @@ class TuyaClimate(ClimateEntity):
             config[CONF_ACCESS_SECRET],
             config[CONF_CLIMATE_ID],
             config[CONF_INFRARED_ID],
-            TUYA_SERVER.get(config[CONF_TUYA_SERVER]),
+            TUYA_SERVER.get(config[CONF_TUYA_SERVER])
         )
         self._name = config.get(CONF_NAME)
         self._unique_id = config.get(CONF_UNIQUE_ID, None)
