@@ -50,13 +50,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_INFRARED_ID): cv.string,
         vol.Required(CONF_CLIMATE_ID): cv.string,
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_TEMPERATURE_SENSOR): cv.entity_id,
         vol.Optional(CONF_HUMIDITY_SENSOR): cv.entity_id,
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
-        vol.Optional(CONF_TUYA_COUNTRY, default=CONF_TUYA_COUNTRY): vol.In(TUYA_COUNTRY.keys()),
+        vol.Optional(CONF_TUYA_COUNTRY, default=CONF_TUYA_COUNTRY): vol.In(TUYA_COUNTRY.keys())
     }
 )
 
