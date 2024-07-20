@@ -1,18 +1,14 @@
 # Home Assistant Tuya IR Air Conditioner Integration
 
-Tested with the following devices:
-
-![344095726-d887c8a1-9e66-4552-835e-bbe333482a85](https://github.com/user-attachments/assets/1cc75e57-357c-420e-80cf-df57e3097eed)
-
-![349898076-b50941eb-8681-4425-ba35-86eafa2ae182](https://github.com/user-attachments/assets/d4bc0f83-760b-4dbd-a416-8c8134fc1509)
+This is a custom integration to control IR-based air conditioners from Tuya via Home Assistant tested with the following devices:
 
 
-This is a custom integration to control IR-based air conditioners from Tuya via Home Assistant.
+![344095726-d887c8a1-9e66-4552-835e-bbe333482a85](https://github.com/user-attachments/assets/0c1ed6ea-a2b7-43ca-a979-94ff6e3499dc)
 
-![image](https://github.com/EnzoD86/tuya-smart-ir-ac/assets/61162811/271d82ba-d460-4352-9a4d-054e7e607758)
+![349898076-b50941eb-8681-4425-ba35-86eafa2ae182](https://github.com/user-attachments/assets/c811bdf9-c9cf-4df3-a1b8-fd4cc7152db9)
 
+>  **This repository was cloned from [DavidIlie's project](https://github.com/DavidIlie/tuya-smart-ir-ac) because it had not been updated for some time.**
 
->  **WARNING:** This is by no means a custom component which I can assure works with everything, this is tailored to my needs and is a fork of [DavidIlie's](https://github.com/DavidIlie) project (which I thank because it was an excellent starting point to then implement what was needed for my needs).
 
 ## Adding it to Home Assistant via yaml configuration
 
