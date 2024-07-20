@@ -17,7 +17,6 @@ This is a custom integration to control IR-based air conditioners from Tuya via 
 ```yaml
 climate:
    - platform: tuya_smart_ir_ac
-     tuya_server: "EU"
      access_id: ""
      access_secret: ""
      climate_id: ""
@@ -29,6 +28,7 @@ climate:
      min_temp: 18
      max_temp: 30
      temp_step: 1
+     country: "EU"
 ```
 
 **You can find the IDs from the Tuya Iot Website!**

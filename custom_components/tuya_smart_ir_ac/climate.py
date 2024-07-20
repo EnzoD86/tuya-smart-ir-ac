@@ -38,11 +38,10 @@ CONF_HUMIDITY_SENSOR = "humidity_sensor"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_STEP = "temp_step"
-CONF_TUYA_API_URL = "tuya_api_url"
-CONF_HUMIDITY_SENSOR = "humidity_sensor"
+CONF_TUYA_COUNTRY = "country"
 
 DEFAULT_PRECISION = 1.0
-DEFAULT_TUYA_SERVER = "EU"
+DEFAULT_TUYA_COUNTRY = "EU"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -57,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
-        vol.Optional(CONF_TUYA_SERVER, default=DEFAULT_TUYA_SERVER): vol.In(TUYA_SERVER.keys()),
+        vol.Optional(CONF_TUYA_COUNTRY, default=CONF_TUYA_COUNTRY): vol.In(TUYA_COUNTRY.keys()),
     }
 )
 
@@ -80,7 +79,7 @@ class TuyaClimate(ClimateEntity):
             config[CONF_ACCESS_SECRET],
             config[CONF_CLIMATE_ID],
             config[CONF_INFRARED_ID],
-            TUYA_SERVER.get(config[CONF_TUYA_SERVER])
+            TUYA_COUNTRY.get(config[CONF_TUYA_COUNTRY])
         )
         self._name = config.get(CONF_NAME)
         self._unique_id = config.get(CONF_UNIQUE_ID, None)

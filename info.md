@@ -8,7 +8,6 @@ Tested with the following devices:
 
 | Name                 | Type     | Description                          | Required | Default |
 | -------------------- | -------- | ------------------------------------ | -------- | ------- |
-| tuya_server          | `string` | Tuya server: EU, US, IN, CN          | No       | EU      |
 | access_id            | `string` | Tuya access ID.                      | Yes      |         |
 | access_secret        | `string` | Tuya access secret.                  | Yes      |         |
 | climate_id           | `string` | Air conditioner ID.                  | Yes      |         |
@@ -20,23 +19,23 @@ Tested with the following devices:
 | min_temp             | `float`  | Minimum set point available.         | No       | 7       |
 | max_temp             | `float`  | Maximum set point available.         | No       | 35      |
 | temp_step            | `float`  | Step size for temperature set point. | No       | 1       |
+| country              | `string` | Tuya country: EU, US, IN, CN         | No       | EU      |
 
 
-### Tuya Server
+### Country
 
-| ID    | Country             |
-| ----- | ------------------- | 
-| EU    | Europe Data Center  |
-| US    | America Data Center |
-| IN    | India Data Center   |
-| CN    | China Data Center   |
+| ID    | Data center |
+| ----- | ----------- | 
+| EU    | Europe      |
+| US    | America     |
+| IN    | India       |
+| CN    | China       |
 
 
 ### Example
 ```yaml
 climate:
    - platform: tuya_smart_ir_ac
-     tuya_server: "EU"
      access_id: ""
      access_secret: ""
      climate_id: ""
@@ -48,4 +47,5 @@ climate:
      min_temp: 18
      max_temp: 30
      temp_step: 1
+     country: "EU"
 ```
