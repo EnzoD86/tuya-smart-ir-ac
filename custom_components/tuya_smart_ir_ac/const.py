@@ -21,3 +21,10 @@ TUYA_FAN_MODES = {
     "2": FAN_MEDIUM,
     "3": FAN_HIGH
 }
+
+TUYA_SERVER = {
+    "EU": "https://openapi.tuyaeu.com",
+    "US": "https://openapi.tuyaus.com",
+    "IN": "https://openapi.tuyain.com",
+    "CN": "https://openapi.tuyacn.com"
+}

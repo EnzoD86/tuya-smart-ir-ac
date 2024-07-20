@@ -33,12 +33,14 @@ CONF_ACCESS_ID = "access_id"
 CONF_ACCESS_SECRET = "access_secret"
 CONF_INFRARED_ID = "infrared_id"
 CONF_CLIMATE_ID = "climate_id"
-CONF_TEMP_SENSOR = "temp_sensor"
+CONF_TEMPERATURE_SENSOR = "temperature_sensor"
+CONF_HUMIDITY_SENSOR = "humidity_sensor"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_STEP = "temp_step"
 
 DEFAULT_PRECISION = 1.0
+DEFAULT_TUYA_SERVER = "EU"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -47,11 +49,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_INFRARED_ID): cv.string,
         vol.Required(CONF_CLIMATE_ID): cv.string,
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_TEMP_SENSOR): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string
+        vol.Optional(CONF_TEMPERATURE_SENSOR): cv.entity_id,
+        vol.Optional(CONF_HUMIDITY_SENSOR): cv.entity_id,
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
-        vol.Optional(CONF_UNIQUE_ID): cv.string
+        vol.Optional(CONF_TUYA_SERVER, default=DEFAULT_TUYA_SERVER): vol.In(TUYA_SERVER.keys()),
     }
 )
 
@@ -68,20 +72,21 @@ def setup_platform(
 
 class TuyaClimate(ClimateEntity):
     def __init__(self, hass, config):
-        #_LOGGER.debug(pformat(config))
         self._api = TuyaAPI(
             hass,
             config[CONF_ACCESS_ID],
             config[CONF_ACCESS_SECRET],
             config[CONF_CLIMATE_ID],
             config[CONF_INFRARED_ID],
+            TUYA_SERVER.get(config[CONF_TUYA_SERVER]),
         )
         self._name = config.get(CONF_NAME)
-        self._temp_sensor_name = config.get(CONF_TEMP_SENSOR, None)
+        self._unique_id = config.get(CONF_UNIQUE_ID, None)
+        self._temperature_sensor = config.get(CONF_TEMPERATURE_SENSOR, None)
+        self._humidity_sensor = config.get(CONF_HUMIDITY_SENSOR, None)
         self._min_temp = config.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP)
         self._max_temp = config.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP)
         self._temp_step = config.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
-        self._unique_id = config.get(CONF_UNIQUE_ID, None)
 
     @property
     def name(self):
@@ -113,8 +118,14 @@ class TuyaClimate(ClimateEntity):
 
     @property
     def current_temperature(self):
-        sensor_state = self.hass.states.get(self._temp_sensor_name)
+        sensor_state = self.hass.states.get(self._temperature_sensor)
         _LOGGER.info("TEMPERATURE SENSOR STATE ", sensor_state)
+        return float(sensor_state.state) if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE] else None
+
+    @property
+    def current_humidity(self):
+        sensor_state = self.hass.states.get(self._humidity_sensor)
+        _LOGGER.info("HUMIDITY SENSOR STATE ", sensor_state)
         return float(sensor_state.state) if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE] else None
 
     @property
