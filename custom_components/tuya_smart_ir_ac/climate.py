@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.components.climate import ClimateEntity
 
-from .const import TUYA_HVAC_MODES, TUYA_FAN_MODES
+from .const import TUYA_HVAC_MODES, TUYA_FAN_MODES, TUYA_API_URLS
 from .api import TuyaAPI
 
 _LOGGER = logging.getLogger(__package__)
@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
-        vol.Optional(CONF_TUYA_COUNTRY, default=CONF_TUYA_COUNTRY): vol.In(TUYA_COUNTRY.keys())
+        vol.Optional(CONF_TUYA_COUNTRY, default=DEFAULT_TUYA_COUNTRY): vol.In(TUYA_API_URLS.keys())
     }
 )
 
@@ -79,7 +79,7 @@ class TuyaClimate(ClimateEntity):
             config[CONF_ACCESS_SECRET],
             config[CONF_CLIMATE_ID],
             config[CONF_INFRARED_ID],
-            TUYA_COUNTRY.get(config[CONF_TUYA_COUNTRY])
+            TUYA_API_URLS.get(config[CONF_TUYA_COUNTRY])
         )
         self._name = config.get(CONF_NAME)
         self._unique_id = config.get(CONF_UNIQUE_ID, None)
@@ -119,13 +119,13 @@ class TuyaClimate(ClimateEntity):
 
     @property
     def current_temperature(self):
-        sensor_state = self.hass.states.get(self._temperature_sensor)
+        sensor_state = self.hass.states.get(self._temperature_sensor) if self._temperature_sensor is not None else None
         _LOGGER.info("TEMPERATURE SENSOR STATE ", sensor_state)
         return float(sensor_state.state) if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE] else None
 
     @property
     def current_humidity(self):
-        sensor_state = self.hass.states.get(self._humidity_sensor)
+        sensor_state = self.hass.states.get(self._humidity_sensor) if self._humidity_sensor is not None else None
         _LOGGER.info("HUMIDITY SENSOR STATE ", sensor_state)
         return float(sensor_state.state) if sensor_state and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE] else None
 

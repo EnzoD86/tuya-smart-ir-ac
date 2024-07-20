@@ -22,7 +22,7 @@ TUYA_FAN_MODES = {
     "3": FAN_HIGH
 }
 
-TUYA_COUNTRY = {
+TUYA_API_URLS = {
     "EU": "https://openapi.tuyaeu.com",
     "US": "https://openapi.tuyaus.com",
     "IN": "https://openapi.tuyain.com",
