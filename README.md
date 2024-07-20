@@ -2,7 +2,9 @@
 
 Tested with the following devices:
 
-![image](https://github.com/EnzoD86/tuya-smart-ir-ac/assets/61162811/d887c8a1-9e66-4552-835e-bbe333482a85)
+![344095726-d887c8a1-9e66-4552-835e-bbe333482a85](https://github.com/user-attachments/assets/1cc75e57-357c-420e-80cf-df57e3097eed)
+
+![349898076-b50941eb-8681-4425-ba35-86eafa2ae182](https://github.com/user-attachments/assets/d4bc0f83-760b-4dbd-a416-8c8134fc1509)
 
 
 This is a custom integration to control IR-based air conditioners from Tuya via Home Assistant.
