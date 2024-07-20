@@ -19,10 +19,10 @@ Tested with the following devices:
 | min_temp             | `float`  | Minimum set point available.         | No       | 7       |
 | max_temp             | `float`  | Maximum set point available.         | No       | 35      |
 | temp_step            | `float`  | Step size for temperature set point. | No       | 1       |
-| country              | `string` | Tuya country: EU, US, IN, CN         | No       | EU      |
+| country              | `string` | Tuya country API: EU, US, IN, CN     | No       | EU      |
 
 
-### Country
+### Country/Data center API
 
 | ID    | Data center |
 | ----- | ----------- | 
