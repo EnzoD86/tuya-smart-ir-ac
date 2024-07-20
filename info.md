@@ -2,20 +2,20 @@
 
 ## Configuration
 
-| Name                 | Type     | Description                          | Required | Default |
-| -------------------- | -------- | ------------------------------------ | -------- | ------- |
-| access_id            | `string` | Tuya access ID.                      | Yes      |         |
-| access_secret        | `string` | Tuya access secret.                  | Yes      |         |
-| climate_id           | `string` | Air conditioner ID.                  | Yes      |         |
-| infrared_id          | `string` | Infrared ID.                         | Yes      |         |
-| name                 | `string` | The name of the climate device.      | Yes      |         |
-| unique_id            | `string` | The unique id of the climate entity. | No       |         |
-| temperature_sensor   | `string` | Name of the temperature sensor.      | No       |         |
-| humidity_sensor      | `string` | Name of the humidity sensor.         | No       |         |
-| min_temp             | `float`  | Minimum set point available.         | No       | 7       |
-| max_temp             | `float`  | Maximum set point available.         | No       | 35      |
-| temp_step            | `float`  | Step size for temperature set point. | No       | 1       |
-| country              | `string` | Tuya country API: EU, US, IN, CN     | No       | EU      |
+| Name                 | Type     | Description                          | Required | Default | Note                       |
+| -------------------- | -------- | ------------------------------------ | -------- | ------- | -------------------------- |
+| access_id            | `string` | Tuya access ID.                      | Yes      |         |                            |
+| access_secret        | `string` | Tuya access secret.                  | Yes      |         |                            |
+| climate_id           | `string` | Air conditioner ID.                  | Yes      |         |                            |
+| infrared_id          | `string` | Infrared ID.                         | Yes      |         |                            |
+| name                 | `string` | The name of the climate device.      | Yes      |         |                            |
+| unique_id            | `string` | The unique id of the climate entity. | No       |         |                            |
+| temperature_sensor   | `string` | Name of the temperature sensor.      | No       |         |                            |
+| humidity_sensor      | `string` | Name of the humidity sensor.         | No       |         |                            |
+| min_temp             | `float`  | Minimum set point available.         | No       | 7       | HA default values          |
+| max_temp             | `float`  | Maximum set point available.         | No       | 35      | HA default values          |
+| temp_step            | `float`  | Step size for temperature set point. | No       | 1       |                            |
+| country              | `string` | Tuya country API: EU, US, IN, CN     | No       | EU      | Written in capital letters |
 
 
 ### Country/Data center API
