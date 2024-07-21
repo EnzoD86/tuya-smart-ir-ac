@@ -1,4 +1,4 @@
-# Home Assistant Tuya IR Air Conditioner Integration
+# Home Assistant Tuya Smart IR Air Conditioner Integration
 
 ## Configuration
 

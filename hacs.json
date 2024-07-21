@@ -1,0 +1,5 @@
+{
+  "name": "Tuya Smart AC via IR",
+  "render_readme": false,
+  "homeassistant": "2024.1.0"
+}
