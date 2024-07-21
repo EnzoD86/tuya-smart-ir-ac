@@ -1,10 +1,11 @@
 {
    "domain": "tuya_smart_ir_ac",
-   "name": "Tuya AC via IR",
-   "codeowners": [],
+   "name": "Tuya Smart IR AC",
+   "codeowners": ["@enzod86"],
    "documentation": "https://github.com/EnzoD86/tuya-smart-ir-ac",
    "integration_type": "entity",
    "iot_class": "cloud_polling",
+   "issue_tracker": "https://github.com/EnzoD86/tuya-smart-ir-ac/issues",
    "requirements": ["tuya-connector-python==0.1.2"],
-   "version": "0.1.0"
+   "version": "2024.7.0"
 }
