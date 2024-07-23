@@ -2,7 +2,6 @@ from tuya_connector import TuyaOpenAPI
 from homeassistant.core import HomeAssistant
 
 import logging
-from pprint import pformat
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -11,37 +10,23 @@ class TuyaAPI:
     def __init__(
         self,
         hass: HomeAssistant,
+        api_url,
         access_id,
         access_secret,
         climate_id,
-        infrared_id,
-        api_url
+        infrared_id
     ):
-        self.hass = hass
-        self.climate_id = climate_id
-        self.infrared_id = infrared_id
+        self._hass = hass
+        self._climate_id = climate_id
+        self._infrared_id = infrared_id
 
-        openapi = TuyaOpenAPI(api_url, access_id, access_secret)
-        openapi.connect()
-        self.openapi = openapi
+        self._openapi = TuyaOpenAPI(api_url, access_id, access_secret)
+        self._openapi.connect()
 
-        self._temperature = None
-        self._mode = None
-        self._power = None
-        self._wind = None
-
-    async def async_init(self):
-        await self.update()
-
-    async def async_update(self):
+    async def async_get_status(self):
         status = await self.get_status()
-        if status:
-            self._temperature = status.get("temp")
-            self._mode = status.get("mode")
-            self._power = status.get("power")
-            self._wind = status.get("wind")
-        _LOGGER.info(pformat("ASYNC_UPDATE " + str(status)))
-
+        return TuyaData(status) if status else None
+            
     async def async_turn_on(self):
         await self.send_command("power", "1")
 
@@ -49,7 +34,6 @@ class TuyaAPI:
         await self.send_command("power", "0")
 
     async def async_set_fan_speed(self, fan_speed):
-        _LOGGER.info(fan_speed)
         await self.send_command("wind", str(fan_speed))
 
     async def async_set_temperature(self, temperature):
@@ -59,48 +43,52 @@ class TuyaAPI:
         await self.send_command("mode", str(hvac_mode))
         
     async def async_set_multiple(self, power, mode, temp, wind):
-        cmd = { "power": power, "mode": mode, "temp": temp, "wind": wind }
-        await self.send_multiple_command(cmd)
+        await self.send_multiple_command(power, mode, temp, wind)
 
     async def get_status(self):
-        url = f"/v2.0/infrareds/{self.infrared_id}/remotes/{self.climate_id}/ac/status"
-        _LOGGER.info(url)
+        url = f"/v2.0/infrareds/{self._infrared_id}/remotes/{self._climate_id}/ac/status"
         try:
-            data = await self.hass.async_add_executor_job(self.openapi.get, url)
+            data = await self._hass.async_add_executor_job(self._openapi.get, url)
+            _LOGGER.debug(f"Climate {self._climate_id} get status response: {str(data)}")
             if data.get("success"):
-                _LOGGER.info(pformat("GET_STATUS " + str(data.get("result"))))
                 return data.get("result")
+            raise Exception(f"{data.get("code", None)} {data.get("msg", None)}")   
         except Exception as e:
-            _LOGGER.error(f"Error fetching status: {e}")
-        return None
+            _LOGGER.error(f"Error getting status for climate {self._climate_id}: {e}")
+            return None
 
     async def send_command(self, code, value):
-        url = f"/v2.0/infrareds/{self.infrared_id}/air-conditioners/{self.climate_id}/command"
-        _LOGGER.info(url)
+        url = f"/v2.0/infrareds/{self._infrared_id}/air-conditioners/{self._climate_id}/command"
+        command = { "code": code, "value": value }
         try:
-            _LOGGER.info(pformat("SEND_COMMAND_CODE_THEN_VAL " + code + " " + value))
-            data = await self.hass.async_add_executor_job(
-                self.openapi.post,
-                url,
-                {
-                    "code": code,
-                    "value": value,
-                },
-            )
-            _LOGGER.info(pformat("SEND_COMMAND_END " + str(data)))
+            _LOGGER.debug(f"Climate {self._climate_id} send command request: {str(command)}")
+            data = await self._hass.async_add_executor_job(self._openapi.post, url, command)
+            _LOGGER.debug(f"Climate {self._climate_id} send command response: {str(data)}")
+            if not data.get("success"):
+                raise Exception(f"{data.get("code", None)} {data.get("msg", None)}")
             return data
         except Exception as e:
-            _LOGGER.error(f"Error sending command: {e}")
+            _LOGGER.error(f"Error sending command to climate {self._climate_id}: {e}")
             return False
 
-    async def send_multiple_command(self, command):
-        url = f"/v2.0/infrareds/{self.infrared_id}/air-conditioners/{self.climate_id}/scenes/command"
-        _LOGGER.info(url)
+    async def send_multiple_command(self, power, mode, temp, wind):
+        url = f"/v2.0/infrareds/{self._infrared_id}/air-conditioners/{self._climate_id}/scenes/command"
+        command = { "power": power, "mode": mode, "temp": temp, "wind": wind }
         try:
-            _LOGGER.info(pformat("SEND_COMMAND " + str(command)))
-            data = await self.hass.async_add_executor_job(self.openapi.post, url, command)
-            _LOGGER.info(pformat("SEND_COMMAND_END " + str(data)))
+            _LOGGER.debug(f"Climate {self._climate_id} send multiple command request: {str(command)}")
+            data = await self._hass.async_add_executor_job(self._openapi.post, url, command)
+            _LOGGER.debug(f"Climate {self._climate_id} send multiple command response: {str(data)}")
+            if not data.get("success"):
+                raise Exception(f"{data.get("code", None)} {data.get("msg", None)}")
             return data
         except Exception as e:
-            _LOGGER.error(f"Error sending command: {e}")
+            _LOGGER.error(f"Error sending multiple command to climate {self._climate_id}: {e}")
             return False
+
+
+class TuyaData(object):
+    def __init__(self, status):
+        self.temperature = status.get("temp")
+        self.mode = status.get("mode")
+        self.power = status.get("power")
+        self.wind = status.get("wind")
