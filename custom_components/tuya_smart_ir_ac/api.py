@@ -10,7 +10,7 @@ class TuyaAPI:
     def __init__(
         self,
         hass: HomeAssistant,
-        api_url,
+        api_endpoint,
         access_id,
         access_secret,
         climate_id,
@@ -20,7 +20,7 @@ class TuyaAPI:
         self._climate_id = climate_id
         self._infrared_id = infrared_id
 
-        self._openapi = TuyaOpenAPI(api_url, access_id, access_secret)
+        self._openapi = TuyaOpenAPI(api_endpoint, access_id, access_secret)
         self._openapi.connect()
 
     async def async_get_status(self):
@@ -28,24 +28,24 @@ class TuyaAPI:
         return TuyaData(status) if status else None
             
     async def async_turn_on(self):
-        await self.send_command("power", "1")
+        await self.async_send_command("power", "1")
 
     async def async_turn_off(self):
-        await self.send_command("power", "0")
+        await self.async_send_command("power", "0")
 
     async def async_set_fan_speed(self, fan_speed):
-        await self.send_command("wind", str(fan_speed))
+        await self.async_send_command("wind", str(fan_speed))
 
     async def async_set_temperature(self, temperature):
-        await self.send_command("temp", str(temperature))
+        await self.async_send_command("temp", str(temperature))
 
     async def async_set_hvac_mode(self, hvac_mode):
-        await self.send_command("mode", str(hvac_mode))
+        await self.async_send_command("mode", str(hvac_mode))
         
     async def async_set_multiple(self, power, mode, temp, wind):
-        await self.send_multiple_command(power, mode, temp, wind)
+        await self.async_send_multiple_command(power, mode, temp, wind)
 
-    async def get_status(self):
+    async def async_fetch_status(self):
         url = f"/v2.0/infrareds/{self._infrared_id}/remotes/{self._climate_id}/ac/status"
         try:
             data = await self._hass.async_add_executor_job(self._openapi.get, url)
@@ -54,10 +54,10 @@ class TuyaAPI:
                 return data.get("result")
             raise Exception(f"{data.get("code", None)} {data.get("msg", None)}")   
         except Exception as e:
-            _LOGGER.error(f"Error getting status for climate {self._climate_id}: {e}")
+            _LOGGER.error(f"Error fetching status for climate {self._climate_id}: {e}")
             return None
 
-    async def send_command(self, code, value):
+    async def async_send_command(self, code, value):
         url = f"/v2.0/infrareds/{self._infrared_id}/air-conditioners/{self._climate_id}/command"
         command = { "code": code, "value": value }
         try:
@@ -71,7 +71,7 @@ class TuyaAPI:
             _LOGGER.error(f"Error sending command to climate {self._climate_id}: {e}")
             return False
 
-    async def send_multiple_command(self, power, mode, temp, wind):
+    async def async_send_multiple_command(self, power, mode, temp, wind):
         url = f"/v2.0/infrareds/{self._infrared_id}/air-conditioners/{self._climate_id}/scenes/command"
         command = { "power": power, "mode": mode, "temp": temp, "wind": wind }
         try:

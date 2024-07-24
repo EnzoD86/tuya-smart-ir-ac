@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.components.climate import ClimateEntity
 
-from .const import TUYA_HVAC_MODES, TUYA_FAN_MODES, TUYA_API_URLS
+from .const import TUYA_HVAC_MODES, TUYA_FAN_MODES, TUYA_ENDPOINTS
 from .api import TuyaAPI
 
 _LOGGER = logging.getLogger(__package__)
@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
-        vol.Optional(CONF_TUYA_COUNTRY, default=DEFAULT_TUYA_COUNTRY): vol.In(TUYA_API_URLS.keys())
+        vol.Optional(CONF_TUYA_COUNTRY, default=DEFAULT_TUYA_COUNTRY): vol.In(TUYA_ENDPOINTS.keys())
     }
 )
 
@@ -75,7 +75,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
     def __init__(self, hass, config):
         self._api = TuyaAPI(
             hass,
-            TUYA_API_URLS.get(config.get(CONF_TUYA_COUNTRY)),
+            TUYA_ENDPOINTS.get(config.get(CONF_TUYA_COUNTRY)),
             config.get(CONF_ACCESS_ID),
             config.get(CONF_ACCESS_SECRET),
             config.get(CONF_CLIMATE_ID),
@@ -160,7 +160,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
             self._target_temperature = last_state.attributes.get("temperature")
 
     async def async_update(self):
-        status = await self._api.async_get_status()
+        status = await self._api.async_fetch_status()
         if status: 
             self._hvac_mode = HVACMode.OFF if status.power == "0" else TUYA_HVAC_MODES.get(str(status.mode), None)
             self._fan_mode = TUYA_FAN_MODES.get(str(status.wind), None)
