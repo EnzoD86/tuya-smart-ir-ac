@@ -29,11 +29,12 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     if DOMAIN not in config:
-        _LOGGER.error("Cannot find tuya_smart_ir platform on configuration.yaml")
+        _LOGGER.error(f"Cannot find {DOMAIN} platform on configuration.yaml")
         return False
 
     cfg = config.get(DOMAIN)
     tuya_country = cfg.get(CONF_TUYA_COUNTRY)
+    
     api_endpoint = TUYA_ENDPOINTS.get(tuya_country)
     access_id = cfg.get(CONF_ACCESS_ID)
     access_secret = cfg.get(CONF_ACCESS_SECRET)
