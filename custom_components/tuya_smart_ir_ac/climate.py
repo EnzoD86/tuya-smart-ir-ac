@@ -1,13 +1,9 @@
 import voluptuous as vol
-
 import logging
-
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     HVACMode,
@@ -22,31 +18,26 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID
 )
-from homeassistant.components.climate import ClimateEntity
-
-from .const import TUYA_HVAC_MODES, TUYA_FAN_MODES, TUYA_ENDPOINTS
+from .const import (
+    CONF_INFRARED_ID,
+    CONF_CLIMATE_ID,
+    CONF_TEMPERATURE_SENSOR,
+    CONF_HUMIDITY_SENSOR,
+    CONF_TEMP_MIN,
+    CONF_TEMP_MAX,
+    CONF_TEMP_STEP,
+    DEFAULT_PRECISION,
+    TUYA_API_CLIENT,
+    TUYA_HVAC_MODES,
+    TUYA_FAN_MODES
+)
 from .api import TuyaAPI
 
 _LOGGER = logging.getLogger(__package__)
 
-CONF_ACCESS_ID = "access_id"
-CONF_ACCESS_SECRET = "access_secret"
-CONF_INFRARED_ID = "infrared_id"
-CONF_CLIMATE_ID = "climate_id"
-CONF_TEMPERATURE_SENSOR = "temperature_sensor"
-CONF_HUMIDITY_SENSOR = "humidity_sensor"
-CONF_TEMP_MIN = "min_temp"
-CONF_TEMP_MAX = "max_temp"
-CONF_TEMP_STEP = "temp_step"
-CONF_TUYA_COUNTRY = "country"
-
-DEFAULT_PRECISION = 1.0
-DEFAULT_TUYA_COUNTRY = "EU"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ACCESS_ID): cv.string,
-        vol.Required(CONF_ACCESS_SECRET): cv.string,
         vol.Required(CONF_INFRARED_ID): cv.string,
         vol.Required(CONF_CLIMATE_ID): cv.string,
         vol.Required(CONF_NAME): cv.string,
@@ -56,31 +47,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
-        vol.Optional(CONF_TUYA_COUNTRY, default=DEFAULT_TUYA_COUNTRY): vol.In(TUYA_ENDPOINTS.keys())
     }
 )
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-
-    add_entities([TuyaClimate(hass, config)])
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    client = hass.data.get(TUYA_API_CLIENT)
+    add_entities([TuyaClimate(hass, client, config)])
+    return True
 
 
 class TuyaClimate(ClimateEntity, RestoreEntity):
-    def __init__(self, hass, config):
-        self._api = TuyaAPI(
-            hass,
-            TUYA_ENDPOINTS.get(config.get(CONF_TUYA_COUNTRY)),
-            config.get(CONF_ACCESS_ID),
-            config.get(CONF_ACCESS_SECRET),
-            config.get(CONF_CLIMATE_ID),
-            config.get(CONF_INFRARED_ID)
-        )
+    def __init__(self, hass, client, config):
+        infrared_id = config.get(CONF_INFRARED_ID)
+        climate_id = config.get(CONF_CLIMATE_ID)
+        self._api = TuyaAPI(hass, client, infrared_id, climate_id)
         
         self._name = config.get(CONF_NAME)
         self._unique_id = config.get(CONF_UNIQUE_ID, None)
@@ -160,7 +141,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
             self._target_temperature = last_state.attributes.get("temperature")
 
     async def async_update(self):
-        status = await self._api.async_fetch_status()
+        status = await self._api.async_get_status()
         if status: 
             self._hvac_mode = HVACMode.OFF if status.power == "0" else TUYA_HVAC_MODES.get(str(status.mode), None)
             self._fan_mode = TUYA_FAN_MODES.get(str(status.wind), None)
