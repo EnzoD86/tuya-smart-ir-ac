@@ -1,30 +1,17 @@
-from tuya_connector import TuyaOpenAPI
-from homeassistant.core import HomeAssistant
-
 import logging
 
-_LOGGER = logging.getLogger(__package__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class TuyaAPI:
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        api_endpoint,
-        access_id,
-        access_secret,
-        climate_id,
-        infrared_id
-    ):
+    def __init__(self, hass, client, infrared_id, climate_id):
         self._hass = hass
-        self._climate_id = climate_id
+        self._client = client
         self._infrared_id = infrared_id
-
-        self._openapi = TuyaOpenAPI(api_endpoint, access_id, access_secret)
-        self._openapi.connect()
+        self._climate_id = climate_id
 
     async def async_get_status(self):
-        status = await self.get_status()
+        status = await self.async_fetch_status()
         return TuyaData(status) if status else None
             
     async def async_turn_on(self):
@@ -48,8 +35,8 @@ class TuyaAPI:
     async def async_fetch_status(self):
         url = f"/v2.0/infrareds/{self._infrared_id}/remotes/{self._climate_id}/ac/status"
         try:
-            data = await self._hass.async_add_executor_job(self._openapi.get, url)
-            _LOGGER.debug(f"Climate {self._climate_id} get status response: {str(data)}")
+            data = await self._hass.async_add_executor_job(self._client.get, url)
+            _LOGGER.debug(f"Climate {self._climate_id} fetch status response: {str(data)}")
             if data.get("success"):
                 return data.get("result")
             raise Exception(f"{data.get("code", None)} {data.get("msg", None)}")   
@@ -62,7 +49,7 @@ class TuyaAPI:
         command = { "code": code, "value": value }
         try:
             _LOGGER.debug(f"Climate {self._climate_id} send command request: {str(command)}")
-            data = await self._hass.async_add_executor_job(self._openapi.post, url, command)
+            data = await self._hass.async_add_executor_job(self._client.post, url, command)
             _LOGGER.debug(f"Climate {self._climate_id} send command response: {str(data)}")
             if not data.get("success"):
                 raise Exception(f"{data.get("code", None)} {data.get("msg", None)}")
@@ -76,7 +63,7 @@ class TuyaAPI:
         command = { "power": power, "mode": mode, "temp": temp, "wind": wind }
         try:
             _LOGGER.debug(f"Climate {self._climate_id} send multiple command request: {str(command)}")
-            data = await self._hass.async_add_executor_job(self._openapi.post, url, command)
+            data = await self._hass.async_add_executor_job(self._client.post, url, command)
             _LOGGER.debug(f"Climate {self._climate_id} send multiple command response: {str(data)}")
             if not data.get("success"):
                 raise Exception(f"{data.get("code", None)} {data.get("msg", None)}")
