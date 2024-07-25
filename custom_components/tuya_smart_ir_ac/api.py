@@ -1,6 +1,6 @@
 import logging
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__package__)
 
 
 class TuyaAPI:
