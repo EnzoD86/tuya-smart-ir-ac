@@ -15,7 +15,7 @@ from .const import (
 )
 from .api import TuyaAPI
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__package__)
 
 
 CONFIG_SCHEMA = vol.Schema({
@@ -42,7 +42,7 @@ async def async_setup(hass, config):
     client = TuyaOpenAPI(api_endpoint, access_id, access_secret)
     res = await hass.async_add_executor_job(client.connect)
     if not res.get("success"):
-        _LOGGER.error("Tuya open API login error")
+        _LOGGER.error("Tuya Open API login error")
         return False
 
     hass.data[TUYA_API_CLIENT] = client
