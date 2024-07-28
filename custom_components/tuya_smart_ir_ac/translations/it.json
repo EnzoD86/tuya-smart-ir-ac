@@ -1,0 +1,16 @@
+{
+  "exceptions": {
+    "climate_error_turn_on": {
+      "message": "Impossibile accendere"
+    },
+    "climate_error_temperature": {
+      "message": "Impossibile cambiare la temperatura"
+    },
+    "climate_error_fan_mode": {
+      "message": "Impossibile cambiare la velocità della ventola"
+    },
+    "climate_error_hvac_mode": {
+      "message": "Impossibile cambiare la modalità"
+    }
+  }
+}
