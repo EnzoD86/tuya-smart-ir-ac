@@ -12,24 +12,31 @@ This is a custom integration to control IR-based air conditioners from Tuya via 
 
 ## Adding it to Home Assistant via yaml configuration
 
+Add the following section in your configuration.yaml & restart HA (Access ID and Access Secret can be found on the Tuya IoT Website):
+
+```yaml
+tuya_smart_ir_ac:
+  access_id: "tuya_access_id_example"
+  access_secret: "tuya_access_secret_example"
+  country: "EU"
+```
+
 ```yaml
 climate:
    - platform: tuya_smart_ir_ac
-     access_id: ""
-     access_secret: ""
-     climate_id: ""
-     infrared_id: ""
+     climate_id: "climate_id_example"
+     infrared_id: "infrared_id_example"
      name: "conditioner name"
      unique_id: conditioner_id
-     temperature_sensor: sensor.temperature_name
-     humidity_sensor: sensor.humidity_name
+     temperature_sensor: sensor.temperature_name_example
+     humidity_sensor: sensor.humidity_name_example
      min_temp: 18
      max_temp: 30
      temp_step: 1
-     country: "EU"
+     hvac_modes: ["auto", "cool", "dry", "fan_only", "heat", "off"]
+     fan_modes: ["auto", "high", "low", "medium"] 
 ```
 
-**You can find the IDs from the Tuya Iot Website!**
 
 ## Contributions are welcome!
 
