@@ -12,7 +12,7 @@ This is a custom integration to control IR-based air conditioners from Tuya via 
 
 ## Adding it to Home Assistant via yaml configuration
 
-Add the following section in your configuration.yaml & restart HA (Access ID and Access Secret can be found on the Tuya IoT Website):
+Add the following sections in your configuration.yaml and restart HA (Access ID, Access Secret, Climate ID and Infrared ID can be found on the Tuya IoT Website):
 
 ```yaml
 tuya_smart_ir_ac:
