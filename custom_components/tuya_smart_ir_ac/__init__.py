@@ -3,12 +3,11 @@
 import voluptuous as vol
 import logging
 import homeassistant.helpers.config_validation as cv
-from tuya_connector import TuyaOpenAPI
+from .tuya_connector import TuyaOpenAPI
 from .const import (
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
     CONF_TUYA_COUNTRY,
-    DEFAULT_TUYA_COUNTRY,
     DOMAIN,
     TUYA_API_CLIENT,
     TUYA_ENDPOINTS
@@ -22,7 +21,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_ACCESS_ID): cv.string,
         vol.Required(CONF_ACCESS_SECRET): cv.string,
-        vol.Optional(CONF_TUYA_COUNTRY, default=DEFAULT_TUYA_COUNTRY): vol.In(TUYA_ENDPOINTS.keys())
+        vol.Required(CONF_TUYA_COUNTRY): vol.In(TUYA_ENDPOINTS.keys())
     })
 }, extra=vol.ALLOW_EXTRA)
 

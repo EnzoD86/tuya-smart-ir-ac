@@ -26,12 +26,13 @@ from .const import (
     CONF_TEMP_MIN,
     CONF_TEMP_MAX,
     CONF_TEMP_STEP,
+    CONF_HVAC_MODES,
+    CONF_FAN_MODES,
     DEFAULT_PRECISION,
-    TUYA_API_CLIENT,
-    TUYA_HVAC_MODES,
-    TUYA_FAN_MODES
+    DEFAULT_HVAC_MODES,
+    DEFAULT_FAN_MODES
 )
-from .api import TuyaAPI
+from .service import TuyaService
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -47,22 +48,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
+        vol.Optional(CONF_HVAC_MODES, default=DEFAULT_HVAC_MODES): vol.All(
+            cv.ensure_list, [vol.In([e.value for e in DEFAULT_HVAC_MODES])]
+        ),
+        vol.Optional(CONF_FAN_MODES, default=DEFAULT_FAN_MODES): vol.All(
+            cv.ensure_list, [vol.In(DEFAULT_FAN_MODES)]
+        )
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    client = hass.data.get(TUYA_API_CLIENT)
-    add_entities([TuyaClimate(hass, client, config)])
-    return True
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    async_add_entities([TuyaClimate(hass, config)])
 
 
 class TuyaClimate(ClimateEntity, RestoreEntity):
-    def __init__(self, hass, client, config):
+    def __init__(self, hass, config):
         infrared_id = config.get(CONF_INFRARED_ID)
         climate_id = config.get(CONF_CLIMATE_ID)
-        self._api = TuyaAPI(hass, client, infrared_id, climate_id)
-        
+        self._service = TuyaService(hass, infrared_id, climate_id)
+
         self._name = config.get(CONF_NAME)
         self._unique_id = config.get(CONF_UNIQUE_ID, None)
         self._temperature_sensor = config.get(CONF_TEMPERATURE_SENSOR, None)
@@ -70,7 +75,9 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
         self._min_temp = config.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP)
         self._max_temp = config.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP)
         self._temp_step = config.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
-        
+        self._hvac_modes = config.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES)
+        self._fan_modes = config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES)
+
         self._hvac_mode = HVACMode.OFF
         self._fan_mode = FAN_AUTO
         self._target_temperature = 0
@@ -123,7 +130,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
 
     @property
     def hvac_modes(self):
-        return list(TUYA_HVAC_MODES.values())
+        return self._hvac_modes
 
     @property
     def fan_mode(self):
@@ -131,7 +138,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
 
     @property
     def fan_modes(self):
-        return list(TUYA_FAN_MODES.values())
+        return self._fan_modes
 
     async def async_added_to_hass(self):
         last_state = await self.async_get_last_state()
@@ -141,36 +148,27 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
             self._target_temperature = last_state.attributes.get("temperature")
 
     async def async_update(self):
-        status = await self._api.async_get_status()
+        status = await self._service.async_get_status()
         if status: 
-            self._hvac_mode = HVACMode.OFF if status.power == "0" else TUYA_HVAC_MODES.get(str(status.mode), None)
-            self._fan_mode = TUYA_FAN_MODES.get(str(status.wind), None)
-            self._target_temperature = float(status.temperature)
+            self._hvac_mode = status.hvac_mode
+            self._fan_mode = status.fan_mode
+            self._target_temperature = status.temperature
             self.async_write_ha_state()
 
     async def async_turn_on(self):
         _LOGGER.info(f"{self.entity_id} turn on")
-        await self._api.async_turn_on()
+        await self._service.async_turn_on()
 
     async def async_set_temperature(self, **kwargs):
         temperature = kwargs.get("temperature")
         if temperature is not None:
             _LOGGER.info(f"{self.entity_id} setting temperature to {temperature}")
-            await self._api.async_set_temperature(float(temperature))
+            await self._service.async_set_temperature(temperature)
 
     async def async_set_fan_mode(self, fan_mode):
         _LOGGER.info(f"{self.entity_id} setting fan mode to {fan_mode}")
-        for mode, mode_name in TUYA_FAN_MODES.items():
-            if fan_mode == mode_name:
-                await self._api.async_set_fan_speed(mode)
-                break
+        await self._service.async_set_fan_mode(fan_mode)
 
     async def async_set_hvac_mode(self, hvac_mode):
         _LOGGER.info(f"{self.entity_id} setting hvac mode to {hvac_mode}")
-        for mode, mode_name in TUYA_HVAC_MODES.items():
-            if hvac_mode == mode_name:
-                if mode == "5":
-                    await self._api.async_turn_off()
-                else:
-                    await self._api.async_set_multiple("1", mode, self._target_temperature, "0")
-                break
+        await self._service.async_set_hvac_mode(hvac_mode, self._target_temperature, FAN_AUTO)
