@@ -37,6 +37,9 @@ climate:
      fan_modes: ["auto", "high", "low", "medium"] 
 ```
 
+## Third-party libraries
+The integration uses a modified version of the [Tuya connector python library](https://github.com/tuya/tuya-connector-python) to resolve some issues related to token renewal.
+
 
 ## Contributions are welcome!
 
