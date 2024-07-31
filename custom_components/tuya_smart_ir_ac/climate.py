@@ -34,19 +34,21 @@ from .const import (
 )
 from .service import TuyaService
 
+
 _LOGGER = logging.getLogger(__package__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    async_add_entities([TuyaClimate(hass, config_entry.data)])
+    infrared_id = config_entry.data.get(CONF_INFRARED_ID)
+    climate_id = config_entry.data.get(CONF_CLIMATE_ID)
+    service = TuyaService(hass, infrared_id, climate_id)
+
+    async_add_entities([TuyaClimate(hass, config_entry.data, service)])
 
 
 class TuyaClimate(ClimateEntity, RestoreEntity):
-    def __init__(self, hass, config):
-        infrared_id = config.get(CONF_INFRARED_ID)
-        climate_id = config.get(CONF_CLIMATE_ID)
-        self._service = TuyaService(hass, infrared_id, climate_id)
-
+    def __init__(self, hass, config, service):
+        self._service = service
         self._name = config.get(CONF_NAME)
         self._temperature_sensor = config.get(CONF_TEMPERATURE_SENSOR, None)
         self._humidity_sensor = config.get(CONF_HUMIDITY_SENSOR, None)
@@ -126,8 +128,11 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
             self._target_temperature = last_state.attributes.get("temperature")
 
     async def async_update(self):
-        status = await self._service.async_get_status()
-        if status: 
+        status = await self._service.async_fetch_status()
+        if (status and 
+        (self._hvac_mode != status.hvac_mode 
+        or self._fan_mode != status.fan_mode 
+        or self._target_temperature != status.temperature)):
             self._hvac_mode = status.hvac_mode
             self._fan_mode = status.fan_mode
             self._target_temperature = status.temperature

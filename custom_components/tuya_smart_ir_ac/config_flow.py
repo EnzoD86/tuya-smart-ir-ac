@@ -29,6 +29,7 @@ from .const import (
 )
 from .api import TuyaAPI
 
+
 class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
@@ -159,7 +160,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         #        ) 
         #    }
         #)
-        
+
         return self.async_show_form(step_id="user", data_schema=schema)
 
 

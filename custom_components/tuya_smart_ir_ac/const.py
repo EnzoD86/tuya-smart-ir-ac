@@ -7,6 +7,7 @@ from homeassistant.components.climate import (
     HVACMode
 )
 
+
 DOMAIN = "tuya_smart_ir_ac"
 TUYA_API_CLIENT = "tuya_api_client"
 PLATFORMS = [Platform.CLIMATE]

@@ -15,6 +15,7 @@ from .const import (
     TUYA_ENDPOINTS
 )
 
+
 _LOGGER = logging.getLogger(__package__)
 
 

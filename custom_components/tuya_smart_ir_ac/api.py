@@ -1,6 +1,7 @@
 import logging
 from .const import DOMAIN, TUYA_API_CLIENT
 
+
 _LOGGER = logging.getLogger(__package__)
 
 
