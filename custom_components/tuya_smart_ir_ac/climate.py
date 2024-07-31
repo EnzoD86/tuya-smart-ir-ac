@@ -34,42 +34,22 @@ from .const import (
 )
 from .service import TuyaService
 
+
 _LOGGER = logging.getLogger(__package__)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_INFRARED_ID): cv.string,
-        vol.Required(CONF_CLIMATE_ID): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_TEMPERATURE_SENSOR): cv.entity_id,
-        vol.Optional(CONF_HUMIDITY_SENSOR): cv.entity_id,
-        vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION): vol.Coerce(float),
-        vol.Optional(CONF_HVAC_MODES, default=DEFAULT_HVAC_MODES): vol.All(
-            cv.ensure_list, [vol.In([e.value for e in DEFAULT_HVAC_MODES])]
-        ),
-        vol.Optional(CONF_FAN_MODES, default=DEFAULT_FAN_MODES): vol.All(
-            cv.ensure_list, [vol.In(DEFAULT_FAN_MODES)]
-        )
-    }
-)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    infrared_id = config_entry.data.get(CONF_INFRARED_ID)
+    climate_id = config_entry.data.get(CONF_CLIMATE_ID)
+    service = TuyaService(hass, infrared_id, climate_id)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    async_add_entities([TuyaClimate(hass, config)])
+    async_add_entities([TuyaClimate(hass, config_entry.data, service)])
 
 
 class TuyaClimate(ClimateEntity, RestoreEntity):
-    def __init__(self, hass, config):
-        infrared_id = config.get(CONF_INFRARED_ID)
-        climate_id = config.get(CONF_CLIMATE_ID)
-        self._service = TuyaService(hass, infrared_id, climate_id)
-
+    def __init__(self, hass, config, service):
+        self._service = service
         self._name = config.get(CONF_NAME)
-        self._unique_id = config.get(CONF_UNIQUE_ID, None)
         self._temperature_sensor = config.get(CONF_TEMPERATURE_SENSOR, None)
         self._humidity_sensor = config.get(CONF_HUMIDITY_SENSOR, None)
         self._min_temp = config.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP)
@@ -88,7 +68,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
 
     @property
     def unique_id(self):
-        return self._unique_id
+        return self._name
 
     @property
     def temperature_unit(self):
@@ -148,8 +128,11 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
             self._target_temperature = last_state.attributes.get("temperature")
 
     async def async_update(self):
-        status = await self._service.async_get_status()
-        if status: 
+        status = await self._service.async_fetch_status()
+        if (status and 
+        (self._hvac_mode != status.hvac_mode 
+        or self._fan_mode != status.fan_mode 
+        or self._target_temperature != status.temperature)):
             self._hvac_mode = status.hvac_mode
             self._fan_mode = status.fan_mode
             self._target_temperature = status.temperature

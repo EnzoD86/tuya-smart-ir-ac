@@ -1,4 +1,47 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "infrared_id": "Infrared ID",
+          "climate_id": "Climate ID",
+          "name": "Air conditioner name",
+          "temperature_sensor": "Temperature sensor",
+          "humidity_sensor": "Humidity sensor",
+          "min_temp": "Minimum temperature",
+          "max_temp": "Maximum temperature",
+          "temp_step": "Step temperature",
+          "hvac_modes": "HVAC modes supported",
+          "fan_modes": "FAN modes supported"
+        },
+        "description": "Configuration",
+        "title": "Tuya Smart IR Air Conditioners"
+      }
+    },
+    "error": {
+      "connection": "Unable to connect to device. This may be a temporary issue, or the information provided may be incorrect."
+    },
+    "abort": {
+	  "credentials": "Before continuing, you need to add the integration in your configuration.yaml (read the readme)."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "data": {
+          "temperature_sensor": "Temperature sensor",
+          "humidity_sensor": "Humidity sensor",
+          "min_temp": "Minimum temperature",
+          "max_temp": "Maximum temperature",
+          "temp_step": "Step temperature",
+          "hvac_modes": "HVAC modes supported",
+          "fan_modes": "FAN modes supported"
+        },
+        "description": "Configurazione",
+        "title": "Tuya Smart IR Air Conditioners"
+      }
+    }
+  },
   "exceptions": {
     "climate_error_turn_on": {
       "message": "Unable to turn on"

@@ -1,5 +1,6 @@
 import logging
-from .const import TUYA_API_CLIENT
+from .const import DOMAIN, TUYA_API_CLIENT
+
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -7,7 +8,7 @@ _LOGGER = logging.getLogger(__package__)
 class TuyaAPI:
     def __init__(self, hass, infrared_id, climate_id):
         self._hass = hass
-        self._client = hass.data.get(TUYA_API_CLIENT)
+        self._client = hass.data.get(DOMAIN).get(TUYA_API_CLIENT)
         self._infrared_id = infrared_id
         self._climate_id = climate_id
 

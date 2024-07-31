@@ -15,7 +15,7 @@ class TuyaService:
     def __init__(self, hass, infrared_id, climate_id):
         self._api = TuyaAPI(hass, infrared_id, climate_id)
 
-    async def async_get_status(self):
+    async def async_fetch_status(self):
         status = await self._api.async_fetch_status()
         return TuyaData(status) if status else None
 
