@@ -12,7 +12,7 @@ This is a custom integration to control IR-based air conditioners from Tuya via 
 
 ## Configuration
 
-Add the following sections in your configuration.yaml and restart HA (Access ID, Access Secret can be found on the Tuya IoT Website):
+Add the following sections in your configuration.yaml and restart HA (Tuya Access ID, Tuya Access Secret can be found on the Tuya IoT Website):
 
 ```yaml
 tuya_smart_ir_ac:
