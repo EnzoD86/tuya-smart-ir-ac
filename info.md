@@ -1,6 +1,6 @@
 # Home Assistant Tuya Smart IR Air Conditioner Integration
 
-## Platform configuration
+## Platform configuration (configuration.yaml)
 
 | Name                 | Type     | Description                      | Required |
 | -------------------- | -------- | -------------------------------- | -------- |
