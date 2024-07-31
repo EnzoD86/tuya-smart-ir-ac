@@ -1,3 +1,4 @@
+from homeassistant.const import Platform
 from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_LOW,
@@ -8,6 +9,7 @@ from homeassistant.components.climate import (
 
 DOMAIN = "tuya_smart_ir_ac"
 TUYA_API_CLIENT = "tuya_api_client"
+PLATFORMS = [Platform.CLIMATE]
 
 CONF_ACCESS_ID = "access_id"
 CONF_ACCESS_SECRET = "access_secret"
