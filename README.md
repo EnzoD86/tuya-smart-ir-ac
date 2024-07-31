@@ -12,7 +12,7 @@ This is a custom integration to control IR-based air conditioners from Tuya via 
 
 ## Configuration
 
-Add the following sections in your configuration.yaml and restart HA (Access ID, Access Secret, Climate ID and Infrared ID can be found on the Tuya IoT Website):
+Add the following sections in your configuration.yaml and restart HA (Access ID, Access Secret can be found on the Tuya IoT Website):
 
 ```yaml
 tuya_smart_ir_ac:
@@ -21,21 +21,7 @@ tuya_smart_ir_ac:
   country: "EU"
 ```
 
-```yaml
-climate:
-   - platform: tuya_smart_ir_ac
-     climate_id: "climate_id_example"
-     infrared_id: "infrared_id_example"
-     name: "conditioner name"
-     unique_id: conditioner_id
-     temperature_sensor: sensor.temperature_name_example
-     humidity_sensor: sensor.humidity_name_example
-     min_temp: 18
-     max_temp: 30
-     temp_step: 1
-     hvac_modes: ["auto", "cool", "dry", "fan_only", "heat", "off"]
-     fan_modes: ["auto", "high", "low", "medium"] 
-```
+The individual air conditioners must be configured via the web interface. It is necessary to retrieve the Climate ID and the Infrared ID on the Tuya IoT website
 
 ## Third-party libraries
 The integration uses a modified version of the [Tuya connector python library](https://github.com/tuya/tuya-connector-python) to resolve some issues related to token renewal.
