@@ -1,6 +1,8 @@
 # Home Assistant Tuya Smart IR Air Conditioner Integration
 
-## Platform configuration (configuration.yaml)
+## Platform configuration
+
+Add the following sections in your configuration.yaml and restart HA (Tuya Access ID, Tuya Access Secret can be found on the Tuya IoT Website):
 
 | Name                 | Type     | Description                      | Required |
 | -------------------- | -------- | -------------------------------- | -------- |
@@ -26,6 +28,9 @@ tuya_smart_ir_ac:
   access_secret: "tuya_access_secret_example"
   country: "EU"
 ```
+
+Then you can add the "Tuya Smart IR Air Conditioners" integration from the web interface to configure your air conditioners. 
+You need to retrieve your Climate ID and Infrared ID on the Tuya IoT website.
 
 # Debug
 It is possible to activate debug mode by adding the following lines in your configuration.yaml file:
