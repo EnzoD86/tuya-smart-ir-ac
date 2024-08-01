@@ -1,0 +1,59 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "infrared_id": "Infrared ID",
+          "climate_id": "Climate ID",
+          "name": "Nome condizionatore",
+          "temperature_sensor": "Sensore temperatura",
+          "humidity_sensor": "Sensore umidità",
+          "min_temp": "Temperatura minima",
+          "max_temp": "Temperatura massima",
+          "temp_step": "Temperatura step",
+          "hvac_modes": "Modalità HVAC supportate",
+          "fan_modes": "Modalità FAN supportate"
+        },
+        "description": "Configurazione",
+        "title": "Tuya Smart IR Air Conditioners"
+      }
+    },
+    "error": {
+      "connection": "Impossibile connettersi al dispositivo. Può trattarsi di un problema temporaneo, oppure le informazioni fornite potrebbero non essere corrette."
+    },
+    "abort": {
+	  "credentials": "Prima di proseguire, è necessario aggiungere l'integrazione nel configuration.yaml (leggi il readme)."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "data": {
+          "temperature_sensor": "Sensore temperatura",
+          "humidity_sensor": "Sensore umidità",
+          "min_temp": "Temperatura minima",
+          "max_temp": "Temperatura massima",
+          "temp_step": "Temperatura step",
+          "hvac_modes": "Modalità HVAC supportate",
+          "fan_modes": "Modalità FAN supportate"
+        },
+        "description": "Configurazione",
+        "title": "Tuya Smart IR Air Conditioners"
+      }
+    }
+  },
+  "exceptions": {
+    "climate_error_turn_on": {
+      "message": "Impossibile accendere"
+    },
+    "climate_error_temperature": {
+      "message": "Impossibile cambiare la temperatura"
+    },
+    "climate_error_fan_mode": {
+      "message": "Impossibile cambiare la velocità della ventola"
+    },
+    "climate_error_hvac_mode": {
+      "message": "Impossibile cambiare la modalità"
+    }
+  }
+}

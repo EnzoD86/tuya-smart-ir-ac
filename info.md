@@ -1,21 +1,14 @@
 # Home Assistant Tuya Smart IR Air Conditioner Integration
 
-## Configuration
+## Platform configuration
 
-| Name                 | Type     | Description                          | Required | Default | Note                       |
-| -------------------- | -------- | ------------------------------------ | -------- | ------- | -------------------------- |
-| access_id            | `string` | Tuya access ID.                      | Yes      |         |                            |
-| access_secret        | `string` | Tuya access secret.                  | Yes      |         |                            |
-| climate_id           | `string` | Air conditioner ID.                  | Yes      |         |                            |
-| infrared_id          | `string` | Infrared ID.                         | Yes      |         |                            |
-| name                 | `string` | The name of the climate device.      | Yes      |         |                            |
-| unique_id            | `string` | The unique id of the climate entity. | No       |         |                            |
-| temperature_sensor   | `string` | Name of the temperature sensor.      | No       |         |                            |
-| humidity_sensor      | `string` | Name of the humidity sensor.         | No       |         |                            |
-| min_temp             | `float`  | Minimum set point available.         | No       | 7       | HA default values          |
-| max_temp             | `float`  | Maximum set point available.         | No       | 35      | HA default values          |
-| temp_step            | `float`  | Step size for temperature set point. | No       | 1       |                            |
-| country              | `string` | Tuya country API: EU, US, IN, CN     | No       | EU      | Written in capital letters |
+Add the following sections in your configuration.yaml and restart HA (Tuya Access ID, Tuya Access Secret can be found on the Tuya IoT Website):
+
+| Name                 | Type     | Description                      | Required |
+| -------------------- | -------- | -------------------------------- | -------- |
+| access_id            | `string` | Tuya access ID.                  | Yes      |
+| access_secret        | `string` | Tuya access secret.              | Yes      |
+| country              | `string` | Tuya country API: EU, US, IN, CN | Yes      |
 
 
 ### Country/Data center API
@@ -28,24 +21,18 @@
 | CN    | China       |
 
 ### Example
+
 ```yaml
-climate:
-   - platform: tuya_smart_ir_ac
-     access_id: ""
-     access_secret: ""
-     climate_id: ""
-     infrared_id: ""
-     name: "conditioner name"
-     unique_id: conditioner_id
-     temperature_sensor: sensor.temperature_name
-     humidity_sensor: sensor.humidity_name
-     min_temp: 18
-     max_temp: 30
-     temp_step: 1
-     country: "EU"
+tuya_smart_ir_ac:
+  access_id: "tuya_access_id_example"
+  access_secret: "tuya_access_secret_example"
+  country: "EU"
 ```
 
-### Debug
+Then you can add the "Tuya Smart IR Air Conditioners" integration from the web interface to configure your air conditioners. 
+You need to retrieve your Climate ID and Infrared ID on the Tuya IoT website.
+
+# Debug
 It is possible to activate debug mode by adding the following lines in your configuration.yaml file:
 
 ```yaml
