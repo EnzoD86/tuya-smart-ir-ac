@@ -39,16 +39,13 @@ _LOGGER = logging.getLogger(__package__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    infrared_id = config_entry.data.get(CONF_INFRARED_ID)
-    climate_id = config_entry.data.get(CONF_CLIMATE_ID)
-    service = TuyaService(hass, infrared_id, climate_id)
-
-    async_add_entities([TuyaClimate(hass, config_entry.data, service)])
+    async_add_entities([TuyaClimate(hass, config_entry.data)])
 
 
 class TuyaClimate(ClimateEntity, RestoreEntity):
-    def __init__(self, hass, config, service):
-        self._service = service
+    def __init__(self, hass, config):
+        self._infrared_id = config.get(CONF_INFRARED_ID)
+        self._climate_id = config.get(CONF_CLIMATE_ID)
         self._name = config.get(CONF_NAME)
         self._temperature_sensor = config.get(CONF_TEMPERATURE_SENSOR, None)
         self._humidity_sensor = config.get(CONF_HUMIDITY_SENSOR, None)
@@ -57,6 +54,8 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
         self._temp_step = config.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
         self._hvac_modes = config.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES)
         self._fan_modes = config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES)
+        
+        self._service = TuyaService(hass, self._infrared_id, self._climate_id)
 
         self._hvac_mode = HVACMode.OFF
         self._fan_mode = FAN_AUTO
@@ -68,7 +67,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
 
     @property
     def unique_id(self):
-        return self._name
+        return f"{self._infrared_id}_{self._climate_id}"
 
     @property
     def temperature_unit(self):
