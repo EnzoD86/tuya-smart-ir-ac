@@ -22,7 +22,7 @@
       "connection": "Unable to connect to device. This may be a temporary issue, or the information provided may be incorrect."
     },
     "abort": {
-	  "credentials": "Before continuing, you need to add the integration in your configuration.yaml (read the readme)."
+      "credentials": "Before continuing, you need to add the integration in your configuration.yaml (read the readme)."
     }
   },
   "options": {
@@ -45,6 +45,9 @@
   "exceptions": {
     "climate_error_turn_on": {
       "message": "Unable to turn on"
+    },
+    "climate_error_turn_off": {
+      "message": "Unable to turn off"
     },
     "climate_error_temperature": {
       "message": "Unable to change temperature"

@@ -22,7 +22,7 @@
       "connection": "Impossibile connettersi al dispositivo. Può trattarsi di un problema temporaneo, oppure le informazioni fornite potrebbero non essere corrette."
     },
     "abort": {
-	  "credentials": "Prima di proseguire, è necessario aggiungere l'integrazione nel configuration.yaml (leggi il readme)."
+      "credentials": "Prima di proseguire, è necessario aggiungere l'integrazione nel configuration.yaml (leggi il readme)."
     }
   },
   "options": {
@@ -45,6 +45,9 @@
   "exceptions": {
     "climate_error_turn_on": {
       "message": "Impossibile accendere"
+    },
+    "climate_error_turn_off": {
+      "message": "Impossibile spegnere"
     },
     "climate_error_temperature": {
       "message": "Impossibile cambiare la temperatura"

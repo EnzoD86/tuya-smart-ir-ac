@@ -13,7 +13,7 @@ from homeassistant.components.climate.const import (
 )
 from .const import (
     DOMAIN,
-    TUYA_API_CLIENT,
+    CLIENT,
     CONF_INFRARED_ID,
     CONF_CLIMATE_ID,
     CONF_TEMPERATURE_SENSOR,
@@ -39,13 +39,15 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         domain_config  = self.hass.data.get(DOMAIN, {})
-        client = domain_config.get(TUYA_API_CLIENT, None)
+        client = domain_config.get(CLIENT, None)
         if client is None:
             return self.async_abort(reason="credentials")
 
         if user_input is not None:
-            result = await async_test_connection(user_input, self.hass)
-            if result:
+            infrared_id = user_input.get(CONF_INFRARED_ID)
+            climate_id = user_input.get(CONF_CLIMATE_ID)
+            
+            if await TuyaAPI(self.hass, client).async_fetch_data(infrared_id, climate_id):
                 return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
             else:
                 errors["base"] = "connection"
@@ -163,13 +165,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(step_id="user", data_schema=schema)
 
-
-async def async_test_connection(config, hass):
-    infrared_id = config.get(CONF_INFRARED_ID)
-    climate_id = config.get(CONF_CLIMATE_ID)
-    api = TuyaAPI(hass, infrared_id, climate_id)
-    result = await api.async_fetch_status()
-    return result
 
 # TODO: to be removed when the bug is fixed!
 def conf_option_flow_temperature(config):

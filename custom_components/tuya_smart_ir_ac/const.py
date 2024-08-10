@@ -9,7 +9,10 @@ from homeassistant.components.climate import (
 
 
 DOMAIN = "tuya_smart_ir_ac"
-TUYA_API_CLIENT = "tuya_api_client"
+CLIENT = "CLIENT"
+COORDINATOR = "COORDINATOR"
+UPDATE_INTERVAL = 60
+UPDATE_TIMEOUT = 10
 PLATFORMS = [Platform.CLIMATE]
 
 CONF_ACCESS_ID = "access_id"
