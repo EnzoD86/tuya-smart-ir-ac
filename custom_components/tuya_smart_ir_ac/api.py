@@ -58,7 +58,6 @@ class TuyaAPI:
             _LOGGER.debug(f"API send_multiple_command response: {str(result)}")
             if not result.get("success"):
                 raise Exception(TuyaDetails(url, command, result).to_dict())
-            return result
         except Exception as e:
             _LOGGER.error(f"Error sending multiple command to climate {climate_id}: {e}")
             raise Exception(e)

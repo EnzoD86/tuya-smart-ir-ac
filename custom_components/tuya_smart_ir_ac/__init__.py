@@ -3,7 +3,6 @@
 import voluptuous as vol
 import logging
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import Platform
 from .tuya_connector import TuyaOpenAPI
 from .const import (
     DOMAIN,
