@@ -1,8 +1,6 @@
-import voluptuous as vol
 import logging
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.core import callback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -15,10 +13,12 @@ from homeassistant.const import (
     UnitOfTemperature, 
     STATE_UNKNOWN, 
     STATE_UNAVAILABLE,
-    CONF_NAME,
-    CONF_UNIQUE_ID
+    CONF_NAME
 )
 from .const import (
+    DOMAIN,
+    MANUFACTURER,
+    COORDINATOR,
     CONF_INFRARED_ID,
     CONF_CLIMATE_ID,
     CONF_TEMPERATURE_SENSOR,
@@ -32,18 +32,17 @@ from .const import (
     DEFAULT_HVAC_MODES,
     DEFAULT_FAN_MODES
 )
-from .service import TuyaService
-
 
 _LOGGER = logging.getLogger(__package__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    async_add_entities([TuyaClimate(hass, config_entry.data)])
+    coordinator = hass.data.get(DOMAIN).get(COORDINATOR)
+    async_add_entities([TuyaClimate(hass, config_entry.data, coordinator)])
 
 
-class TuyaClimate(ClimateEntity, RestoreEntity):
-    def __init__(self, hass, config):
+class TuyaClimate(ClimateEntity, CoordinatorEntity):
+    def __init__(self, hass, config, coordinator):
         self._infrared_id = config.get(CONF_INFRARED_ID)
         self._climate_id = config.get(CONF_CLIMATE_ID)
         self._name = config.get(CONF_NAME)
@@ -54,12 +53,12 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
         self._temp_step = config.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
         self._hvac_modes = config.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES)
         self._fan_modes = config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES)
-        
-        self._service = TuyaService(hass, self._infrared_id, self._climate_id)
+
+        super().__init__(coordinator, context=self._climate_id)
 
         self._hvac_mode = HVACMode.OFF
-        self._fan_mode = FAN_AUTO
         self._target_temperature = 0
+        self._fan_mode = FAN_AUTO
 
     @property
     def name(self):
@@ -68,6 +67,19 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
     @property
     def unique_id(self):
         return f"{self._infrared_id}_{self._climate_id}"
+
+    @property
+    def device_info(self):
+        return {
+            "name": self._name,
+            "identifiers": {(DOMAIN, self._climate_id)},
+            "via_device": (DOMAIN, self._infrared_id),
+            "manufacturer": MANUFACTURER
+        }
+        
+    @property
+    def available(self):
+        return self.coordinator.is_available(self._climate_id)
 
     @property
     def temperature_unit(self):
@@ -85,7 +97,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
     def max_temp(self):
         return self._max_temp
 
-    @property  
+    @property
     def target_temperature_step(self):
         return self._temp_step
 
@@ -119,38 +131,37 @@ class TuyaClimate(ClimateEntity, RestoreEntity):
     def fan_modes(self):
         return self._fan_modes
 
-    async def async_added_to_hass(self):
-        last_state = await self.async_get_last_state()
-        if last_state:
-            self._hvac_mode = last_state.state
-            self._fan_mode = last_state.attributes.get("fan_mode")
-            self._target_temperature = last_state.attributes.get("temperature")
-
-    async def async_update(self):
-        status = await self._service.async_fetch_status()
-        if (status and 
-        (self._hvac_mode != status.hvac_mode 
-        or self._fan_mode != status.fan_mode 
-        or self._target_temperature != status.temperature)):
-            self._hvac_mode = status.hvac_mode
-            self._fan_mode = status.fan_mode
-            self._target_temperature = status.temperature
-            self.async_write_ha_state()
+    @callback
+    def _handle_coordinator_update(self):
+        data = self.coordinator.data.get(self._climate_id)
+        self._hvac_mode = data.hvac_mode if data.power else HVACMode.OFF
+        self._target_temperature = data.temperature
+        self._fan_mode = data.fan_mode
+        self.async_write_ha_state()
 
     async def async_turn_on(self):
         _LOGGER.info(f"{self.entity_id} turn on")
-        await self._service.async_turn_on()
+        await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
+        self._handle_coordinator_update()
+
+    async def async_turn_off(self):
+        _LOGGER.info(f"{self.entity_id} turn off")
+        await self.coordinator.async_turn_off(self._infrared_id, self._climate_id)
+        self._handle_coordinator_update()
 
     async def async_set_temperature(self, **kwargs):
         temperature = kwargs.get("temperature")
         if temperature is not None:
             _LOGGER.info(f"{self.entity_id} setting temperature to {temperature}")
-            await self._service.async_set_temperature(temperature)
+            await self.coordinator.async_set_temperature(self._infrared_id, self._climate_id, temperature)
+            self._handle_coordinator_update()
 
     async def async_set_fan_mode(self, fan_mode):
         _LOGGER.info(f"{self.entity_id} setting fan mode to {fan_mode}")
-        await self._service.async_set_fan_mode(fan_mode)
+        await self.coordinator.async_set_fan_mode(self._infrared_id, self._climate_id, fan_mode)
+        self._handle_coordinator_update()
 
     async def async_set_hvac_mode(self, hvac_mode):
         _LOGGER.info(f"{self.entity_id} setting hvac mode to {hvac_mode}")
-        await self._service.async_set_hvac_mode(hvac_mode, self._target_temperature, FAN_AUTO)
+        await self.coordinator.async_set_hvac_mode(self._infrared_id, self._climate_id, hvac_mode, self._target_temperature, FAN_AUTO)
+        self._handle_coordinator_update()

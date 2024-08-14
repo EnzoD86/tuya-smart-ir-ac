@@ -3,20 +3,19 @@
 import voluptuous as vol
 import logging
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import async_migrate_entries
-from homeassistant.core import callback
-from homeassistant.const import Platform
 from .tuya_connector import TuyaOpenAPI
 from .const import (
     DOMAIN,
     PLATFORMS,
+    CLIENT,
+    COORDINATOR,
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
     CONF_TUYA_COUNTRY,
-    TUYA_API_CLIENT,
     TUYA_ENDPOINTS
 )
-
+from .api import TuyaAPI
+from .coordinator import TuyaCoordinator
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -48,32 +47,15 @@ async def async_setup(hass, config):
         _LOGGER.error("Tuya Open API login error")
         return False
 
+    api = TuyaAPI(hass, client)
+    coordinator = TuyaCoordinator(hass, api)
+
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][TUYA_API_CLIENT] = client
+    hass.data[DOMAIN][CLIENT] = client
+    hass.data[DOMAIN][COORDINATOR] = coordinator
     return True
 
 async def async_setup_entry(hass, config_entry):
-    #TODO: remove in next release!
-    try:
-        _LOGGER.debug("Update unique_id")
-        
-        infrared_id = config_entry.data.get("infrared_id")
-        climate_id = config_entry.data.get("climate_id")
-        new_unique_id = f"{infrared_id}_{climate_id}"
-            
-        @callback
-        def update_unique_id(entity_entry):
-            """Update unique ID of entity entry."""
-            return {
-                "new_unique_id": new_unique_id
-            }
-            
-        await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
-        hass.config_entries.async_update_entry(config_entry)
-    except Exception as e:
-        pass
-    #################################
-    
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     config_entry.async_on_unload(config_entry.add_update_listener(async_update_entry))
     return True
