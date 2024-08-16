@@ -61,14 +61,14 @@ class TuyaCoordinator(DataUpdateCoordinator):
     async def async_set_temperature(self, infrared_id, climate_id, temperature):
         try:
             await self._api.async_send_command(infrared_id, climate_id, "temp", tuya_temp(temperature))
-            await self._async_force_update_data(climate_id, temperature=temperature)
+            await self._async_force_update_data(climate_id, power=True, temperature=temperature)
         except Exception:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="climate_error_temperature")
 
     async def async_set_fan_mode(self, infrared_id, climate_id, fan_mode):
         try:
             await self._api.async_send_command(infrared_id, climate_id, "wind", tuya_wind(fan_mode))
-            await self._async_force_update_data(climate_id, fan_mode=fan_mode)
+            await self._async_force_update_data(climate_id, power=True, fan_mode=fan_mode)
         except Exception:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="climate_error_fan_mode")
 
