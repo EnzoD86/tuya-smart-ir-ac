@@ -21,10 +21,8 @@ tuya_smart_ir_ac:
   country: "EU"
 ```
 
-Then you can add the "Tuya Smart IR Air Conditioners" integration from the web interface to configure your air conditioners. You need to retrieve your Climate ID and Infrared ID on the Tuya IoT website.
-
-## Third-party libraries
-The integration uses a modified version of the [Tuya connector python library](https://github.com/tuya/tuya-connector-python) to resolve some issues related to token renewal.
+Then you can add the "Tuya Smart IR Air Conditioners" integration from the web interface to configure your air conditioners. 
+You need to retrieve your Climate ID (Device ID of your air conditioning) and Infrared ID (Device ID of your IR HUB) on the Tuya IoT website.
 
 
 ## Contributions are welcome!
