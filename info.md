@@ -30,7 +30,8 @@ tuya_smart_ir_ac:
 ```
 
 Then you can add the "Tuya Smart IR Air Conditioners" integration from the web interface to configure your air conditioners. 
-You need to retrieve your Climate ID and Infrared ID on the Tuya IoT website.
+You need to retrieve your Climate ID (Device ID of your air conditioning) and Infrared ID (Device ID of your IR HUB) on the Tuya IoT website.
+
 
 # Debug
 It is possible to activate debug mode by adding the following lines in your configuration.yaml file:
