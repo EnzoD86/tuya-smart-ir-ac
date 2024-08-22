@@ -50,7 +50,7 @@ You need to retrieve your Climate ID (Device ID of your air conditioning) and In
 - in the "Overview" tab you have the "Authorization Key" section where you will find the Access ID and the Access Secret that you must enter in the configuration.yaml
 - select the "Devices" tab and you will see the list of all your devices connected to SmartLife
 - search in the list of your devices the ID of the infrared hub and the ID of the air conditioner (which you will have previously created on SmartLife)
-- in the "Service API" tab make sure that the "IR Control Hub Open Service" API is active;
+- in the "Service API" tab make sure that the "IR Control Hub Open Service" API is active
 
 # Debug
 It is possible to activate debug mode by adding the following lines in your configuration.yaml file:
