@@ -10,9 +10,28 @@ This is a custom integration to control IR-based air conditioners from Tuya via 
 >  **This repository was cloned from [DavidIlie's project](https://github.com/DavidIlie/tuya-smart-ir-ac) because it had not been updated for some time.**
 
 
-## Configuration
+## Platform configuration
 
 Add the following sections in your configuration.yaml and restart HA (Tuya Access ID, Tuya Access Secret can be found on the Tuya IoT Website):
+
+| Name                 | Type     | Description                      | Required |
+| -------------------- | -------- | -------------------------------- | -------- |
+| access_id            | `string` | Tuya access ID.                  | Yes      |
+| access_secret        | `string` | Tuya access secret.              | Yes      |
+| country              | `string` | Tuya country API: EU, US, IN, CN | Yes      |
+
+
+### Country/Data center API
+
+| ID    | Data center |
+| ----- | ----------- | 
+| EU    | Europe      |
+| US    | America     |
+| IN    | India       |
+| CN    | China       |
+
+
+### Example
 
 ```yaml
 tuya_smart_ir_ac:
@@ -23,6 +42,27 @@ tuya_smart_ir_ac:
 
 Then you can add the "Tuya Smart IR Air Conditioners" integration from the web interface to configure your air conditioners. 
 You need to retrieve your Climate ID (Device ID of your air conditioning) and Infrared ID (Device ID of your IR HUB) on the Tuya IoT website.
+
+### Steps to retrieve the information needed for correct configuration
+- connect to https://platform.tuya.com/
+- from the left menu select Cloud -> Development
+- open your cloud project (which you will have previously created and connected to the SmartLife app) by clicking on the "Open Project" button
+- in the "Overview" tab you have the "Authorization Key" section where you will find the Access ID and the Access Secret that you must enter in the configuration.yaml
+- select the "Devices" tab and you will see the list of all your devices connected to SmartLife
+- search in the list of your devices the ID of the infrared hub and the ID of the air conditioner (which you will have previously created on SmartLife)
+- in the "Service API" tab make sure that the "IR Control Hub Open Service" API is active;
+
+# Debug
+It is possible to activate debug mode by adding the following lines in your configuration.yaml file:
+
+```yaml
+logger:
+  # Begging of lines to add
+  logs:
+    custom_components.tuya_smart_ir_ac: debug
+  # End of lines to add
+```
+Home Assistant needs to be restarted after this change.
 
 
 ## Contributions are welcome!
