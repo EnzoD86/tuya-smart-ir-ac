@@ -7,10 +7,6 @@ from homeassistant.const import (
     CONF_NAME,
     Platform
 )
-from homeassistant.components.climate.const import (
-    DEFAULT_MIN_TEMP,
-    DEFAULT_MAX_TEMP
-)
 from .const import (
     DOMAIN,
     CLIENT,
@@ -23,9 +19,13 @@ from .const import (
     CONF_TEMP_STEP,
     CONF_HVAC_MODES,
     CONF_FAN_MODES,
+    CONF_DRY_MIN_TEMP,
+    DEFAULT_MIN_TEMP,
+    DEFAULT_MAX_TEMP,
     DEFAULT_PRECISION,
     DEFAULT_HVAC_MODES,
-    DEFAULT_FAN_MODES
+    DEFAULT_FAN_MODES,
+    DEFAULT_DRY_MIN_TEMP
 )
 from .api import TuyaAPI
 
@@ -49,8 +49,8 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             
             if await TuyaAPI(self.hass, client).async_fetch_data(infrared_id, climate_id):
                 return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
-            else:
-                errors["base"] = "connection"
+            
+            errors["base"] = "connection"
 
         data = {}
         data.update(required_data())
@@ -94,11 +94,12 @@ def optional_data(config=None):
     if config is None:
         temperature_sensor = vol.Optional(CONF_TEMPERATURE_SENSOR)
         humidity_sensor = vol.Optional(CONF_HUMIDITY_SENSOR)
-        default_temp_min = DEFAULT_MIN_TEMP
-        default_temp_max = DEFAULT_MAX_TEMP
-        default_temp_step = DEFAULT_PRECISION
-        default_hvac_modes = DEFAULT_HVAC_MODES
-        default_fan_modes = DEFAULT_FAN_MODES
+        temp_min = vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP)
+        temp_max = vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP)
+        temp_step = vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION)
+        hvac_modes = vol.Optional(CONF_HVAC_MODES, default=DEFAULT_HVAC_MODES)
+        fan_modes = vol.Optional(CONF_FAN_MODES, default=DEFAULT_FAN_MODES)
+        dry_min_temp = vol.Optional(CONF_DRY_MIN_TEMP, default=DEFAULT_DRY_MIN_TEMP)
     else:
         if config.get(CONF_TEMPERATURE_SENSOR, None) is None:
             temperature_sensor = vol.Optional(CONF_TEMPERATURE_SENSOR)
@@ -109,12 +110,13 @@ def optional_data(config=None):
             humidity_sensor = vol.Optional(CONF_HUMIDITY_SENSOR)
         else:
             humidity_sensor = vol.Optional(CONF_HUMIDITY_SENSOR, default=config.get(CONF_HUMIDITY_SENSOR))
-
-        default_temp_min = config.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP)
-        default_temp_max = config.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP)
-        default_temp_step = config.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
-        default_hvac_modes = config.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES)
-        default_fan_modes = config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES)
+        
+        temp_min = vol.Optional(CONF_TEMP_MIN, default=config.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP))
+        temp_max = vol.Optional(CONF_TEMP_MAX, default=config.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP))
+        temp_step = vol.Optional(CONF_TEMP_STEP, default=config.get(CONF_TEMP_STEP, DEFAULT_PRECISION))
+        hvac_modes = vol.Optional(CONF_HVAC_MODES, default=config.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES))
+        fan_modes = vol.Optional(CONF_FAN_MODES, default=config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES))
+        dry_min_temp = vol.Optional(CONF_DRY_MIN_TEMP, default=config.get(CONF_DRY_MIN_TEMP, DEFAULT_DRY_MIN_TEMP))
 
     return {
         temperature_sensor: selector.EntitySelector(
@@ -131,21 +133,43 @@ def optional_data(config=None):
                 multiple=False
             )
         ),
-        vol.Optional(CONF_TEMP_MIN, default=default_temp_min): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_MAX, default=default_temp_max): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_STEP, default=default_temp_step): vol.Coerce(float),
-        vol.Optional(CONF_HVAC_MODES, default=default_hvac_modes): selector.SelectSelector(
+        temp_min: selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=DEFAULT_MIN_TEMP,
+                max=DEFAULT_MAX_TEMP,
+                step=1,
+                mode=selector.NumberSelectorMode.BOX
+            )
+        ),
+        temp_max: selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=DEFAULT_MIN_TEMP,
+                max=DEFAULT_MAX_TEMP,
+                step=1,
+                mode=selector.NumberSelectorMode.BOX
+            )
+        ),
+        temp_step: selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0.1,
+                max=1,
+                step=0.1,
+                mode=selector.NumberSelectorMode.BOX
+            )
+        ),
+        hvac_modes: selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=DEFAULT_HVAC_MODES, 
                 multiple=True,
                 mode=selector.SelectSelectorMode.DROPDOWN
             )
         ),
-        vol.Optional(CONF_FAN_MODES, default=default_fan_modes): selector.SelectSelector(
+        fan_modes: selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=DEFAULT_FAN_MODES, 
                 multiple=True,
                 mode=selector.SelectSelectorMode.DROPDOWN
             )
-        )
+        ),
+        dry_min_temp: selector.BooleanSelector()
     }
