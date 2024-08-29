@@ -23,7 +23,7 @@ The steps to retrieve the information you need are the following:
 - from the left menu select Cloud -> Development;
 - create a project or select the existing one (making sure it is connected to SmartLife);
 - from the Overview tab retrieve the Access ID, Access Secret and Data Center data of the project (which will be used for the installation of the platform);
-- from the Service API tab verify that the following APIs are active (verify by clicking on View Details that the status of the APIs is In service for each of these):
+- from the Service API tab, verify that the following APIs are active (verify by clicking on View details, the API status is In Service for each of them):
   - IoT Core;
   - IR Control Hub Open Service.
 - from the Devices tab you will see all your devices connected to SmartLife and you will have to search for the following devices:
