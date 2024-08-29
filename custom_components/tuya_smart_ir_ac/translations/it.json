@@ -13,7 +13,8 @@
           "temp_step": "Temperatura step",
           "hvac_modes": "Modalità HVAC supportate",
           "fan_modes": "Modalità FAN supportate",
-          "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione"
+          "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione",
+		  "dry_min_fan": "Imposta la ventola al minimo in modalità deumidificazione"
         },
         "description": "Configurazione",
         "title": "Tuya Smart IR Air Conditioners"
@@ -37,7 +38,8 @@
           "temp_step": "Temperatura step",
           "hvac_modes": "Modalità HVAC supportate",
           "fan_modes": "Modalità FAN supportate",
-          "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione"
+          "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione",
+		  "dry_min_fan": "Imposta la ventola al minimo in modalità deumidificazione"
         },
         "description": "Configurazione",
         "title": "Tuya Smart IR Air Conditioners"

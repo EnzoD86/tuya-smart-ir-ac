@@ -20,12 +20,14 @@ from .const import (
     CONF_HVAC_MODES,
     CONF_FAN_MODES,
     CONF_DRY_MIN_TEMP,
+    CONF_DRY_MIN_FAN,
     DEFAULT_MIN_TEMP,
     DEFAULT_MAX_TEMP,
     DEFAULT_PRECISION,
     DEFAULT_HVAC_MODES,
     DEFAULT_FAN_MODES,
-    DEFAULT_DRY_MIN_TEMP
+    DEFAULT_DRY_MIN_TEMP,
+    DEFAULT_DRY_MIN_FAN
 )
 from .api import TuyaAPI
 
@@ -100,6 +102,7 @@ def optional_data(config=None):
         hvac_modes = vol.Optional(CONF_HVAC_MODES, default=DEFAULT_HVAC_MODES)
         fan_modes = vol.Optional(CONF_FAN_MODES, default=DEFAULT_FAN_MODES)
         dry_min_temp = vol.Optional(CONF_DRY_MIN_TEMP, default=DEFAULT_DRY_MIN_TEMP)
+        dry_min_fan = vol.Optional(CONF_DRY_MIN_FAN, default=DEFAULT_DRY_MIN_FAN)
     else:
         if config.get(CONF_TEMPERATURE_SENSOR, None) is None:
             temperature_sensor = vol.Optional(CONF_TEMPERATURE_SENSOR)
@@ -117,6 +120,7 @@ def optional_data(config=None):
         hvac_modes = vol.Optional(CONF_HVAC_MODES, default=config.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES))
         fan_modes = vol.Optional(CONF_FAN_MODES, default=config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES))
         dry_min_temp = vol.Optional(CONF_DRY_MIN_TEMP, default=config.get(CONF_DRY_MIN_TEMP, DEFAULT_DRY_MIN_TEMP))
+        dry_min_fan = vol.Optional(CONF_DRY_MIN_FAN, default=config.get(CONF_DRY_MIN_FAN, DEFAULT_DRY_MIN_FAN))
 
     return {
         temperature_sensor: selector.EntitySelector(
@@ -171,5 +175,6 @@ def optional_data(config=None):
                 mode=selector.SelectSelectorMode.DROPDOWN
             )
         ),
-        dry_min_temp: selector.BooleanSelector()
+        dry_min_temp: selector.BooleanSelector(),
+        dry_min_fan: selector.BooleanSelector()
     }

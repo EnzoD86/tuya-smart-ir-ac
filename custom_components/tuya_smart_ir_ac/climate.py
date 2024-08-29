@@ -5,6 +5,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
+    FAN_LOW,
     HVACMode,
     ClimateEntityFeature
 )
@@ -28,12 +29,14 @@ from .const import (
     CONF_HVAC_MODES,
     CONF_FAN_MODES,
     CONF_DRY_MIN_TEMP,
+    CONF_DRY_MIN_FAN,
     DEFAULT_MIN_TEMP,
     DEFAULT_MAX_TEMP,
     DEFAULT_PRECISION,
     DEFAULT_HVAC_MODES,
     DEFAULT_FAN_MODES,
-    DEFAULT_DRY_MIN_TEMP
+    DEFAULT_DRY_MIN_TEMP,
+    DEFAULT_DRY_MIN_FAN
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -57,6 +60,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity):
         self._hvac_modes = config.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES)
         self._fan_modes = config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES)
         self._dry_min_temp = config.get(CONF_DRY_MIN_TEMP, DEFAULT_DRY_MIN_TEMP)
+        self._dry_min_fan = config.get(CONF_DRY_MIN_FAN, DEFAULT_DRY_MIN_FAN)
 
         super().__init__(coordinator, context=self._climate_id)
 
@@ -177,12 +181,8 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         _LOGGER.info(f"{self.entity_id} setting hvac mode to {hvac_mode}")
-        temperature = self.get_hvac_temperature(hvac_mode)
-        await self.coordinator.async_set_hvac_mode(self._infrared_id, self._climate_id, hvac_mode, temperature, FAN_AUTO)
+        temperature = (DEFAULT_MIN_TEMP if hvac_mode is HVACMode.DRY and self._dry_min_temp 
+                       else (self._min_temp if self._target_temperature < self._min_temp else self._target_temperature))
+        fan_mode = FAN_LOW if hvac_mode is HVACMode.DRY and self._dry_min_fan else FAN_AUTO
+        await self.coordinator.async_set_hvac_mode(self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode)
         self._handle_coordinator_update()
-
-    def get_hvac_temperature(self, hvac_mode):
-        if hvac_mode is HVACMode.DRY and self._dry_min_temp:
-            return DEFAULT_MIN_TEMP
-        
-        return self._min_temp if self._target_temperature < self._min_temp else self._target_temperature

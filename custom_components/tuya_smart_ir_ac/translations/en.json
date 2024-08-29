@@ -13,7 +13,8 @@
           "temp_step": "Step temperature",
           "hvac_modes": "HVAC modes supported",
           "fan_modes": "FAN modes supported",
-          "dry_min_temp": "Set minimum temperature in dry mode"
+          "dry_min_temp": "Set minimum temperature in dry mode",
+		  "dry_min_fan": "Set minimum fan mode in dry mode"
         },
         "description": "Configuration",
         "title": "Tuya Smart IR Air Conditioners"
@@ -37,7 +38,8 @@
           "temp_step": "Step temperature",
           "hvac_modes": "HVAC modes supported",
           "fan_modes": "FAN modes supported",
-          "dry_min_temp": "Set minimum temperature in dry mode"
+          "dry_min_temp": "Set minimum temperature in dry mode",
+		  "dry_min_fan": "Set minimum fan speed in dry mode"
         },
         "description": "Configurazione",
         "title": "Tuya Smart IR Air Conditioners"
