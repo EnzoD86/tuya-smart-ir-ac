@@ -16,8 +16,7 @@ Add this [repository](https://github.com/EnzoD86/tuya-smart-ir-ac) to your custo
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=EnzoD86&repository=tuya-smart-ir-ac&category=integration)
 
 ## Retrieve correct information from Tuya IoT website
-Before you start setting up the integration, you will need some information that can be retrieved from the [Tuya IoT platform](https://platform.tuya.com/).
-
+Before you start setting up the integration, you will need some information that can be retrieved from the Tuya IoT platform.
 The steps to retrieve the information you need are the following:
 - connect to https://platform.tuya.com ;
 - from the left menu select Cloud -> Development;
