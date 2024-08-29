@@ -9,27 +9,40 @@ This is a custom integration to control IR-based air conditioners from Tuya via 
 
 >  **This repository was cloned from [DavidIlie's project](https://github.com/DavidIlie/tuya-smart-ir-ac) because it had not been updated for some time.**
 
+## Installation using HACS
+We recommend installing via Home Assistant Community Store (HACS) to always receive the latest integration updates.
+Add this [repository](https://github.com/EnzoD86/tuya-smart-ir-ac) to your custom repositories or click the button below (requires My Homeassistant setup).
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=EnzoD86&repository=tuya-smart-ir-ac&category=integration)
+
+## Manual installation
+If you don't have HACS or prefer to do a manual installation (losing the ability to receive automatic integration updates), you can proceed by copying the contents of custom_components/tuya-smart-ir-ac/ to custom_components/tuya-smart-ir-ac/ in the Home Assistant configuration folder.
+
+## Retrieve correct information from Tuya IoT website
+Before you start setting up the integration, you will need some information that can be retrieved from the [Tuya IoT platform](https://platform.tuya.com/).
+
+The steps to retrieve the information you need are the following:
+- connect to https://platform.tuya.com ;
+- from the left menu select Cloud -> Development;
+- create a project or select the existing one (making sure it is connected to SmartLife);
+- from the Overview tab retrieve the Access ID, Access Secret and Data Center data of the project (which will be used for the installation of the platform);
+- from the Service API tab verify that the following APIs are active (verify by clicking on View Details that the status of the APIs is In service for each of these):
+  - IoT Core;
+  - IR Control Hub Open Service.
+- from the Devices tab you will see all your devices connected to SmartLife and you will have to search for the following devices:
+  - the HUB IR device (called InfraredID by the integration);
+  - the air conditioner connected to the HUB (called ClimateID by the integration).
+
+The last point must be repeated for each air conditioner that must be configured.
 
 ## Platform configuration
+Add the following sections in your configuration.yaml and restart HA (Tuya Access ID, Tuya Access Secret can be found on the [Tuya IoT Website](https://platform.tuya.com/)):
 
-Add the following sections in your configuration.yaml and restart HA (Tuya Access ID, Tuya Access Secret can be found on the Tuya IoT Website):
-
-| Name                 | Type     | Description                      | Required |
-| -------------------- | -------- | -------------------------------- | -------- |
-| access_id            | `string` | Tuya access ID.                  | Yes      |
-| access_secret        | `string` | Tuya access secret.              | Yes      |
-| country              | `string` | Tuya country API: EU, US, IN, CN | Yes      |
-
-
-### Country/Data center API
-
-| ID    | Data center |
-| ----- | ----------- | 
-| EU    | Europe      |
-| US    | America     |
-| IN    | India       |
-| CN    | China       |
-
+| Name                 | Type     | Description                                                         | Required |
+| -------------------- | -------- | ------------------------------------------------------------------- | -------- |
+| access_id            | `string` | Tuya access ID.                                                     | Yes      |
+| access_secret        | `string` | Tuya access secret.                                                 | Yes      |
+| country              | `string` | Tuya country API: EU (Europe), US (America), IN (India), CN (China) | Yes      |
 
 ### Example
 
@@ -39,9 +52,14 @@ tuya_smart_ir_ac:
   access_secret: "tuya_access_secret_example"
   country: "EU"
 ```
+## Integration configuration
+After the platform has been configured, you can add air conditioners using the Integrations configuration UI.
+Go to Settings / Devices & Services and press the Add Integration button, or click the shortcut button below (requires My Homeassistant configured).
 
-Then you can add the "Tuya Smart IR Air Conditioners" integration from the web interface to configure your air conditioners. 
-You need to retrieve your Climate ID (Device ID of your air conditioning) and Infrared ID (Device ID of your IR HUB) on the Tuya IoT website.
+[![Add Integration to your Home Assistant
+instance.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tuya_smart_ir_ac)
+
+You need to retrieve your Climate ID (Device ID of your air conditioning) and Infrared ID (Device ID of your IR HUB) on the [Tuya IoT website](https://platform.tuya.com/).
 
 ### Steps to retrieve the information needed for correct configuration
 - connect to https://platform.tuya.com/
