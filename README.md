@@ -55,6 +55,25 @@ Go to Settings / Devices & Services and press the Add Integration button, or cli
 [![Add Integration to your Home Assistant
 instance.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tuya_smart_ir_ac)
 
+The interface will show a form to fill in with the following information:
+
+| Name                                  | Description                                                                                        | Required |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------- | -------- |
+| Infrared ID                           | IR HUB Device ID (retrieved from Tuya Platform).                                                   | Yes      |
+| Climate ID                            | Air Conditioner Device ID (retrieved from Tuya Platform).                                          | Yes      |
+| Air conditioner name                  | Name of the device that will be displayed in Home Assistant.                                       | Yes      |
+| Temperature sensor                    | Name of the temperature sensor to pair with the device.                                            | No       |
+| Humidity sensor                       | Name of the humidity sensor to pair with the device.                                               | No       |
+| Minimum temperature                   | Minimum set point availabl supported by the device.                                                | No       |
+| Maximum temperature                   | Maximum set point available supported by the device.                                               | No       |
+| Step temperature                      | Step size for temperature set point supported by the device.                                       | No       |
+| HVAC modes supported                  | HVAC modes supported by the device.                                                                | No       |
+| FAN modes supported                   | FAN modes supported by the device.                                                                 | No       |
+| *Set minimum temperature in dry mode* | *Set temperature to 16° when DRY MODE is selected (fixes compatibility issues with some devices).* | No       |
+| *Set minimum fan mode in dry mode*    | *Set fan speed to LOW when DRY MODE is selected (fixes compatibility issues with some devices).*   | No       |
+
+> ***The last two options should only be used when you are having problems with DRY mode; if you are unable to change modes, try enabling one or both flags.***
+
 # Debug
 It is possible to activate debug mode by adding the following lines in your configuration.yaml file:
 
