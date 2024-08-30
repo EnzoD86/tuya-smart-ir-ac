@@ -41,13 +41,13 @@ Add the following sections in your configuration.yaml and restart HA (Tuya Acces
 | country              | `string` | Tuya country API: EU (Europe), US (America), IN (India), CN (China) | Yes      |
 
 ### Example
-
 ```yaml
 tuya_smart_ir_ac:
   access_id: "tuya_access_id_example"
   access_secret: "tuya_access_secret_example"
   country: "EU"
 ```
+
 ## Integration configuration
 After the platform has been configured, you can add air conditioners using the Integrations configuration UI.
 Go to Settings / Devices & Services and press the Add Integration button, or click the shortcut button below (requires My Homeassistant configured).
@@ -91,6 +91,6 @@ Home Assistant needs to be restarted after this change.
 If you have ideas to contribute to the project, open a pull request and we will evaluate together how to implement the improvement. Thanks!
 
 ## Support me
-I dedicate my free time to the development and support of this integration, if you appreciate my work and want to support me, you can buy me a coffee. Thanks!
+I dedicate my free time to the development and support for this integration, if you appreciate my work and want to support me, you can buy me a coffee. Thanks!
 
 <a href="https://www.buymeacoffee.com/enzod86" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
