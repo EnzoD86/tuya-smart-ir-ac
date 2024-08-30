@@ -71,3 +71,8 @@ Home Assistant needs to be restarted after this change.
 ## Contributions are welcome!
 
 If this repository can help anyone, any contribution is welcome.
+
+## Support me
+I dedicate my free time to the development and support of this integration, if you appreciate my work and want to support me, you can buy me a coffee. Thanks!
+
+<a href="https://www.buymeacoffee.com/enzod86" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
