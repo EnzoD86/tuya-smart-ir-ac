@@ -88,8 +88,7 @@ Home Assistant needs to be restarted after this change.
 
 
 ## Contributions are welcome!
-
-If this repository can help anyone, any contribution is welcome.
+If you have ideas to contribute to the project, open a pull request and we will evaluate together how to implement the improvement. Thanks!
 
 ## Support me
 I dedicate my free time to the development and support of this integration, if you appreciate my work and want to support me, you can buy me a coffee. Thanks!
