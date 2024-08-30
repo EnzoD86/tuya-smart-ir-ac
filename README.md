@@ -16,8 +16,7 @@ Add this [repository](https://github.com/EnzoD86/tuya-smart-ir-ac) to your custo
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=EnzoD86&repository=tuya-smart-ir-ac&category=integration)
 
 ## Retrieve correct information from Tuya IoT website
-Before you start setting up the integration, you will need some information that can be retrieved from the [Tuya IoT platform](https://platform.tuya.com/).
-
+Before you start setting up the integration, you will need some information that can be retrieved from the Tuya IoT platform.
 The steps to retrieve the information you need are the following:
 - connect to https://platform.tuya.com ;
 - from the left menu select Cloud -> Development;
@@ -55,17 +54,6 @@ Go to Settings / Devices & Services and press the Add Integration button, or cli
 
 [![Add Integration to your Home Assistant
 instance.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tuya_smart_ir_ac)
-
-You need to retrieve your Climate ID (Device ID of your air conditioning) and Infrared ID (Device ID of your IR HUB) on the [Tuya IoT website](https://platform.tuya.com/).
-
-### Steps to retrieve the information needed for correct configuration
-- connect to https://platform.tuya.com/
-- from the left menu select Cloud -> Development
-- open your cloud project (which you will have previously created and connected to the SmartLife app) by clicking on the "Open Project" button
-- in the "Overview" tab you have the "Authorization Key" section where you will find the Access ID and the Access Secret that you must enter in the configuration.yaml
-- select the "Devices" tab and you will see the list of all your devices connected to SmartLife
-- search in the list of your devices the ID of the infrared hub and the ID of the air conditioner (which you will have previously created on SmartLife)
-- in the "Service API" tab make sure that the "IR Control Hub Open Service" API is active
 
 # Debug
 It is possible to activate debug mode by adding the following lines in your configuration.yaml file:
