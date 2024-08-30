@@ -9,30 +9,38 @@ This is a custom integration to control IR-based air conditioners from Tuya via 
 
 >  **This repository was cloned from [DavidIlie's project](https://github.com/DavidIlie/tuya-smart-ir-ac) because it had not been updated for some time.**
 
+## Installation using HACS
+We recommend installing via Home Assistant Community Store (HACS) to always receive the latest integration updates.
+Add this [repository](https://github.com/EnzoD86/tuya-smart-ir-ac) to your custom repositories or click the button below (requires My Homeassistant setup).
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=EnzoD86&repository=tuya-smart-ir-ac&category=integration)
+
+## Retrieve correct information from Tuya IoT website
+Before you start setting up the integration, you will need some information that can be retrieved from the Tuya IoT platform.
+The steps to retrieve the information you need are the following:
+- connect to https://platform.tuya.com ;
+- from the left menu select Cloud -> Development;
+- create a project or select the existing one (making sure it is connected to SmartLife);
+- from the Overview tab retrieve the Access ID, Access Secret and Data Center data of the project (which will be used for the installation of the platform);
+- from the Service API tab, verify that the following APIs are active (verify by clicking on View details, the API status is In Service for each of them):
+  - IoT Core;
+  - IR Control Hub Open Service.
+- from the Devices tab you will see all your devices connected to SmartLife and you will have to search for the following devices:
+  - the HUB IR device (called InfraredID by the integration);
+  - the air conditioner connected to the HUB (called ClimateID by the integration).
+
+The last point must be repeated for each air conditioner that must be configured.
 
 ## Platform configuration
+Add the following sections in your configuration.yaml and restart HA (Tuya Access ID, Tuya Access Secret can be found on the [Tuya IoT Website](https://platform.tuya.com/)):
 
-Add the following sections in your configuration.yaml and restart HA (Tuya Access ID, Tuya Access Secret can be found on the Tuya IoT Website):
-
-| Name                 | Type     | Description                      | Required |
-| -------------------- | -------- | -------------------------------- | -------- |
-| access_id            | `string` | Tuya access ID.                  | Yes      |
-| access_secret        | `string` | Tuya access secret.              | Yes      |
-| country              | `string` | Tuya country API: EU, US, IN, CN | Yes      |
-
-
-### Country/Data center API
-
-| ID    | Data center |
-| ----- | ----------- | 
-| EU    | Europe      |
-| US    | America     |
-| IN    | India       |
-| CN    | China       |
-
+| Name                 | Type     | Description                                                         | Required |
+| -------------------- | -------- | ------------------------------------------------------------------- | -------- |
+| access_id            | `string` | Tuya access ID.                                                     | Yes      |
+| access_secret        | `string` | Tuya access secret.                                                 | Yes      |
+| country              | `string` | Tuya country API: EU (Europe), US (America), IN (India), CN (China) | Yes      |
 
 ### Example
-
 ```yaml
 tuya_smart_ir_ac:
   access_id: "tuya_access_id_example"
@@ -40,17 +48,31 @@ tuya_smart_ir_ac:
   country: "EU"
 ```
 
-Then you can add the "Tuya Smart IR Air Conditioners" integration from the web interface to configure your air conditioners. 
-You need to retrieve your Climate ID (Device ID of your air conditioning) and Infrared ID (Device ID of your IR HUB) on the Tuya IoT website.
+## Integration configuration
+After the platform has been configured, you can add air conditioners using the Integrations configuration UI.
+Go to Settings / Devices & Services and press the Add Integration button, or click the shortcut button below (requires My Homeassistant configured).
 
-### Steps to retrieve the information needed for correct configuration
-- connect to https://platform.tuya.com/
-- from the left menu select Cloud -> Development
-- open your cloud project (which you will have previously created and connected to the SmartLife app) by clicking on the "Open Project" button
-- in the "Overview" tab you have the "Authorization Key" section where you will find the Access ID and the Access Secret that you must enter in the configuration.yaml
-- select the "Devices" tab and you will see the list of all your devices connected to SmartLife
-- search in the list of your devices the ID of the infrared hub and the ID of the air conditioner (which you will have previously created on SmartLife)
-- in the "Service API" tab make sure that the "IR Control Hub Open Service" API is active
+[![Add Integration to your Home Assistant
+instance.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tuya_smart_ir_ac)
+
+The interface will show a form to fill in with the following information:
+
+| Name                                  | Description                                                                                        | Required |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------- | -------- |
+| Infrared ID                           | IR HUB Device ID (retrieved from Tuya Platform).                                                   | Yes      |
+| Climate ID                            | Air Conditioner Device ID (retrieved from Tuya Platform).                                          | Yes      |
+| Air conditioner name                  | Name of the device that will be displayed in Home Assistant.                                       | Yes      |
+| Temperature sensor                    | Name of the temperature sensor to pair with the device.                                            | No       |
+| Humidity sensor                       | Name of the humidity sensor to pair with the device.                                               | No       |
+| Minimum temperature                   | Minimum set point availabl supported by the device.                                                | No       |
+| Maximum temperature                   | Maximum set point available supported by the device.                                               | No       |
+| Step temperature                      | Step size for temperature set point supported by the device.                                       | No       |
+| HVAC modes supported                  | HVAC modes supported by the device.                                                                | No       |
+| FAN modes supported                   | FAN modes supported by the device.                                                                 | No       |
+| *Set minimum temperature in dry mode* | *Set temperature to 16° when DRY MODE is selected (fixes compatibility issues with some devices).* | No       |
+| *Set minimum fan mode in dry mode*    | *Set fan speed to LOW when DRY MODE is selected (fixes compatibility issues with some devices).*   | No       |
+
+> ***The last two options should only be used when you are having problems with DRY mode; if you are unable to change modes, try enabling one or both flags.***
 
 # Debug
 It is possible to activate debug mode by adding the following lines in your configuration.yaml file:
@@ -66,5 +88,9 @@ Home Assistant needs to be restarted after this change.
 
 
 ## Contributions are welcome!
+If you have ideas to contribute to the project, open a pull request and we will evaluate together how to implement the improvement. Thanks!
 
-If this repository can help anyone, any contribution is welcome.
+## Support me
+I dedicate my free time to the development and support for this integration, if you appreciate my work and want to support me, you can buy me a coffee. Thanks!
+
+<a href="https://www.buymeacoffee.com/enzod86" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>

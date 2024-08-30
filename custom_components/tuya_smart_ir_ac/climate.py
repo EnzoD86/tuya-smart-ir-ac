@@ -1,13 +1,13 @@
 import logging
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
+    FAN_LOW,
     HVACMode,
-    ClimateEntityFeature,
-    DEFAULT_MIN_TEMP,
-    DEFAULT_MAX_TEMP
+    ClimateEntityFeature
 )
 from homeassistant.const import (
     UnitOfTemperature, 
@@ -28,9 +28,15 @@ from .const import (
     CONF_TEMP_STEP,
     CONF_HVAC_MODES,
     CONF_FAN_MODES,
+    CONF_DRY_MIN_TEMP,
+    CONF_DRY_MIN_FAN,
+    DEFAULT_MIN_TEMP,
+    DEFAULT_MAX_TEMP,
     DEFAULT_PRECISION,
     DEFAULT_HVAC_MODES,
-    DEFAULT_FAN_MODES
+    DEFAULT_FAN_MODES,
+    DEFAULT_DRY_MIN_TEMP,
+    DEFAULT_DRY_MIN_FAN
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -41,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([TuyaClimate(hass, config_entry.data, coordinator)])
 
 
-class TuyaClimate(ClimateEntity, CoordinatorEntity):
+class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity):
     def __init__(self, hass, config, coordinator):
         self._infrared_id = config.get(CONF_INFRARED_ID)
         self._climate_id = config.get(CONF_CLIMATE_ID)
@@ -53,6 +59,8 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity):
         self._temp_step = config.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
         self._hvac_modes = config.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES)
         self._fan_modes = config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES)
+        self._dry_min_temp = config.get(CONF_DRY_MIN_TEMP, DEFAULT_DRY_MIN_TEMP)
+        self._dry_min_fan = config.get(CONF_DRY_MIN_FAN, DEFAULT_DRY_MIN_FAN)
 
         super().__init__(coordinator, context=self._climate_id)
 
@@ -131,13 +139,23 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity):
     def fan_modes(self):
         return self._fan_modes
 
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+        if last_state and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            self._hvac_mode = last_state.state
+            self._target_temperature = last_state.attributes.get("temperature")
+            self._fan_mode = last_state.attributes.get("fan_mode")
+
     @callback
     def _handle_coordinator_update(self):
         data = self.coordinator.data.get(self._climate_id)
-        self._hvac_mode = data.hvac_mode if data.power else HVACMode.OFF
-        self._target_temperature = data.temperature
-        self._fan_mode = data.fan_mode
-        self.async_write_ha_state()
+        if data:
+            self._hvac_mode = data.hvac_mode if data.power else HVACMode.OFF
+            self._target_temperature = data.temperature
+            self._fan_mode = data.fan_mode
+            self.async_write_ha_state()
 
     async def async_turn_on(self):
         _LOGGER.info(f"{self.entity_id} turn on")
@@ -163,5 +181,8 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         _LOGGER.info(f"{self.entity_id} setting hvac mode to {hvac_mode}")
-        await self.coordinator.async_set_hvac_mode(self._infrared_id, self._climate_id, hvac_mode, self._target_temperature, FAN_AUTO)
+        temperature = (DEFAULT_MIN_TEMP if hvac_mode is HVACMode.DRY and self._dry_min_temp 
+                       else (self._min_temp if self._target_temperature < self._min_temp else self._target_temperature))
+        fan_mode = FAN_LOW if hvac_mode is HVACMode.DRY and self._dry_min_fan else FAN_AUTO
+        await self.coordinator.async_set_hvac_mode(self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode)
         self._handle_coordinator_update()

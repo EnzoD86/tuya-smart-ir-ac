@@ -35,7 +35,7 @@ class TuyaCoordinator(DataUpdateCoordinator):
         self._first_update = True
 
     def is_available(self, climate_id):
-        return self.last_update_success and self.data and self.data.get(climate_id, None) is not None
+        return self.data and self.data.get(climate_id, None) is not None
 
     async def async_fetch_data(self, climate_ids):
         all_data = await self._api.async_fetch_all_data(climate_ids)
