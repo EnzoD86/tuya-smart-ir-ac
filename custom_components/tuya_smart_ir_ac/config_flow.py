@@ -19,6 +19,7 @@ from .const import (
     CONF_TEMP_STEP,
     CONF_HVAC_MODES,
     CONF_FAN_MODES,
+    CONF_HVAC_POWER_ON,
     CONF_DRY_MIN_TEMP,
     CONF_DRY_MIN_FAN,
     DEFAULT_MIN_TEMP,
@@ -26,6 +27,7 @@ from .const import (
     DEFAULT_PRECISION,
     DEFAULT_HVAC_MODES,
     DEFAULT_FAN_MODES,
+    DEFAULT_HVAC_POWER_ON,
     DEFAULT_DRY_MIN_TEMP,
     DEFAULT_DRY_MIN_FAN
 )
@@ -101,6 +103,7 @@ def optional_data(config=None):
         temp_step = vol.Optional(CONF_TEMP_STEP, default=DEFAULT_PRECISION)
         hvac_modes = vol.Optional(CONF_HVAC_MODES, default=DEFAULT_HVAC_MODES)
         fan_modes = vol.Optional(CONF_FAN_MODES, default=DEFAULT_FAN_MODES)
+        hvac_power_on = vol.Optional(CONF_HVAC_POWER_ON, default=DEFAULT_HVAC_POWER_ON)
         dry_min_temp = vol.Optional(CONF_DRY_MIN_TEMP, default=DEFAULT_DRY_MIN_TEMP)
         dry_min_fan = vol.Optional(CONF_DRY_MIN_FAN, default=DEFAULT_DRY_MIN_FAN)
     else:
@@ -119,6 +122,7 @@ def optional_data(config=None):
         temp_step = vol.Optional(CONF_TEMP_STEP, default=config.get(CONF_TEMP_STEP, DEFAULT_PRECISION))
         hvac_modes = vol.Optional(CONF_HVAC_MODES, default=config.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES))
         fan_modes = vol.Optional(CONF_FAN_MODES, default=config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES))
+        hvac_power_on = vol.Optional(CONF_HVAC_POWER_ON, default=config.get(CONF_HVAC_POWER_ON, DEFAULT_HVAC_POWER_ON))
         dry_min_temp = vol.Optional(CONF_DRY_MIN_TEMP, default=config.get(CONF_DRY_MIN_TEMP, DEFAULT_DRY_MIN_TEMP))
         dry_min_fan = vol.Optional(CONF_DRY_MIN_FAN, default=config.get(CONF_DRY_MIN_FAN, DEFAULT_DRY_MIN_FAN))
 
@@ -175,6 +179,7 @@ def optional_data(config=None):
                 mode=selector.SelectSelectorMode.DROPDOWN
             )
         ),
+        hvac_power_on: selector.BooleanSelector(),
         dry_min_temp: selector.BooleanSelector(),
         dry_min_fan: selector.BooleanSelector()
     }
