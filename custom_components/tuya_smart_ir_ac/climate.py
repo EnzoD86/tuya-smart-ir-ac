@@ -28,6 +28,7 @@ from .const import (
     CONF_TEMP_STEP,
     CONF_HVAC_MODES,
     CONF_FAN_MODES,
+    CONF_HVAC_POWER_ON,
     CONF_DRY_MIN_TEMP,
     CONF_DRY_MIN_FAN,
     DEFAULT_MIN_TEMP,
@@ -35,6 +36,7 @@ from .const import (
     DEFAULT_PRECISION,
     DEFAULT_HVAC_MODES,
     DEFAULT_FAN_MODES,
+    DEFAULT_HVAC_POWER_ON,
     DEFAULT_DRY_MIN_TEMP,
     DEFAULT_DRY_MIN_FAN
 )
@@ -59,6 +61,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity):
         self._temp_step = config.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
         self._hvac_modes = config.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES)
         self._fan_modes = config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES)
+        self._hvac_power_on = config.get(CONF_HVAC_POWER_ON, DEFAULT_HVAC_POWER_ON)
         self._dry_min_temp = config.get(CONF_DRY_MIN_TEMP, DEFAULT_DRY_MIN_TEMP)
         self._dry_min_fan = config.get(CONF_DRY_MIN_FAN, DEFAULT_DRY_MIN_FAN)
 
@@ -184,5 +187,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity):
         temperature = (DEFAULT_MIN_TEMP if hvac_mode is HVACMode.DRY and self._dry_min_temp 
                        else (self._min_temp if self._target_temperature < self._min_temp else self._target_temperature))
         fan_mode = FAN_LOW if hvac_mode is HVACMode.DRY and self._dry_min_fan else FAN_AUTO
+        if self._hvac_power_on:
+            await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)   
         await self.coordinator.async_set_hvac_mode(self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode)
         self._handle_coordinator_update()

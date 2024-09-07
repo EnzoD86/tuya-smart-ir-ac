@@ -13,6 +13,7 @@
           "temp_step": "Step temperature",
           "hvac_modes": "HVAC modes supported",
           "fan_modes": "FAN modes supported",
+          "hvac_power_on": "Force power on when setting hvac mode",
           "dry_min_temp": "Set minimum temperature in dry mode",
           "dry_min_fan": "Set minimum fan mode in dry mode"
         },
@@ -38,6 +39,7 @@
           "temp_step": "Step temperature",
           "hvac_modes": "HVAC modes supported",
           "fan_modes": "FAN modes supported",
+          "hvac_power_on": "Force power on when setting hvac mode",
           "dry_min_temp": "Set minimum temperature in dry mode",
           "dry_min_fan": "Set minimum fan speed in dry mode"
         },

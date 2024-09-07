@@ -13,6 +13,7 @@
           "temp_step": "Temperatura step",
           "hvac_modes": "Modalità HVAC supportate",
           "fan_modes": "Modalità FAN supportate",
+          "hvac_power_on": "Forza l'accensione quando si imposta la modalità HVAC",
           "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione",
           "dry_min_fan": "Imposta ventola al minimo in modalità deumidificazione"
         },
@@ -38,6 +39,7 @@
           "temp_step": "Temperatura step",
           "hvac_modes": "Modalità HVAC supportate",
           "fan_modes": "Modalità FAN supportate",
+          "hvac_power_on": "Forza l'accensione quando si imposta la modalità HVAC",
           "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione",
           "dry_min_fan": "Imposta ventola al minimo in modalità deumidificazione"
         },
