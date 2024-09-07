@@ -74,12 +74,8 @@ class TuyaCoordinator(DataUpdateCoordinator):
 
     async def async_set_hvac_mode(self, infrared_id, climate_id, hvac_mode, temperature, fan_mode):
         try:
-            if hvac_mode is HVACMode.OFF:
-                await self._api.async_send_command(infrared_id, climate_id, "power", "0")
-                await self._async_force_update_data(climate_id, power=False)
-            else:
-                await self._api.async_send_multiple_command(infrared_id, climate_id, "1", tuya_mode(hvac_mode), tuya_temp(temperature), tuya_wind(fan_mode))
-                await self._async_force_update_data(climate_id, True, hvac_mode, temperature, fan_mode)
+            await self._api.async_send_multiple_command(infrared_id, climate_id, "1", tuya_mode(hvac_mode), tuya_temp(temperature), tuya_wind(fan_mode))
+            await self._async_force_update_data(climate_id, True, hvac_mode, temperature, fan_mode)
         except Exception:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="climate_error_hvac_mode")
 
