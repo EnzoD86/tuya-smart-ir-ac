@@ -15,7 +15,7 @@ COORDINATOR = "COORDINATOR"
 FIRST_UPDATE = 5
 UPDATE_INTERVAL = 60
 UPDATE_TIMEOUT = 15
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.NUMBER, Platform.SELECT, Platform.CLIMATE]
 
 CONF_ACCESS_ID = "access_id"
 CONF_ACCESS_SECRET = "access_secret"
@@ -29,6 +29,9 @@ CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_STEP = "temp_step"
 CONF_HVAC_MODES = "hvac_modes"
 CONF_FAN_MODES = "fan_modes"
+CONF_TEMP_HVAC_MODE = "temp_hvac_mode"
+CONF_FAN_HVAC_MODE = "fan_hvac_mode"
+CONF_COMPATIBILITY_OPTIONS = "compatibility_options"
 CONF_HVAC_POWER_ON = "hvac_power_on"
 CONF_DRY_MIN_TEMP = "dry_min_temp"
 CONF_DRY_MIN_FAN = "dry_min_fan"
@@ -36,16 +39,24 @@ CONF_DRY_MIN_FAN = "dry_min_fan"
 DEFAULT_MIN_TEMP = 16
 DEFAULT_MAX_TEMP = 30
 DEFAULT_PRECISION = 1.0
+DEFAULT_TEMP_HVAC_MODE = False
+DEFAULT_FAN_HVAC_MODE = False
 DEFAULT_HVAC_POWER_ON = False
 DEFAULT_DRY_MIN_TEMP = False
 DEFAULT_DRY_MIN_FAN = False
 
+DEFAULT_TEMP_HVAC_MODES = [
+    HVACMode.AUTO,
+    HVACMode.COOL,
+    HVACMode.HEAT
+]
+
 DEFAULT_HVAC_MODES = [
+    HVACMode.AUTO,
     HVACMode.COOL,
     HVACMode.HEAT,
-    HVACMode.AUTO,
-    HVACMode.FAN_ONLY,
     HVACMode.DRY,
+    HVACMode.FAN_ONLY,
     HVACMode.OFF
 ]
 

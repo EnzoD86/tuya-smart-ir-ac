@@ -1,5 +1,3 @@
-"""Tuya Smart IR AC"""
-
 import voluptuous as vol
 import logging
 import homeassistant.helpers.config_validation as cv
@@ -12,6 +10,10 @@ from .const import (
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
     CONF_TUYA_COUNTRY,
+    CONF_COMPATIBILITY_OPTIONS,
+    CONF_HVAC_POWER_ON,
+    CONF_DRY_MIN_TEMP,
+    CONF_DRY_MIN_FAN,
     TUYA_ENDPOINTS
 )
 from .api import TuyaAPI
@@ -56,6 +58,7 @@ async def async_setup(hass, config):
     return True
 
 async def async_setup_entry(hass, config_entry):
+    await update_entry_configuration(hass, config_entry)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     config_entry.async_on_unload(config_entry.add_update_listener(async_update_entry))
     return True
@@ -66,3 +69,31 @@ async def async_unload_entry(hass, config_entry):
 
 async def async_update_entry(hass, config_entry):
     await hass.config_entries.async_reload(config_entry.entry_id)
+
+async def update_entry_configuration(hass, config_entry):
+    data = {**config_entry.data}
+
+    if (data.get(CONF_HVAC_POWER_ON, None) is not None or
+        data.get(CONF_DRY_MIN_TEMP, None) is not None or
+        data.get(CONF_DRY_MIN_FAN, None) is not None):
+        _LOGGER.debug("Update configuration")
+
+        if data.get(CONF_COMPATIBILITY_OPTIONS, None) is None:
+            data[CONF_COMPATIBILITY_OPTIONS] = {}
+
+        if data.get(CONF_HVAC_POWER_ON, None) is not None:
+            data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] = data[CONF_HVAC_POWER_ON]
+            del data[CONF_HVAC_POWER_ON]
+
+        if data.get(CONF_DRY_MIN_TEMP, None) is not None:
+            data[CONF_COMPATIBILITY_OPTIONS][CONF_DRY_MIN_TEMP] = data[CONF_DRY_MIN_TEMP]
+            del data[CONF_DRY_MIN_TEMP]
+
+        if data.get(CONF_DRY_MIN_FAN, None) is not None:
+            data[CONF_COMPATIBILITY_OPTIONS][CONF_DRY_MIN_FAN] = data[CONF_DRY_MIN_FAN]
+            del data[CONF_DRY_MIN_FAN]
+
+        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=1, version=1)
+        _LOGGER.debug("Update configuration successful")
+
+    return True

@@ -3,7 +3,6 @@ import async_timeout
 from datetime import timedelta
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.components.climate.const import HVACMode
 from .helpers import (
     hass_temperature,
     hass_fan_mode,
@@ -50,7 +49,7 @@ class TuyaCoordinator(DataUpdateCoordinator):
             await self._async_force_update_data(climate_id, power=True)
         except Exception:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="climate_error_turn_on")
-            
+
     async def async_turn_off(self, infrared_id, climate_id):
         try:
             await self._api.async_send_command(infrared_id, climate_id, "power", "0")
