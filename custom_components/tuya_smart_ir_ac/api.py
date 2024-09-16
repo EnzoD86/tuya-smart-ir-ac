@@ -68,6 +68,6 @@ class TuyaDetails(object):
         self.url = url
         self.request = request
         self.response = response
-        
+
     def to_dict(self):
         return vars(self)

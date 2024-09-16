@@ -1,3 +1,7 @@
+from homeassistant.const import (
+    STATE_UNKNOWN, 
+    STATE_UNAVAILABLE
+)
 from .const import (
     TUYA_HVAC_MODES,
     TUYA_FAN_MODES
@@ -27,3 +31,9 @@ def hass_fan_mode(wind):
 
 def hass_temperature(temperature):
     return float(temperature)
+
+def valid_sensor_state(sensor_state):
+    return sensor_state is not None and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+
+def valid_number_data(number_data):
+    return number_data is not None and number_data.native_value is not None

@@ -1,11 +1,63 @@
 {
+  "entity": {
+    "number": {
+      "temp_hvac_mode_auto": {
+        "name": "Auto"
+      },
+      "temp_hvac_mode_cool": {
+        "name": "Freddo"
+      },
+      "temp_hvac_mode_heat": {
+        "name": "Caldo"
+      }
+    },
+    "select": {
+      "fan_hvac_mode": {
+        "name": "Velocità ventola",
+        "state": {
+          "auto": "Auto",
+          "low": "Basso",
+          "medium": "Medio",
+          "high": "Alto"
+        }
+      }
+    }
+  },
+  "selector": {
+    "hvac_modes": {
+      "options": {
+        "auto": "Auto",
+        "cool": "Freddo",
+        "heat": "Caldo",
+        "dry": "Deumidificazione",
+        "fan_only": "Solo ventilatore",
+        "off": "Spento"
+      }
+    },
+    "fan_modes": {
+      "options": {
+        "auto": "Auto",
+        "low": "Basso",
+        "medium": "Medio",
+        "high": "Alto"
+      }
+    },
+    "temp_hvac_modes": {
+      "options": {
+        "auto": "Auto",
+        "cool": "Freddo",
+        "heat": "Caldo"
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
+        "title": "Configurazione climatizzatore",
         "data": {
-          "infrared_id": "Infrared ID",
-          "climate_id": "Climate ID",
-          "name": "Nome condizionatore",
+          "infrared_id": "ID hub infrarossi",
+          "climate_id": "ID climatizzatore",
+          "name": "Nome climatizzatore",
           "temperature_sensor": "Sensore temperatura",
           "humidity_sensor": "Sensore umidità",
           "min_temp": "Temperatura minima",
@@ -13,24 +65,33 @@
           "temp_step": "Temperatura step",
           "hvac_modes": "Modalità HVAC supportate",
           "fan_modes": "Modalità FAN supportate",
-          "hvac_power_on": "Forza l'accensione quando si imposta la modalità HVAC",
-          "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione",
-          "dry_min_fan": "Imposta ventola al minimo in modalità deumidificazione"
+          "temp_hvac_mode": "Temperature di default quando si imposta la modalità HVAC",
+          "fan_hvac_mode": "Velocità ventola di default quando si imposta la modalità HVAC"
         },
-        "description": "Configurazione",
-        "title": "Tuya Smart IR Air Conditioners"
+        "sections": {
+          "compatibility_options": {
+            "name": "Opzioni di compatibilità",
+            "data": {
+              "hvac_power_on": "Forza l'accensione quando si imposta la modalità HVAC",
+              "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione",
+              "dry_min_fan": "Imposta ventola al minimo in modalità deumidificazione"
+            }
+          }
+        }
       }
     },
     "error": {
-      "connection": "Impossibile connettersi al dispositivo. Può trattarsi di un problema temporaneo, oppure le informazioni fornite potrebbero non essere corrette."
+      "already_configured": "Questo dispositivo è già stato configurato.",
+      "connection": "Impossibile connettersi al dispositivo; controlla il log per maggiori informazioni."
     },
     "abort": {
-      "credentials": "Prima di proseguire, è necessario aggiungere l'integrazione nel configuration.yaml (leggi il readme)."
+      "credentials": "Prima di proseguire, è necessario aggiungere manualmente l'integrazione nel configuration.yaml."
     }
   },
   "options": {
     "step": {
       "user": {
+        "title": "Configurazione climatizzatore",
         "data": {
           "temperature_sensor": "Sensore temperatura",
           "humidity_sensor": "Sensore umidità",
@@ -39,12 +100,19 @@
           "temp_step": "Temperatura step",
           "hvac_modes": "Modalità HVAC supportate",
           "fan_modes": "Modalità FAN supportate",
-          "hvac_power_on": "Forza l'accensione quando si imposta la modalità HVAC",
-          "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione",
-          "dry_min_fan": "Imposta ventola al minimo in modalità deumidificazione"
+          "temp_hvac_mode": "Temperature di default quando si imposta la modalità HVAC",
+          "fan_hvac_mode": "Velocità ventola di default quando si imposta la modalità HVAC"
         },
-        "description": "Configurazione",
-        "title": "Tuya Smart IR Air Conditioners"
+        "sections": {
+          "compatibility_options": {
+            "name": "Opzioni di compatibilità",
+            "data": {
+              "hvac_power_on": "Forza l'accensione quando si imposta la modalità HVAC",
+              "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione",
+              "dry_min_fan": "Imposta ventola al minimo in modalità deumidificazione"
+            }
+          }
+        }
       }
     }
   },
