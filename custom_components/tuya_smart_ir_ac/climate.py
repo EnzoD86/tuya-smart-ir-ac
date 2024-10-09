@@ -9,7 +9,10 @@ from homeassistant.components.climate.const import (
     HVACMode,
     ClimateEntityFeature
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    UnitOfTemperature
+)
 from .const import (
     DOMAIN,
     COORDINATOR
@@ -88,6 +91,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaEntity):
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
         self.load_optional_entities()
+        self.hass.bus.async_listen(EVENT_STATE_CHANGED, self._async_handle_event)
         last_state = await self.async_get_last_state()
         if valid_sensor_state(last_state):
             self._attr_hvac_mode = last_state.state
@@ -97,6 +101,11 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaEntity):
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_target_temperature = 0
             self._attr_fan_mode = FAN_AUTO
+
+    @callback
+    async def _async_handle_event(self, event):
+        if event.data.get("entity_id") in [self._temperature_sensor, self._humidity_sensor]:
+            self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self):
