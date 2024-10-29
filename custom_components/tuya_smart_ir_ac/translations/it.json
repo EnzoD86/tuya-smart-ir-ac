@@ -42,11 +42,11 @@
         "high": "Alto"
       }
     },
-    "temp_hvac_modes": {
+    "hvac_power_on": {
       "options": {
-        "auto": "Auto",
-        "cool": "Freddo",
-        "heat": "Caldo"
+        "never": "Mai",
+        "always": "Sempre",
+        "only_off": "Solo se spento (non consigliato)"
       }
     }
   },
@@ -85,7 +85,7 @@
       "connection": "Impossibile connettersi al dispositivo; controlla il log per maggiori informazioni."
     },
     "abort": {
-      "credentials": "Prima di proseguire, è necessario aggiungere manualmente l'integrazione nel configuration.yaml."
+      "credentials": "Integrazione non configurata o credenziali errate."
     }
   },
   "options": {

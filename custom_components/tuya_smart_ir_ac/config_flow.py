@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_NAME,
     Platform
 )
+from homeassistant.components.sensor.const import SensorDeviceClass
 from .const import (
     DOMAIN,
     CLIENT,
@@ -48,7 +49,8 @@ from .const import (
     DEFAULT_FAN_HVAC_MODE,
     DEFAULT_HVAC_POWER_ON,
     DEFAULT_DRY_MIN_TEMP,
-    DEFAULT_DRY_MIN_FAN
+    DEFAULT_DRY_MIN_FAN,
+    DEFAULT_HVAC_POWER_ON_MODES
 )
 from .api import TuyaAPI
 
@@ -143,7 +145,7 @@ def optional_data(config=None):
         else:
             temperature_sensor = vol.Optional(CONF_TEMPERATURE_SENSOR, default=config.get(CONF_TEMPERATURE_SENSOR))
 
-        if config.get(CONF_TEMPERATURE_SENSOR, None) is None:
+        if config.get(CONF_HUMIDITY_SENSOR, None) is None:
             humidity_sensor = vol.Optional(CONF_HUMIDITY_SENSOR)
         else:
             humidity_sensor = vol.Optional(CONF_HUMIDITY_SENSOR, default=config.get(CONF_HUMIDITY_SENSOR))
@@ -161,10 +163,10 @@ def optional_data(config=None):
 
     return {
         temperature_sensor: EntitySelector(
-            EntitySelectorConfig(domain=Platform.SENSOR, device_class="temperature",  multiple=False)
+            EntitySelectorConfig(domain=Platform.SENSOR, device_class=SensorDeviceClass.TEMPERATURE, multiple=False)
         ),
         humidity_sensor: EntitySelector(
-            EntitySelectorConfig(domain=Platform.SENSOR, device_class="humidity", multiple=False)
+            EntitySelectorConfig(domain=Platform.SENSOR, device_class=SensorDeviceClass.HUMIDITY, multiple=False)
         ),
         temp_min: NumberSelector(
             NumberSelectorConfig(min=DEFAULT_MIN_TEMP, max=DEFAULT_MAX_TEMP, step=1, mode=NumberSelectorMode.BOX)
@@ -186,7 +188,9 @@ def optional_data(config=None):
         CONF_COMPATIBILITY_OPTIONS: section(
             vol.Schema(
                 {
-                    hvac_power_on: BooleanSelector(),
+                    hvac_power_on: SelectSelector(
+                        SelectSelectorConfig(options=DEFAULT_HVAC_POWER_ON_MODES, multiple=False, mode=SelectSelectorMode.LIST, translation_key=CONF_HVAC_POWER_ON)
+                    ),
                     dry_min_temp: BooleanSelector(),
                     dry_min_fan: BooleanSelector()
                 }

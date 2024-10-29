@@ -14,7 +14,9 @@ from .const import (
     CONF_HVAC_POWER_ON,
     CONF_DRY_MIN_TEMP,
     CONF_DRY_MIN_FAN,
-    TUYA_ENDPOINTS
+    TUYA_ENDPOINTS,
+    HVAC_POWER_ON_NEVER,
+    HVAC_POWER_ON_ALWAYS
 )
 from .api import TuyaAPI
 from .coordinator import TuyaCoordinator
@@ -94,6 +96,20 @@ async def update_entry_configuration(hass, config_entry):
             del data[CONF_DRY_MIN_FAN]
 
         hass.config_entries.async_update_entry(config_entry, data=data, minor_version=1, version=1)
+        hass.config_entries._async_schedule_save()
         _LOGGER.debug("Update configuration successful")
+        
+    if data.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_HVAC_POWER_ON, None) is not None:
+        if data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] is False:
+            data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] = HVAC_POWER_ON_NEVER
+            hass.config_entries.async_update_entry(config_entry, data=data, minor_version=1, version=1)
+            hass._async_schedule_save()
+            _LOGGER.debug("Update configuration successful")
+        
+        if data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] is True:
+            data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] = HVAC_POWER_ON_ALWAYS
+            hass.config_entries.async_update_entry(config_entry, data=data, minor_version=1, version=1)
+            hass.config_entries._async_schedule_save()
+            _LOGGER.debug("Update configuration successful")
 
     return True
