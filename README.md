@@ -36,11 +36,12 @@ The last point must be repeated for each air conditioner that must be configured
 ## Platform configuration
 Add the following sections in your configuration.yaml and restart HA (Tuya Access ID, Tuya Access Secret can be found on the [Tuya IoT Website](https://platform.tuya.com/)):
 
-| Name                 | Type     | Description                                                         | Required |
-| -------------------- | -------- | ------------------------------------------------------------------- | -------- |
-| access_id            | `string` | Tuya access ID.                                                     | Yes      |
-| access_secret        | `string` | Tuya access secret.                                                 | Yes      |
-| country              | `string` | Tuya country API: EU (Europe), US (America), IN (India), CN (China) | Yes      |
+| Name                 | Type      | Description                                                         | Required | Default |
+| -------------------- | --------- | ------------------------------------------------------------------- | -------- | ------- |
+| access_id            | `string`  | Tuya access ID.                                                     | Yes      |         |
+| access_secret        | `string`  | Tuya access secret.                                                 | Yes      |         |
+| country              | `string`  | Tuya country API: EU (Europe), US (America), IN (India), CN (China) | Yes      |         |
+| update_interval      | `integer` | Update interval (in seconds) from tuya server                       | No       | 60      |
 
 ### Example
 ```yaml
