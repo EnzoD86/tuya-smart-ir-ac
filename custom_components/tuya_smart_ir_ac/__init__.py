@@ -10,10 +10,12 @@ from .const import (
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
     CONF_TUYA_COUNTRY,
+    CONF_UPDATE_INTERVAL,
     CONF_COMPATIBILITY_OPTIONS,
     CONF_HVAC_POWER_ON,
     CONF_DRY_MIN_TEMP,
     CONF_DRY_MIN_FAN,
+    UPDATE_INTERVAL,
     TUYA_ENDPOINTS,
     HVAC_POWER_ON_NEVER,
     HVAC_POWER_ON_ALWAYS
@@ -28,7 +30,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_ACCESS_ID): cv.string,
         vol.Required(CONF_ACCESS_SECRET): cv.string,
-        vol.Required(CONF_TUYA_COUNTRY): vol.In(TUYA_ENDPOINTS.keys())
+        vol.Required(CONF_TUYA_COUNTRY): vol.In(TUYA_ENDPOINTS.keys()),
+        vol.Optional(CONF_UPDATE_INTERVAL, default=UPDATE_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600))
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -44,7 +47,8 @@ async def async_setup(hass, config):
     api_endpoint = TUYA_ENDPOINTS.get(tuya_country)
     access_id = domain_config.get(CONF_ACCESS_ID)
     access_secret = domain_config.get(CONF_ACCESS_SECRET)
-
+    update_interval = domain_config.get(CONF_UPDATE_INTERVAL)
+    
     client = TuyaOpenAPI(api_endpoint, access_id, access_secret)
     res = await hass.async_add_executor_job(client.connect)
     if not res.get("success"):
@@ -52,7 +56,7 @@ async def async_setup(hass, config):
         return False
 
     api = TuyaAPI(hass, client)
-    coordinator = TuyaCoordinator(hass, api)
+    coordinator = TuyaCoordinator(hass, api, update_interval)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][CLIENT] = client
@@ -103,7 +107,7 @@ async def update_entry_configuration(hass, config_entry):
         if data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] is False:
             data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] = HVAC_POWER_ON_NEVER
             hass.config_entries.async_update_entry(config_entry, data=data, minor_version=1, version=1)
-            hass._async_schedule_save()
+            hass.config_entries._async_schedule_save()
             _LOGGER.debug("Update configuration successful")
         
         if data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] is True:
