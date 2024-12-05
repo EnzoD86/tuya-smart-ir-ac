@@ -145,7 +145,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaEntity):
         if hvac_mode is HVACMode.OFF:
             await self.coordinator.async_turn_off(self._infrared_id, self._climate_id)
         else:
-            if self._hvac_power_on:
+            if self.get_hvac_power_on(self._attr_hvac_mode):
                 await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
             await self.coordinator.async_set_hvac_mode(self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode)
         self._handle_coordinator_update()

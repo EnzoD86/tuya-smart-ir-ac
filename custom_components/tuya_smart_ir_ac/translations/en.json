@@ -41,6 +41,13 @@
         "medium": "Medium",
         "high": "High"
       }
+    },
+    "hvac_power_on": {
+      "options": {
+        "never": "Never",
+        "always": "Always",
+        "only_off": "Only if turned off (not recommended)"
+      }
     }
   },
   "config": {
@@ -78,7 +85,7 @@
       "connection": "Could not connect to device; check the log for more information."
     },
     "abort": {
-      "credentials": "Before continuing, you need to manually add the integration in your configuration.yaml."
+      "credentials": "Integration not configured or incorrect credentials."
     }
   },
   "options": {

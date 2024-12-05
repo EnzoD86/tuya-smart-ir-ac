@@ -36,7 +36,10 @@ from .const import (
     DEFAULT_TEMP_HVAC_MODES,
     DEFAULT_HVAC_POWER_ON,
     DEFAULT_DRY_MIN_TEMP,
-    DEFAULT_DRY_MIN_FAN
+    DEFAULT_DRY_MIN_FAN,
+    HVAC_POWER_ON_NEVER,
+    HVAC_POWER_ON_ALWAYS,
+    HVAC_POWER_ON_ONLY_OFF
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -122,3 +125,15 @@ class TuyaEntity():
             return select_state.state
 
         return self.fan_mode
+
+    def get_hvac_power_on(self, hvac_mode_previous_state):
+        if self._hvac_power_on == HVAC_POWER_ON_NEVER:
+            return False
+
+        if self._hvac_power_on == HVAC_POWER_ON_ALWAYS:
+            return True
+            
+        if self._hvac_power_on == HVAC_POWER_ON_ONLY_OFF and hvac_mode_previous_state is HVACMode.OFF:
+            return True
+            
+        return False

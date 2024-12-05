@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__package__)
 
 
 class TuyaCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass, api):
+    def __init__(self, hass, api, custom_update_interval=UPDATE_INTERVAL):
         super().__init__(
             hass,
             _LOGGER,
@@ -32,6 +32,7 @@ class TuyaCoordinator(DataUpdateCoordinator):
         )
         self._api = api
         self._first_update = True
+        self._custom_update_interval = custom_update_interval
 
     def is_available(self, climate_id):
         return self.data and self.data.get(climate_id, None) is not None
@@ -82,7 +83,7 @@ class TuyaCoordinator(DataUpdateCoordinator):
         try:
             if self._first_update:
                 self._first_update = False
-                self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
+                self.update_interval = timedelta(seconds=self._custom_update_interval)
 
             async with async_timeout.timeout(UPDATE_TIMEOUT):
                 climate_ids = set(self.async_contexts())
