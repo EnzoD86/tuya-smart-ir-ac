@@ -1,7 +1,7 @@
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import section
+from homeassistant import data_entry_flow
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -185,7 +185,7 @@ def optional_data(config=None):
         ),
         temp_hvac_mode: BooleanSelector(),
         fan_hvac_mode: BooleanSelector(),
-        CONF_COMPATIBILITY_OPTIONS: section(
+        vol.Required(CONF_COMPATIBILITY_OPTIONS): data_entry_flow.section(
             vol.Schema(
                 {
                     hvac_power_on: SelectSelector(
