@@ -130,11 +130,15 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaEntity):
         temperature = kwargs.get("temperature")
         if temperature is not None:
             _LOGGER.info(f"{self.entity_id} setting temperature to {temperature}")
+            if self.get_temp_power_on(self._attr_hvac_mode):
+                await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
             await self.coordinator.async_set_temperature(self._infrared_id, self._climate_id, temperature)
             self._handle_coordinator_update()
 
     async def async_set_fan_mode(self, fan_mode):
         _LOGGER.info(f"{self.entity_id} setting fan mode to {fan_mode}")
+        if self.get_fan_power_on(self._attr_hvac_mode):
+            await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
         await self.coordinator.async_set_fan_mode(self._infrared_id, self._climate_id, fan_mode)
         self._handle_coordinator_update()
 

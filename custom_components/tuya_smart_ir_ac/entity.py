@@ -24,6 +24,8 @@ from .const import (
     CONF_FAN_HVAC_MODE,
     CONF_COMPATIBILITY_OPTIONS,
     CONF_HVAC_POWER_ON,
+    CONF_TEMP_POWER_ON,
+    CONF_FAN_POWER_ON,
     CONF_DRY_MIN_TEMP,
     CONF_DRY_MIN_FAN,
     DEFAULT_MIN_TEMP,
@@ -35,11 +37,13 @@ from .const import (
     DEFAULT_FAN_HVAC_MODE,
     DEFAULT_TEMP_HVAC_MODES,
     DEFAULT_HVAC_POWER_ON,
+    DEFAULT_TEMP_POWER_ON,
+    DEFAULT_FAN_POWER_ON,
     DEFAULT_DRY_MIN_TEMP,
     DEFAULT_DRY_MIN_FAN,
-    HVAC_POWER_ON_NEVER,
-    HVAC_POWER_ON_ALWAYS,
-    HVAC_POWER_ON_ONLY_OFF
+    POWER_ON_NEVER,
+    POWER_ON_ALWAYS,
+    POWER_ON_ONLY_OFF
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -61,6 +65,8 @@ class TuyaEntity():
         self._temp_hvac_mode = config.get(CONF_TEMP_HVAC_MODE, DEFAULT_TEMP_HVAC_MODE)
         self._fan_hvac_mode = config.get(CONF_FAN_HVAC_MODE, DEFAULT_FAN_HVAC_MODE)
         self._hvac_power_on = config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_HVAC_POWER_ON, DEFAULT_HVAC_POWER_ON)
+        self._temp_power_on = config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_TEMP_POWER_ON, DEFAULT_TEMP_POWER_ON)
+        self._fan_power_on = config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_FAN_POWER_ON, DEFAULT_FAN_POWER_ON)
         self._dry_min_temp = config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_DRY_MIN_TEMP, DEFAULT_DRY_MIN_TEMP)
         self._dry_min_fan = config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_DRY_MIN_FAN, DEFAULT_DRY_MIN_FAN)
 
@@ -68,7 +74,6 @@ class TuyaEntity():
         return {
             "name": self._name,
             "identifiers": {(DOMAIN, self._climate_id)},
-            "via_device": (DOMAIN, self._infrared_id),
             "manufacturer": MANUFACTURER
         }
 
@@ -80,6 +85,12 @@ class TuyaEntity():
 
     def select_unique_id(self):
         return f"{self.climate_unique_id()}_{CONF_FAN_HVAC_MODE}"
+
+    def temperature_sensor_unique_id(self):
+        return f"{self.climate_unique_id()}_temperature"
+
+    def humidity_sensor_unique_id(self):
+        return f"{self.climate_unique_id()}_humidity"
 
     def load_optional_entities(self):
         self._hvac_temp_entities = self.load_hvac_temp_entities()
@@ -127,13 +138,23 @@ class TuyaEntity():
         return self.fan_mode
 
     def get_hvac_power_on(self, hvac_mode_previous_state):
-        if self._hvac_power_on == HVAC_POWER_ON_NEVER:
+        return self.get_power_on(self._hvac_power_on, hvac_mode_previous_state)
+
+    def get_temp_power_on(self, hvac_mode_previous_state):
+        _LOGGER.debug(self._temp_power_on)
+        return self.get_power_on(self._temp_power_on, hvac_mode_previous_state)
+
+    def get_fan_power_on(self, hvac_mode_previous_state):
+        return self.get_power_on(self._fan_power_on, hvac_mode_previous_state)
+
+    def get_power_on(self, power_on, hvac_mode_previous_state):
+        if power_on == POWER_ON_NEVER:
             return False
 
-        if self._hvac_power_on == HVAC_POWER_ON_ALWAYS:
+        if power_on == POWER_ON_ALWAYS:
             return True
             
-        if self._hvac_power_on == HVAC_POWER_ON_ONLY_OFF and hvac_mode_previous_state is HVACMode.OFF:
+        if power_on == POWER_ON_ONLY_OFF and hvac_mode_previous_state is HVACMode.OFF:
             return True
             
         return False

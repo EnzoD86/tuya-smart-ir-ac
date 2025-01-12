@@ -1,0 +1,154 @@
+{
+  "entity": {
+    "number": {
+      "temp_hvac_mode_auto": {
+        "name": "Otomatik"
+      },
+      "temp_hvac_mode_cool": {
+        "name": "Soğutma"
+      },
+      "temp_hvac_mode_heat": {
+        "name": "Isıtma"
+      }
+    },
+    "select": {
+      "fan_hvac_mode": {
+        "name": "Fan hızı",
+        "state": {
+          "auto": "Otomatik",
+          "low": "Düşük",
+          "medium": "Orta",
+          "high": "Yüksek"
+        }
+      }
+    }
+  },
+  "selector": {
+    "hvac_modes": {
+      "options": {
+        "auto": "Otomatik",
+        "cool": "Soğutma",
+        "heat": "Isıtma",
+        "dry": "Nem Alma",
+        "fan_only": "Sadece fan",
+        "off": "Kapalı"
+      }
+    },
+    "fan_modes": {
+      "options": {
+        "auto": "Otomatik",
+        "low": "Düşük",
+        "medium": "Orta",
+        "high": "Yüksek"
+      }
+    },
+    "hvac_power_on": {
+      "options": {
+        "never": "Asla",
+        "always": "Her zaman",
+        "only_off": "Yalnızca kapalıysa (önerilmez)"
+      }
+    },
+    "temp_power_on": {
+      "options": {
+        "never": "Asla",
+        "always": "Her zaman",
+        "only_off": "Yalnızca kapalıysa (önerilmez)"
+      }
+    },
+    "fan_power_on": {
+      "options": {
+        "never": "Asla",
+        "always": "Her zaman",
+        "only_off": "Yalnızca kapalıysa (önerilmez)"
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Klima yapılandırması",
+        "data": {
+          "infrared_id": "Kızılötesi hub kimliği",
+          "climate_id": "Klima kimliği",
+          "name": "Klima adı",
+          "temperature_sensor": "Sıcaklık sensörü",
+          "humidity_sensor": "Nem sensörü",
+          "min_temp": "Minimum sıcaklık",
+          "max_temp": "Maksimum sıcaklık",
+          "temp_step": "Sıcaklık adımı",
+          "hvac_modes": "Desteklenen HVAC modları",
+          "fan_modes": "Desteklenen FAN modları",
+          "temp_hvac_mode": "HVAC modu ayarlanırken varsayılan sıcaklıklar",
+          "fan_hvac_mode": "HVAC modu ayarlanırken varsayılan fan hızı"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "Uyumluluk seçenekleri",
+            "data": {
+              "hvac_power_on": "HVAC modu ayarlanırken gücü açmaya zorla",
+              "temp_power_on": "Sıcaklığı ayarlarken açmaya zorlayın",
+              "fan_power_on": "Fan hızını ayarlarken gücü açmaya zorlayın",
+              "dry_min_temp": "Nem alma modunda minimum sıcaklığı ayarla",
+              "dry_min_fan": "Nem alma modunda minimum fan hızını ayarla"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Bu cihaz zaten yapılandırılmış.",
+      "connection": "Cihaza bağlanılamadı; daha fazla bilgi için günlüğü kontrol edin."
+    },
+    "abort": {
+      "credentials": "Entegrasyon yapılandırılmadı veya yanlış kimlik bilgileri."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Klima yapılandırması",
+        "data": {
+          "temperature_sensor": "Sıcaklık sensörü",
+          "humidity_sensor": "Nem sensörü",
+          "min_temp": "Minimum sıcaklık",
+          "max_temp": "Maksimum sıcaklık",
+          "temp_step": "Sıcaklık adımı",
+          "hvac_modes": "Desteklenen HVAC modları",
+          "fan_modes": "Desteklenen FAN modları",
+          "temp_hvac_mode": "HVAC modu ayarlanırken varsayılan sıcaklıklar",
+          "fan_hvac_mode": "HVAC modu ayarlanırken varsayılan fan hızı"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "Uyumluluk seçenekleri",
+            "data": {
+              "hvac_power_on": "HVAC modu ayarlanırken gücü açmaya zorla",
+              "temp_power_on": "Sıcaklığı ayarlarken açmaya zorlayın",
+              "fan_power_on": "Fan hızını ayarlarken gücü açmaya zorlayın",
+              "dry_min_temp": "Nem alma modunda minimum sıcaklığı ayarla",
+              "dry_min_fan": "Nem alma modunda minimum fan hızını ayarla"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "climate_error_turn_on": {
+      "message": "Açılamıyor"
+    },
+    "climate_error_turn_off": {
+      "message": "Kapatılamıyor"
+    },
+    "climate_error_temperature": {
+      "message": "Sıcaklık değiştirilemiyor"
+    },
+    "climate_error_fan_mode": {
+      "message": "Fan modu değiştirilemiyor"
+    },
+    "climate_error_hvac_mode": {
+      "message": "HVAC modu değiştirilemiyor"
+    }
+  }
+}
