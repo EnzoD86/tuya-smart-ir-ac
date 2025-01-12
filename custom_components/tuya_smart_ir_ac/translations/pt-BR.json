@@ -1,0 +1,136 @@
+{
+  "entity": {
+    "number": {
+      "temp_hvac_mode_auto": {
+        "name": "Auto"
+      },
+      "temp_hvac_mode_cool": {
+        "name": "Resfriar"
+      },
+      "temp_hvac_mode_heat": {
+        "name": "Aquecer"
+      }
+    },
+    "select": {
+      "fan_hvac_mode": {
+        "name": "Velocidade do ventilador",
+        "state": {
+          "auto": "Auto",
+          "low": "Baixa",
+          "medium": "Média",
+          "high": "Alta"
+        }
+      }
+    }
+  },
+  "selector": {
+    "hvac_modes": {
+      "options": {
+        "auto": "Automático",
+        "cool": "Resfriar",
+        "heat": "Aquecer",
+        "dry": "Desumidificar",
+        "fan_only": "Apenas ventilador",
+        "off": "Desligado"
+      }
+    },
+    "fan_modes": {
+      "options": {
+        "auto": "Automático",
+        "low": "Baixa",
+        "medium": "Média",
+        "high": "Alta"
+      }
+    },
+    "hvac_power_on": {
+      "options": {
+        "never": "Nunca",
+        "always": "Sempre",
+        "only_off": "Somente se estiver desligado (não recomendado)"
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuração do ar-condicionado",
+        "data": {
+          "infrared_id": "ID do hub infravermelho",
+          "climate_id": "ID do ar-condicionado",
+          "name": "Nome do ar-condicionado",
+          "temperature_sensor": "Sensor de temperatura",
+          "humidity_sensor": "Sensor de umidade",
+          "min_temp": "Temperatura mínima",
+          "max_temp": "Temperatura máxima",
+          "temp_step": "Incremento de temperatura",
+          "hvac_modes": "Modos HVAC suportados",
+          "fan_modes": "Modos de ventilação suportados",
+          "temp_hvac_mode": "Temperaturas padrão ao definir o modo HVAC",
+          "fan_hvac_mode": "Velocidade do ventilador padrão ao definir o modo HVAC"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "Opções de compatibilidade",
+            "data": {
+              "hvac_power_on": "Forçar ligar ao definir o modo HVAC",
+              "dry_min_temp": "Definir temperatura mínima no modo desumidificação",
+              "dry_min_fan": "Definir velocidade mínima do ventilador no modo desumidificação"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Este dispositivo já foi configurado.",
+      "connection": "Não foi possível conectar ao dispositivo; verifique o log para mais informações."
+    },
+    "abort": {
+      "credentials": "Integração não configurada ou credenciais incorretas."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Configuração do ar-condicionado",
+        "data": {
+          "temperature_sensor": "Sensor de temperatura",
+          "humidity_sensor": "Sensor de umidade",
+          "min_temp": "Temperatura mínima",
+          "max_temp": "Temperatura máxima",
+          "temp_step": "Incremento de temperatura",
+          "hvac_modes": "Modos HVAC suportados",
+          "fan_modes": "Modos de ventilação suportados",
+          "temp_hvac_mode": "Temperaturas padrão ao definir o modo HVAC",
+          "fan_hvac_mode": "Velocidade do ventilador padrão ao definir o modo HVAC"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "Opções de compatibilidade",
+            "data": {
+              "hvac_power_on": "Forçar ligar ao definir o modo HVAC",
+              "dry_min_temp": "Definir temperatura mínima no modo desumidificação",
+              "dry_min_fan": "Definir velocidade mínima do ventilador no modo desumidificação"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "climate_error_turn_on": {
+      "message": "Não foi possível ligar"
+    },
+    "climate_error_turn_off": {
+      "message": "Não foi possível desligar"
+    },
+    "climate_error_temperature": {
+      "message": "Não foi possível alterar a temperatura"
+    },
+    "climate_error_fan_mode": {
+      "message": "Não foi possível alterar o modo de ventilação"
+    },
+    "climate_error_hvac_mode": {
+      "message": "Não foi possível alterar o modo HVAC"
+    }
+  }
+}
