@@ -36,8 +36,11 @@ from .const import (
     CONF_FAN_MODES,
     CONF_TEMP_HVAC_MODE,
     CONF_FAN_HVAC_MODE,
+    CONF_EXTRA_SENSORS,
     CONF_COMPATIBILITY_OPTIONS,
     CONF_HVAC_POWER_ON,
+    CONF_TEMP_POWER_ON,
+    CONF_FAN_POWER_ON,
     CONF_DRY_MIN_TEMP,
     CONF_DRY_MIN_FAN,
     DEFAULT_MIN_TEMP,
@@ -47,10 +50,13 @@ from .const import (
     DEFAULT_FAN_MODES,
     DEFAULT_TEMP_HVAC_MODE,
     DEFAULT_FAN_HVAC_MODE,
+    DEFAULT_EXTRA_SENSORS,
     DEFAULT_HVAC_POWER_ON,
+    DEFAULT_TEMP_POWER_ON,
+    DEFAULT_FAN_POWER_ON,
     DEFAULT_DRY_MIN_TEMP,
     DEFAULT_DRY_MIN_FAN,
-    DEFAULT_HVAC_POWER_ON_MODES
+    DEFAULT_POWER_ON_MODES
 )
 from .api import TuyaAPI
 
@@ -89,13 +95,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
-
     async def async_step_init(self, user_input):
         return await self.async_step_user(user_input)
 
@@ -136,7 +139,10 @@ def optional_data(config=None):
         fan_modes = vol.Required(CONF_FAN_MODES, default=DEFAULT_FAN_MODES)
         temp_hvac_mode = vol.Optional(CONF_TEMP_HVAC_MODE, default=DEFAULT_TEMP_HVAC_MODE)
         fan_hvac_mode = vol.Optional(CONF_FAN_HVAC_MODE, default=DEFAULT_FAN_HVAC_MODE)
+        extra_sensors = vol.Optional(CONF_EXTRA_SENSORS, default=DEFAULT_EXTRA_SENSORS)
         hvac_power_on = vol.Optional(CONF_HVAC_POWER_ON, default=DEFAULT_HVAC_POWER_ON)
+        temp_power_on = vol.Optional(CONF_TEMP_POWER_ON, default=DEFAULT_TEMP_POWER_ON)
+        fan_power_on = vol.Optional(CONF_FAN_POWER_ON, default=DEFAULT_FAN_POWER_ON)
         dry_min_temp = vol.Optional(CONF_DRY_MIN_TEMP, default=DEFAULT_DRY_MIN_TEMP)
         dry_min_fan = vol.Optional(CONF_DRY_MIN_FAN, default=DEFAULT_DRY_MIN_FAN)
     else:
@@ -157,7 +163,10 @@ def optional_data(config=None):
         fan_modes = vol.Required(CONF_FAN_MODES, default=config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES))
         temp_hvac_mode = vol.Optional(CONF_TEMP_HVAC_MODE, default=config.get(CONF_TEMP_HVAC_MODE, DEFAULT_TEMP_HVAC_MODE))
         fan_hvac_mode = vol.Optional(CONF_FAN_HVAC_MODE, default=config.get(CONF_FAN_HVAC_MODE, DEFAULT_FAN_HVAC_MODE))
+        extra_sensors = vol.Optional(CONF_EXTRA_SENSORS, default=config.get(CONF_EXTRA_SENSORS, DEFAULT_EXTRA_SENSORS))
         hvac_power_on = vol.Optional(CONF_HVAC_POWER_ON, default=config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_HVAC_POWER_ON, DEFAULT_HVAC_POWER_ON))
+        temp_power_on = vol.Optional(CONF_TEMP_POWER_ON, default=config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_TEMP_POWER_ON, DEFAULT_TEMP_POWER_ON))        
+        fan_power_on = vol.Optional(CONF_FAN_POWER_ON, default=config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_FAN_POWER_ON, DEFAULT_FAN_POWER_ON))        
         dry_min_temp = vol.Optional(CONF_DRY_MIN_TEMP, default=config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_DRY_MIN_TEMP, DEFAULT_DRY_MIN_TEMP))
         dry_min_fan = vol.Optional(CONF_DRY_MIN_FAN, default=config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_DRY_MIN_FAN, DEFAULT_DRY_MIN_FAN))
 
@@ -185,11 +194,18 @@ def optional_data(config=None):
         ),
         temp_hvac_mode: BooleanSelector(),
         fan_hvac_mode: BooleanSelector(),
+        extra_sensors: BooleanSelector(),
         vol.Required(CONF_COMPATIBILITY_OPTIONS): data_entry_flow.section(
             vol.Schema(
                 {
                     hvac_power_on: SelectSelector(
-                        SelectSelectorConfig(options=DEFAULT_HVAC_POWER_ON_MODES, multiple=False, mode=SelectSelectorMode.LIST, translation_key=CONF_HVAC_POWER_ON)
+                        SelectSelectorConfig(options=DEFAULT_POWER_ON_MODES, multiple=False, mode=SelectSelectorMode.LIST, translation_key=CONF_HVAC_POWER_ON)
+                    ),
+                    temp_power_on: SelectSelector(
+                        SelectSelectorConfig(options=DEFAULT_POWER_ON_MODES, multiple=False, mode=SelectSelectorMode.LIST, translation_key=CONF_TEMP_POWER_ON)
+                    ),
+                    fan_power_on: SelectSelector(
+                        SelectSelectorConfig(options=DEFAULT_POWER_ON_MODES, multiple=False, mode=SelectSelectorMode.LIST, translation_key=CONF_FAN_POWER_ON)
                     ),
                     dry_min_temp: BooleanSelector(),
                     dry_min_fan: BooleanSelector()
