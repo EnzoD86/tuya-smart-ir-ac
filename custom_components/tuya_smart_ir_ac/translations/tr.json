@@ -80,7 +80,8 @@
           "hvac_modes": "Desteklenen HVAC modları",
           "fan_modes": "Desteklenen FAN modları",
           "temp_hvac_mode": "HVAC modu ayarlanırken varsayılan sıcaklıklar",
-          "fan_hvac_mode": "HVAC modu ayarlanırken varsayılan fan hızı"
+          "fan_hvac_mode": "HVAC modu ayarlanırken varsayılan fan hızı",
+          "extra_sensors": "Yapılandırılmış sensörleri ortaya çıkarır"
         },
         "sections": {
           "compatibility_options": {
@@ -117,7 +118,8 @@
           "hvac_modes": "Desteklenen HVAC modları",
           "fan_modes": "Desteklenen FAN modları",
           "temp_hvac_mode": "HVAC modu ayarlanırken varsayılan sıcaklıklar",
-          "fan_hvac_mode": "HVAC modu ayarlanırken varsayılan fan hızı"
+          "fan_hvac_mode": "HVAC modu ayarlanırken varsayılan fan hızı",
+          "extra_sensors": "Yapılandırılmış sensörleri ortaya çıkarır"
         },
         "sections": {
           "compatibility_options": {

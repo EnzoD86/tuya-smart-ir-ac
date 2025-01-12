@@ -10,21 +10,26 @@ from homeassistant.const import (
     UnitOfTemperature
 )
 from .const import (
+    CONF_EXTRA_SENSORS,
     CONF_TEMPERATURE_SENSOR,
-    CONF_HUMIDITY_SENSOR
+    CONF_HUMIDITY_SENSOR,
+    DEFAULT_EXTRA_SENSORS
 )
 from .helpers import valid_sensor_state
 from .entity import TuyaEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    temperature_sensor = config_entry.data.get(CONF_TEMPERATURE_SENSOR, None)
-    if temperature_sensor:
-        async_add_entities([TuyaTemperatureSensor(config_entry.data)])
-        
-    humidity_sensor = config_entry.data.get(CONF_HUMIDITY_SENSOR, None)
-    if humidity_sensor:
-        async_add_entities([TuyaHumiditySensor(config_entry.data)])
+    extra_sensors = config_entry.data.get(CONF_EXTRA_SENSORS, DEFAULT_EXTRA_SENSORS)
+    
+    if extra_sensors:
+        temperature_sensor = config_entry.data.get(CONF_TEMPERATURE_SENSOR, None)
+        if temperature_sensor:
+            async_add_entities([TuyaTemperatureSensor(config_entry.data)])
+            
+        humidity_sensor = config_entry.data.get(CONF_HUMIDITY_SENSOR, None)
+        if humidity_sensor:
+            async_add_entities([TuyaHumiditySensor(config_entry.data)])
 
 
 class TuyaTemperatureSensor(SensorEntity, TuyaEntity):

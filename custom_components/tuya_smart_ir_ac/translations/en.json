@@ -80,7 +80,8 @@
           "hvac_modes": "Supported HVAC modes",
           "fan_modes": "Supported FAN modes",
           "temp_hvac_mode": "Default temperatures when setting HVAC mode",
-          "fan_hvac_mode": "Default fan speed when setting HVAC mode"
+          "fan_hvac_mode": "Default fan speed when setting HVAC mode",
+          "extra_sensors": "Exposes the configured sensors"
         },
         "sections": {
           "compatibility_options": {
@@ -117,7 +118,8 @@
           "hvac_modes": "Supported HVAC modes",
           "fan_modes": "Supported FAN modes",
           "temp_hvac_mode": "Default temperatures when setting HVAC mode",
-          "fan_hvac_mode": "Default fan speed when setting HVAC mode"
+          "fan_hvac_mode": "Default fan speed when setting HVAC mode",
+          "extra_sensors": "Exposes the configured sensors"
         },
         "sections": {
           "compatibility_options": {

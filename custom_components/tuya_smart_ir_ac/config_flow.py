@@ -36,6 +36,7 @@ from .const import (
     CONF_FAN_MODES,
     CONF_TEMP_HVAC_MODE,
     CONF_FAN_HVAC_MODE,
+    CONF_EXTRA_SENSORS,
     CONF_COMPATIBILITY_OPTIONS,
     CONF_HVAC_POWER_ON,
     CONF_TEMP_POWER_ON,
@@ -49,6 +50,7 @@ from .const import (
     DEFAULT_FAN_MODES,
     DEFAULT_TEMP_HVAC_MODE,
     DEFAULT_FAN_HVAC_MODE,
+    DEFAULT_EXTRA_SENSORS,
     DEFAULT_HVAC_POWER_ON,
     DEFAULT_TEMP_POWER_ON,
     DEFAULT_FAN_POWER_ON,
@@ -137,6 +139,7 @@ def optional_data(config=None):
         fan_modes = vol.Required(CONF_FAN_MODES, default=DEFAULT_FAN_MODES)
         temp_hvac_mode = vol.Optional(CONF_TEMP_HVAC_MODE, default=DEFAULT_TEMP_HVAC_MODE)
         fan_hvac_mode = vol.Optional(CONF_FAN_HVAC_MODE, default=DEFAULT_FAN_HVAC_MODE)
+        extra_sensors = vol.Optional(CONF_EXTRA_SENSORS, default=DEFAULT_EXTRA_SENSORS)
         hvac_power_on = vol.Optional(CONF_HVAC_POWER_ON, default=DEFAULT_HVAC_POWER_ON)
         temp_power_on = vol.Optional(CONF_TEMP_POWER_ON, default=DEFAULT_TEMP_POWER_ON)
         fan_power_on = vol.Optional(CONF_FAN_POWER_ON, default=DEFAULT_FAN_POWER_ON)
@@ -160,6 +163,7 @@ def optional_data(config=None):
         fan_modes = vol.Required(CONF_FAN_MODES, default=config.get(CONF_FAN_MODES, DEFAULT_FAN_MODES))
         temp_hvac_mode = vol.Optional(CONF_TEMP_HVAC_MODE, default=config.get(CONF_TEMP_HVAC_MODE, DEFAULT_TEMP_HVAC_MODE))
         fan_hvac_mode = vol.Optional(CONF_FAN_HVAC_MODE, default=config.get(CONF_FAN_HVAC_MODE, DEFAULT_FAN_HVAC_MODE))
+        extra_sensors = vol.Optional(CONF_EXTRA_SENSORS, default=config.get(CONF_EXTRA_SENSORS, DEFAULT_EXTRA_SENSORS))
         hvac_power_on = vol.Optional(CONF_HVAC_POWER_ON, default=config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_HVAC_POWER_ON, DEFAULT_HVAC_POWER_ON))
         temp_power_on = vol.Optional(CONF_TEMP_POWER_ON, default=config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_TEMP_POWER_ON, DEFAULT_TEMP_POWER_ON))        
         fan_power_on = vol.Optional(CONF_FAN_POWER_ON, default=config.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_FAN_POWER_ON, DEFAULT_FAN_POWER_ON))        
@@ -190,6 +194,7 @@ def optional_data(config=None):
         ),
         temp_hvac_mode: BooleanSelector(),
         fan_hvac_mode: BooleanSelector(),
+        extra_sensors: BooleanSelector(),
         vol.Required(CONF_COMPATIBILITY_OPTIONS): data_entry_flow.section(
             vol.Schema(
                 {
