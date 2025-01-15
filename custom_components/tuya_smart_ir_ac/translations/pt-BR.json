@@ -2,20 +2,20 @@
   "entity": {
     "number": {
       "temp_hvac_mode_auto": {
-        "name": "Auto"
+        "name": "Automático"
       },
       "temp_hvac_mode_cool": {
         "name": "Resfriar"
       },
       "temp_hvac_mode_heat": {
-        "name": "Aquecer"
+        "name": "Aquecimento"
       }
     },
     "select": {
       "fan_hvac_mode": {
         "name": "Velocidade do ventilador",
         "state": {
-          "auto": "Auto",
+          "auto": "Automático",
           "low": "Baixa",
           "medium": "Média",
           "high": "Alta"
@@ -28,7 +28,7 @@
       "options": {
         "auto": "Automático",
         "cool": "Resfriar",
-        "heat": "Aquecer",
+        "heat": "Aquecimento",
         "dry": "Desumidificar",
         "fan_only": "Apenas ventilador",
         "off": "Desligado"
@@ -43,6 +43,20 @@
       }
     },
     "hvac_power_on": {
+      "options": {
+        "never": "Nunca",
+        "always": "Sempre",
+        "only_off": "Somente se estiver desligado (não recomendado)"
+      }
+    },
+    "temp_power_on": {
+      "options": {
+        "never": "Nunca",
+        "always": "Sempre",
+        "only_off": "Somente se estiver desligado (não recomendado)"
+      }
+    },
+    "fan_power_on": {
       "options": {
         "never": "Nunca",
         "always": "Sempre",
@@ -63,18 +77,21 @@
           "min_temp": "Temperatura mínima",
           "max_temp": "Temperatura máxima",
           "temp_step": "Incremento de temperatura",
-          "hvac_modes": "Modos HVAC suportados",
-          "fan_modes": "Modos de ventilação suportados",
+          "hvac_modes": "Modos de HVAC suportados",
+          "fan_modes": "Modos de ventilador suportados",
           "temp_hvac_mode": "Temperaturas padrão ao definir o modo HVAC",
-          "fan_hvac_mode": "Velocidade do ventilador padrão ao definir o modo HVAC"
+          "fan_hvac_mode": "Velocidade padrão do ventilador ao definir o modo HVAC",
+          "extra_sensors": "Expor os sensores configurados"
         },
         "sections": {
           "compatibility_options": {
             "name": "Opções de compatibilidade",
             "data": {
               "hvac_power_on": "Forçar ligar ao definir o modo HVAC",
-              "dry_min_temp": "Definir temperatura mínima no modo desumidificação",
-              "dry_min_fan": "Definir velocidade mínima do ventilador no modo desumidificação"
+              "temp_power_on": "Forçar ligar ao definir a temperatura",
+              "fan_power_on": "Forçar ligar ao definir a velocidade do ventilador",
+              "dry_min_temp": "Definir temperatura mínima no modo desumidificar",
+              "dry_min_fan": "Definir velocidade mínima do ventilador no modo desumidificar"
             }
           }
         }
@@ -98,18 +115,21 @@
           "min_temp": "Temperatura mínima",
           "max_temp": "Temperatura máxima",
           "temp_step": "Incremento de temperatura",
-          "hvac_modes": "Modos HVAC suportados",
-          "fan_modes": "Modos de ventilação suportados",
+          "hvac_modes": "Modos de HVAC suportados",
+          "fan_modes": "Modos de ventilador suportados",
           "temp_hvac_mode": "Temperaturas padrão ao definir o modo HVAC",
-          "fan_hvac_mode": "Velocidade do ventilador padrão ao definir o modo HVAC"
+          "fan_hvac_mode": "Velocidade padrão do ventilador ao definir o modo HVAC",
+          "extra_sensors": "Expor os sensores configurados"
         },
         "sections": {
           "compatibility_options": {
             "name": "Opções de compatibilidade",
             "data": {
               "hvac_power_on": "Forçar ligar ao definir o modo HVAC",
-              "dry_min_temp": "Definir temperatura mínima no modo desumidificação",
-              "dry_min_fan": "Definir velocidade mínima do ventilador no modo desumidificação"
+              "temp_power_on": "Forçar ligar ao definir a temperatura",
+              "fan_power_on": "Forçar ligar ao definir a velocidade do ventilador",
+              "dry_min_temp": "Definir temperatura mínima no modo desumidificar",
+              "dry_min_fan": "Definir velocidade mínima do ventilador no modo desumidificar"
             }
           }
         }
@@ -127,7 +147,7 @@
       "message": "Não foi possível alterar a temperatura"
     },
     "climate_error_fan_mode": {
-      "message": "Não foi possível alterar o modo de ventilação"
+      "message": "Não foi possível alterar a velocidade do ventilador"
     },
     "climate_error_hvac_mode": {
       "message": "Não foi possível alterar o modo HVAC"
