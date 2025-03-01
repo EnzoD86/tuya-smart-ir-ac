@@ -74,7 +74,10 @@ The interface will show a form to fill in with the following information:
 | FAN modes supported                         | FAN modes supported by the device.                                                                      |
 | Default temperatures when setting HVAC mode | Enable default temperature settings when changing HVAC modes to auto, cool and heat.                    |
 | Default fan speed when setting HVAC mode    | Enable default fan speed settings when changing HVAC modes.                                             |
+| Exposes the configured sensors              | Exposes temperature and humidity sensors                                                                |
 | *Force power on when setting hvac mode*     | *Send a double power command when setting an HVAC mode (fixes compatibility issues with some devices).* |
+| *Force power on when setting temperature*   | *Send a power command when setting temperature (fixes compatibility issues with some devices).*         |
+| *Force power on when setting fan speed*     | *Send a power command when setting fan speed (fixes compatibility issues with some devices).*           |
 | *Set minimum temperature in dry mode*       | *Set temperature to 16° when DRY MODE is selected (fixes compatibility issues with some devices).*      |
 | *Set minimum fan mode in dry mode*          | *Set fan speed to LOW when DRY MODE is selected (fixes compatibility issues with some devices).*        |
 
