@@ -17,12 +17,13 @@ from .const import (
     UPDATE_INTERVAL,
     UPDATE_TIMEOUT
 )
+from .api import TuyaClimateAPI
 
 _LOGGER = logging.getLogger(__package__)
 
 
 class TuyaCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass, api, custom_update_interval=UPDATE_INTERVAL):
+    def __init__(self, hass, custom_update_interval=UPDATE_INTERVAL):
         super().__init__(
             hass,
             _LOGGER,
@@ -30,7 +31,7 @@ class TuyaCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=FIRST_UPDATE),
             always_update=False
         )
-        self._api = api
+        self._api = TuyaClimateAPI(hass)
         self._first_update = True
         self._custom_update_interval = custom_update_interval
 

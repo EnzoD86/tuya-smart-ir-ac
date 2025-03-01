@@ -8,24 +8,28 @@ from homeassistant.const import (
     UnitOfTemperature
 )
 from .const import (
+    DEVICE_TYPE_CLIMATE,
+    CONF_DEVICE_TYPE,
     CONF_TEMP_HVAC_MODE,
     DEFAULT_TEMP_HVAC_MODE,
     DEFAULT_TEMP_HVAC_MODES
 )
 from .helpers import valid_number_data
-from .entity import TuyaEntity
+from .entity import TuyaClimateEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    temp_hvac_mode = config_entry.data.get(CONF_TEMP_HVAC_MODE, DEFAULT_TEMP_HVAC_MODE)
-    if temp_hvac_mode:
-        async_add_entities(TuyaNumber(config_entry.data, temp_hvac_mode) for temp_hvac_mode in DEFAULT_TEMP_HVAC_MODES)
+    device_type = config_entry.data.get(CONF_DEVICE_TYPE, None)
+    if device_type == DEVICE_TYPE_CLIMATE: 
+        temp_hvac_mode = config_entry.data.get(CONF_TEMP_HVAC_MODE, DEFAULT_TEMP_HVAC_MODE)
+        if temp_hvac_mode:
+            async_add_entities(TuyaNumber(config_entry.data, temp_hvac_mode) for temp_hvac_mode in DEFAULT_TEMP_HVAC_MODES)
 
 
-class TuyaNumber(RestoreNumber, TuyaEntity):
+class TuyaNumber(RestoreNumber, TuyaClimateEntity):
     def __init__(self, config, temp_hvac_mode):
         RestoreNumber.__init__(self)
-        TuyaEntity.__init__(self, config)
+        TuyaClimateEntity.__init__(self, config)
         self._temp_hvac_mode = temp_hvac_mode
 
     @property

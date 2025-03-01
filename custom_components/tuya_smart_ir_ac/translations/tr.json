@@ -24,6 +24,12 @@
     }
   },
   "selector": {
+    "device_type": {
+      "options": {
+        "climate": "Klima",
+        "generic": "Genel cihaz"
+      }
+    },
     "hvac_modes": {
       "options": {
         "auto": "Otomatik",
@@ -67,10 +73,16 @@
   "config": {
     "step": {
       "user": {
+        "title": "Cihaz konfigürasyonu",
+         "data": {
+            "device_type": "Cihaz türü"
+         }
+      },
+      "climate": {
         "title": "Klima yapılandırması",
         "data": {
           "infrared_id": "Kızılötesi hub kimliği",
-          "climate_id": "Klima kimliği",
+          "device_id": "Klima kimliği",
           "name": "Klima adı",
           "temperature_sensor": "Sıcaklık sensörü",
           "humidity_sensor": "Nem sensörü",
@@ -95,6 +107,14 @@
             }
           }
         }
+      },
+      "generic": {
+        "title": "Genel cihaz konfigürasyonu",
+        "data": {
+          "infrared_id": "Kızılötesi hub kimliği",
+          "device_id": "Klima kimliği",
+          "name": "Cihaz adı"
+        }
       }
     },
     "error": {
@@ -107,7 +127,7 @@
   },
   "options": {
     "step": {
-      "user": {
+      "air_conditioner": {
         "title": "Klima yapılandırması",
         "data": {
           "temperature_sensor": "Sıcaklık sensörü",
@@ -134,6 +154,9 @@
           }
         }
       }
+    },
+    "abort": {
+      "not_configurable": "Cihaz yapılandırılamıyor!"
     }
   },
   "exceptions": {

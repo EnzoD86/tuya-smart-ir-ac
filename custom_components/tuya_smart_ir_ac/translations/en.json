@@ -24,6 +24,12 @@
     }
   },
   "selector": {
+    "device_type": {
+      "options": {
+        "climate": "Air conditioner",
+        "generic": "Generic device"
+      }
+    },
     "hvac_modes": {
       "options": {
         "auto": "Auto",
@@ -67,10 +73,16 @@
   "config": {
     "step": {
       "user": {
+        "title": "Device configuration",
+         "data": {
+            "device_type": "Device type"
+         }
+      },
+      "climate": {
         "title": "Air conditioner configuration",
         "data": {
           "infrared_id": "Infrared hub ID",
-          "climate_id": "Air conditioner ID",
+          "device_id": "Air conditioner ID",
           "name": "Air conditioner name",
           "temperature_sensor": "Temperature sensor",
           "humidity_sensor": "Humidity sensor",
@@ -95,6 +107,14 @@
             }
           }
         }
+      },
+      "generic": {
+        "title": "Generic device configuration",
+        "data": {
+          "infrared_id": "ID hub infrarossi",
+          "device_id": "ID dispositivo",
+          "name": "Nome dispositivo"
+        }
       }
     },
     "error": {
@@ -107,7 +127,7 @@
   },
   "options": {
     "step": {
-      "user": {
+      "climate": {
         "title": "Air conditioner configuration",
         "data": {
           "temperature_sensor": "Temperature sensor",
@@ -134,6 +154,9 @@
           }
         }
       }
+    },
+    "abort": {
+      "not_configurable": "Device not configurable!"
     }
   },
   "exceptions": {

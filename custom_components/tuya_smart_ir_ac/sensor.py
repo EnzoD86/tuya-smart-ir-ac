@@ -10,31 +10,34 @@ from homeassistant.const import (
     UnitOfTemperature
 )
 from .const import (
+    DEVICE_TYPE_CLIMATE,
+    CONF_DEVICE_TYPE,
     CONF_EXTRA_SENSORS,
     CONF_TEMPERATURE_SENSOR,
     CONF_HUMIDITY_SENSOR,
     DEFAULT_EXTRA_SENSORS
 )
 from .helpers import valid_sensor_state
-from .entity import TuyaEntity
+from .entity import TuyaClimateEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    extra_sensors = config_entry.data.get(CONF_EXTRA_SENSORS, DEFAULT_EXTRA_SENSORS)
-    
-    if extra_sensors:
-        temperature_sensor = config_entry.data.get(CONF_TEMPERATURE_SENSOR, None)
-        if temperature_sensor:
-            async_add_entities([TuyaTemperatureSensor(config_entry.data)])
-            
-        humidity_sensor = config_entry.data.get(CONF_HUMIDITY_SENSOR, None)
-        if humidity_sensor:
-            async_add_entities([TuyaHumiditySensor(config_entry.data)])
+    device_type = config_entry.data.get(CONF_DEVICE_TYPE, None)
+    if device_type == DEVICE_TYPE_CLIMATE: 
+        extra_sensors = config_entry.data.get(CONF_EXTRA_SENSORS, DEFAULT_EXTRA_SENSORS)
+        if extra_sensors:
+            temperature_sensor = config_entry.data.get(CONF_TEMPERATURE_SENSOR, None)
+            if temperature_sensor:
+                async_add_entities([TuyaTemperatureSensor(config_entry.data)])
+                
+            humidity_sensor = config_entry.data.get(CONF_HUMIDITY_SENSOR, None)
+            if humidity_sensor:
+                async_add_entities([TuyaHumiditySensor(config_entry.data)])
 
 
-class TuyaTemperatureSensor(SensorEntity, TuyaEntity):
+class TuyaTemperatureSensor(SensorEntity, TuyaClimateEntity):
     def __init__(self, config):
-        TuyaEntity.__init__(self, config)
+        TuyaClimateEntity.__init__(self, config)
 
     @property
     def has_entity_name(self):
@@ -74,9 +77,9 @@ class TuyaTemperatureSensor(SensorEntity, TuyaEntity):
             self.async_write_ha_state()
 
 
-class TuyaHumiditySensor(SensorEntity, TuyaEntity):
+class TuyaHumiditySensor(SensorEntity, TuyaClimateEntity):
     def __init__(self, config):
-        TuyaEntity.__init__(self, config)
+        TuyaClimateEntity.__init__(self, config)
 
     @property
     def has_entity_name(self):

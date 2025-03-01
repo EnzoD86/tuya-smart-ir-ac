@@ -12,10 +12,14 @@ DOMAIN = "tuya_smart_ir_ac"
 MANUFACTURER = "Tuya"
 CLIENT = "CLIENT"
 COORDINATOR = "COORDINATOR"
+SERVICE = "SERVICE"
 FIRST_UPDATE = 5
 UPDATE_INTERVAL = 60
 UPDATE_TIMEOUT = 15
-PLATFORMS = [Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.CLIMATE]
+PLATFORMS = [Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.CLIMATE, Platform.BUTTON]
+
+DEVICE_TYPE_CLIMATE = "climate"
+DEVICE_TYPE_GENERIC = "generic"
 
 POWER_ON_NEVER = "never"
 POWER_ON_ALWAYS = "always"
@@ -25,8 +29,9 @@ CONF_ACCESS_ID = "access_id"
 CONF_ACCESS_SECRET = "access_secret"
 CONF_TUYA_COUNTRY = "country"
 CONF_UPDATE_INTERVAL = "update_interval"
+CONF_DEVICE_TYPE = "device_type"
 CONF_INFRARED_ID = "infrared_id"
-CONF_CLIMATE_ID = "climate_id"
+CONF_DEVICE_ID = "device_id"
 CONF_TEMPERATURE_SENSOR = "temperature_sensor"
 CONF_HUMIDITY_SENSOR = "humidity_sensor"
 CONF_TEMP_MIN = "min_temp"
@@ -43,6 +48,12 @@ CONF_TEMP_POWER_ON = "temp_power_on"
 CONF_FAN_POWER_ON = "fan_power_on"
 CONF_DRY_MIN_TEMP = "dry_min_temp"
 CONF_DRY_MIN_FAN = "dry_min_fan"
+CONF_RC_DATA = "rc_data"
+CONF_KEY_LIST = "key_list"
+CONF_KEY = "key"
+CONF_KEY_ID = "key_id"
+CONF_KEY_NAME = "key_name"
+CONF_CATEGORY_ID = "category_id"
 
 DEFAULT_MIN_TEMP = 16
 DEFAULT_MAX_TEMP = 30
@@ -55,6 +66,11 @@ DEFAULT_TEMP_POWER_ON = POWER_ON_NEVER
 DEFAULT_FAN_POWER_ON = POWER_ON_NEVER
 DEFAULT_DRY_MIN_TEMP = False
 DEFAULT_DRY_MIN_FAN = False
+
+DEFAULT_DEVICE_TYPES = [
+    DEVICE_TYPE_CLIMATE,
+    DEVICE_TYPE_GENERIC
+]
 
 DEFAULT_TEMP_HVAC_MODES = [
     HVACMode.AUTO,

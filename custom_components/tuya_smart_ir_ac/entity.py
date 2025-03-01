@@ -12,7 +12,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     CONF_INFRARED_ID,
-    CONF_CLIMATE_ID,
+    CONF_DEVICE_ID,
     CONF_TEMPERATURE_SENSOR,
     CONF_HUMIDITY_SENSOR,
     CONF_TEMP_MIN,
@@ -49,11 +49,11 @@ from .const import (
 _LOGGER = logging.getLogger(__package__)
 
 
-class TuyaEntity():
+class TuyaClimateEntity():
     def __init__(self, config, registry=None):
         self._registry = registry
         self._infrared_id = config.get(CONF_INFRARED_ID)
-        self._climate_id = config.get(CONF_CLIMATE_ID)
+        self._climate_id = config.get(CONF_DEVICE_ID)
         self._name = config.get(CONF_NAME)
         self._temperature_sensor = config.get(CONF_TEMPERATURE_SENSOR, None)
         self._humidity_sensor = config.get(CONF_HUMIDITY_SENSOR, None)

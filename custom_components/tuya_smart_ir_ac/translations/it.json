@@ -24,6 +24,12 @@
     }
   },
   "selector": {
+    "device_type": {
+      "options": {
+        "climate": "Climatizzatore d'aria",
+        "generic": "Dispositivo generico"
+      }
+    },
     "hvac_modes": {
       "options": {
         "auto": "Auto",
@@ -67,10 +73,16 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configurazione climatizzatore",
+        "title": "Configurazione dispositivo",
+         "data": {
+            "device_type": "Tipo dispositivo"
+         }
+      },
+      "climate": {
+        "title": "Configurazione climatizzatore d'aria",
         "data": {
           "infrared_id": "ID hub infrarossi",
-          "climate_id": "ID climatizzatore",
+          "device_id": "ID climatizzatore",
           "name": "Nome climatizzatore",
           "temperature_sensor": "Sensore temperatura",
           "humidity_sensor": "Sensore umidità",
@@ -95,6 +107,14 @@
             }
           }
         }
+      },
+      "generic": {
+        "title": "Configurazione dispositivo generico",
+        "data": {
+          "infrared_id": "ID hub infrarossi",
+          "device_id": "ID dispositivo",
+          "name": "Nome dispositivo"
+        }
       }
     },
     "error": {
@@ -107,8 +127,8 @@
   },
   "options": {
     "step": {
-      "user": {
-        "title": "Configurazione climatizzatore",
+      "climate": {
+        "title": "Configurazione climatizzatore d'aria",
         "data": {
           "temperature_sensor": "Sensore temperatura",
           "humidity_sensor": "Sensore umidità",
@@ -134,6 +154,9 @@
           }
         }
       }
+    },
+    "abort": {
+      "not_configurable": "Dispositivo non configurabile!"
     }
   },
   "exceptions": {
