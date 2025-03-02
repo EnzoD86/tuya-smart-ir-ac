@@ -72,17 +72,17 @@ class TuyaGenericAPI:
         self._hass = hass
         self._client = hass.data.get(DOMAIN, {}).get(CLIENT)
 
-    async def async_fetch_commands(self, infrared_id, device_id):
+    async def async_fetch_data(self, infrared_id, device_id):
         try:
             url = f"/v2.0/infrareds/{infrared_id}/remotes/{device_id}/keys"
-            _LOGGER.debug(f"API get_keys url: {url}")
+            _LOGGER.debug(f"API fetch_data url: {url}")
             result = await self._hass.async_add_executor_job(self._client.get, url)
-            _LOGGER.debug(f"API get_keys response: {str(result)}")
+            _LOGGER.debug(f"API fetch_data response: {str(result)}")
             if result.get("success"):
                 return result.get("result")
             raise Exception(TuyaDetails(url, "", result).to_dict())
         except Exception as e:
-            _LOGGER.error(f"Error fetching keys for device {device_id}: {e}")
+            _LOGGER.error(f"Error fetching data for device {device_id}: {e}")
             raise Exception(e)
 
     async def async_send_command(self, infrared_id, device_id, category_id, key_id, key):

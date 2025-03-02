@@ -174,6 +174,9 @@
     },
     "climate_error_hvac_mode": {
       "message": "Não foi possível alterar o modo HVAC"
+    },
+    "device_error_send_command": {
+      "message": "Não foi possível enviar o comando"
     }
   }
 }

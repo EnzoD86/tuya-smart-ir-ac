@@ -1,4 +1,3 @@
-import logging
 from homeassistant.const import (
     Platform,
     CONF_NAME
@@ -45,8 +44,6 @@ from .const import (
     POWER_ON_ALWAYS,
     POWER_ON_ONLY_OFF
 )
-
-_LOGGER = logging.getLogger(__package__)
 
 
 class TuyaClimateEntity():
@@ -141,7 +138,6 @@ class TuyaClimateEntity():
         return self.get_power_on(self._hvac_power_on, hvac_mode_previous_state)
 
     def get_temp_power_on(self, hvac_mode_previous_state):
-        _LOGGER.debug(self._temp_power_on)
         return self.get_power_on(self._temp_power_on, hvac_mode_previous_state)
 
     def get_fan_power_on(self, hvac_mode_previous_state):

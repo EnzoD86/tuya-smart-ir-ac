@@ -48,12 +48,6 @@ CONF_TEMP_POWER_ON = "temp_power_on"
 CONF_FAN_POWER_ON = "fan_power_on"
 CONF_DRY_MIN_TEMP = "dry_min_temp"
 CONF_DRY_MIN_FAN = "dry_min_fan"
-CONF_RC_DATA = "rc_data"
-CONF_KEY_LIST = "key_list"
-CONF_KEY = "key"
-CONF_KEY_ID = "key_id"
-CONF_KEY_NAME = "key_name"
-CONF_CATEGORY_ID = "category_id"
 
 DEFAULT_MIN_TEMP = 16
 DEFAULT_MAX_TEMP = 30

@@ -1,4 +1,3 @@
-import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -47,7 +46,6 @@ from .const import (
     CONF_FAN_POWER_ON,
     CONF_DRY_MIN_TEMP,
     CONF_DRY_MIN_FAN,
-    CONF_RC_DATA,
     DEFAULT_DEVICE_TYPES,
     DEFAULT_MIN_TEMP,
     DEFAULT_MAX_TEMP,
@@ -69,7 +67,6 @@ from .api import (
     TuyaGenericAPI
 )
 
-_LOGGER = logging.getLogger(__package__)
 
 class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
@@ -129,12 +126,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             client = self.hass.data.get(DOMAIN, {}).get(CLIENT)
             infrared_id = user_input.get(CONF_INFRARED_ID)
             device_id = user_input.get(CONF_DEVICE_ID)
-            rc_data = await async_get_data_device(self.hass, infrared_id, device_id)
-            if not rc_data:
+            if not await async_is_valid_device(self.hass, infrared_id, device_id):
                 errors["base"] = "connection"
             else:
                 user_input[CONF_DEVICE_TYPE] = DEVICE_TYPE_GENERIC
-                user_input[CONF_RC_DATA] = rc_data
                 return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
         
         data = {}
@@ -282,10 +277,10 @@ async def async_is_valid_climate(hass, infrared_id, climate_id):
     except Exception as e:
         return False
 
-async def async_get_data_device(hass, infrared_id, device_id):
+async def async_is_valid_device(hass, infrared_id, device_id):
     try:
         api = TuyaGenericAPI(hass)
-        result = await api.async_fetch_commands(infrared_id, device_id)
+        result = await api.async_fetch_data(infrared_id, device_id)
         return result
     except Exception as e:
         return False
