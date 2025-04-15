@@ -31,9 +31,9 @@ The steps to retrieve the information you need are the following:
   - IR Control Hub Open Service.
 - from the Devices tab you will see all your devices connected to SmartLife/Tuya app and you will have to search for the following devices:
   - the HUB IR device (called InfraredID by the integration);
-  - the air conditioner connected to the HUB (called ClimateID by the integration).
+  - the air conditioner connected to the HUB (called ClimateID or DeviceID by the integration).
 
-The last point must be repeated for each air conditioner that must be configured.
+The last point must be repeated for each air conditioner or generic device that must be configured.
 
 ## Platform configuration
 Add the following sections in your configuration.yaml and restart HA (Tuya Access ID, Tuya Access Secret can be found on the [Tuya IoT Website](https://platform.tuya.com/)):
