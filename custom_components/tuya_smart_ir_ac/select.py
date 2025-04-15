@@ -6,22 +6,26 @@ from homeassistant.const import (
     STATE_UNAVAILABLE
 )
 from .const import (
+    DEVICE_TYPE_CLIMATE,
+    CONF_DEVICE_TYPE,
     CONF_FAN_HVAC_MODE,
     DEFAULT_FAN_HVAC_MODE
 )
 from .helpers import valid_sensor_state
-from .entity import TuyaEntity
+from .entity import TuyaClimateEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    fan_hvac_mode = config_entry.data.get(CONF_FAN_HVAC_MODE, DEFAULT_FAN_HVAC_MODE)
-    if fan_hvac_mode:
-        async_add_entities([TuyaSelect(config_entry.data)])
+    device_type = config_entry.data.get(CONF_DEVICE_TYPE, None)
+    if device_type == DEVICE_TYPE_CLIMATE: 
+        fan_hvac_mode = config_entry.data.get(CONF_FAN_HVAC_MODE, DEFAULT_FAN_HVAC_MODE)
+        if fan_hvac_mode:
+            async_add_entities([TuyaSelect(config_entry.data)])
 
 
-class TuyaSelect(SelectEntity, RestoreEntity, TuyaEntity):
+class TuyaSelect(SelectEntity, RestoreEntity, TuyaClimateEntity):
     def __init__(self, config):
-        TuyaEntity.__init__(self, config)
+        TuyaClimateEntity.__init__(self, config)
 
     @property
     def has_entity_name(self):

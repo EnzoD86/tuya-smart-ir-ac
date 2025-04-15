@@ -24,6 +24,12 @@
     }
   },
   "selector": {
+    "device_type": {
+      "options": {
+        "climate": "Ar-condicionado",
+        "generic": "Dispositivo genérico"
+      }
+    },
     "hvac_modes": {
       "options": {
         "auto": "Automático",
@@ -67,10 +73,16 @@
   "config": {
     "step": {
       "user": {
+        "title": "Configuração do dispositivo",
+         "data": {
+            "device_type": "Tipo de dispositivo"
+         }
+      },
+      "climate": {
         "title": "Configuração do ar-condicionado",
         "data": {
           "infrared_id": "ID do hub infravermelho",
-          "climate_id": "ID do ar-condicionado",
+          "device_id": "ID do ar-condicionado",
           "name": "Nome do ar-condicionado",
           "temperature_sensor": "Sensor de temperatura",
           "humidity_sensor": "Sensor de umidade",
@@ -95,6 +107,14 @@
             }
           }
         }
+      },
+      "generic": {
+        "title": "Configuração genérica do dispositivo",
+        "data": {
+          "infrared_id": "ID do hub infravermelho",
+          "device_id": "ID do ar-condicionado",
+          "name": "Nome do dispositivo"
+        }
       }
     },
     "error": {
@@ -107,7 +127,7 @@
   },
   "options": {
     "step": {
-      "user": {
+      "climate": {
         "title": "Configuração do ar-condicionado",
         "data": {
           "temperature_sensor": "Sensor de temperatura",
@@ -134,6 +154,9 @@
           }
         }
       }
+    },
+    "abort": {
+      "not_configurable": "Dispositivo não configurável!"
     }
   },
   "exceptions": {
@@ -151,6 +174,9 @@
     },
     "climate_error_hvac_mode": {
       "message": "Não foi possível alterar o modo HVAC"
+    },
+    "device_error_send_command": {
+      "message": "Não foi possível enviar o comando"
     }
   }
 }

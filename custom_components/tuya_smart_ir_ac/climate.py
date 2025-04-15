@@ -15,23 +15,27 @@ from homeassistant.const import (
 )
 from .const import (
     DOMAIN,
-    COORDINATOR
+    COORDINATOR,
+    DEVICE_TYPE_CLIMATE,
+    CONF_DEVICE_TYPE
 )
 from .helpers import valid_sensor_state
-from .entity import TuyaEntity
+from .entity import TuyaClimateEntity
 
 _LOGGER = logging.getLogger(__package__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    coordinator = hass.data.get(DOMAIN).get(COORDINATOR)
-    registry = entity_registry.async_get(hass)
-    async_add_entities([TuyaClimate(config_entry.data, coordinator, registry)])
+    device_type = config_entry.data.get(CONF_DEVICE_TYPE, None)
+    if device_type == DEVICE_TYPE_CLIMATE: 
+        coordinator = hass.data.get(DOMAIN).get(COORDINATOR)
+        registry = entity_registry.async_get(hass)
+        async_add_entities([TuyaClimate(config_entry.data, coordinator, registry)])
 
 
-class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaEntity):
+class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaClimateEntity):
     def __init__(self, config, coordinator, registry):
-        TuyaEntity.__init__(self, config, registry)
+        TuyaClimateEntity.__init__(self, config, registry)
         super().__init__(coordinator, context=self._climate_id)
 
     @property

@@ -25,8 +25,11 @@ from homeassistant.components.sensor.const import SensorDeviceClass
 from .const import (
     DOMAIN,
     CLIENT,
+    DEVICE_TYPE_CLIMATE,
+    DEVICE_TYPE_GENERIC,
+    CONF_DEVICE_TYPE,
     CONF_INFRARED_ID,
-    CONF_CLIMATE_ID,
+    CONF_DEVICE_ID,
     CONF_TEMPERATURE_SENSOR,
     CONF_HUMIDITY_SENSOR,
     CONF_TEMP_MIN,
@@ -43,6 +46,7 @@ from .const import (
     CONF_FAN_POWER_ON,
     CONF_DRY_MIN_TEMP,
     CONF_DRY_MIN_FAN,
+    DEFAULT_DEVICE_TYPES,
     DEFAULT_MIN_TEMP,
     DEFAULT_MAX_TEMP,
     DEFAULT_PRECISION,
@@ -58,40 +62,81 @@ from .const import (
     DEFAULT_DRY_MIN_FAN,
     DEFAULT_POWER_ON_MODES
 )
-from .api import TuyaAPI
+from .api import (
+    TuyaClimateAPI,
+    TuyaGenericAPI
+)
 
 
 class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
+    
     async def async_step_user(self, user_input):
-        errors = {}
-        domain_config  = self.hass.data.get(DOMAIN, {})
-        client = domain_config.get(CLIENT, None)
-        if client is None:
+        if self.hass.data.get(DOMAIN, {}).get(CLIENT, None) is None:
             return self.async_abort(reason="credentials")
 
         if user_input is not None:
+            device_type = user_input.get(CONF_DEVICE_TYPE)
+            
+            if device_type == DEVICE_TYPE_CLIMATE:
+                return await self.async_step_climate()
+                
+            if device_type == DEVICE_TYPE_GENERIC:
+                return await self.async_step_generic()
+
+        data_schema = vol.Schema({
+            vol.Required(CONF_DEVICE_TYPE): SelectSelector(
+                SelectSelectorConfig(options=DEFAULT_DEVICE_TYPES, multiple=False, mode=SelectSelectorMode.DROPDOWN, translation_key=CONF_DEVICE_TYPE)
+            )
+        })
+        return self.async_show_form(step_id="user", data_schema=data_schema, last_step=False)
+
+
+    async def async_step_climate(self, user_input=None):
+        errors = {}
+
+        if user_input is not None:
             overwrite_invalid_user_input(user_input)
+            client = self.hass.data.get(DOMAIN, {}).get(CLIENT)
             infrared_id = user_input.get(CONF_INFRARED_ID)
-            climate_id = user_input.get(CONF_CLIMATE_ID)
+            climate_id = user_input.get(CONF_DEVICE_ID)
             registry = entity_registry.async_get(self.hass)
             entity_id = registry.async_get_entity_id(Platform.CLIMATE, DOMAIN, f"{infrared_id}_{climate_id}")
             if entity_id is not None:
                 errors["base"] = "already_configured"
-            elif not await async_is_valid_device(self.hass, client, infrared_id, climate_id):
+            elif not await async_is_valid_climate(self.hass, infrared_id, climate_id):
                 errors["base"] = "connection"
             else:
+                user_input[CONF_DEVICE_TYPE] = DEVICE_TYPE_CLIMATE
                 return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         data = {}
-        data.update(required_data())
-        data.update(optional_data())
+        data.update(device_data())
+        data.update(climate_data())
         data_schema = vol.Schema(data)
-        return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
+        return self.async_show_form(step_id="climate", data_schema=data_schema, errors=errors)
+        
+        
+    async def async_step_generic(self, user_input=None):
+        errors = {}
 
+        if user_input is not None:
+            client = self.hass.data.get(DOMAIN, {}).get(CLIENT)
+            infrared_id = user_input.get(CONF_INFRARED_ID)
+            device_id = user_input.get(CONF_DEVICE_ID)
+            if not await async_is_valid_device(self.hass, infrared_id, device_id):
+                errors["base"] = "connection"
+            else:
+                user_input[CONF_DEVICE_TYPE] = DEVICE_TYPE_GENERIC
+                return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+        
+        data = {}
+        data.update(device_data())
+        data_schema = vol.Schema(data)
+        return self.async_show_form(step_id="generic", data_schema=data_schema, errors=errors)
+        
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -103,6 +148,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_user(user_input)
 
     async def async_step_user(self, user_input):
+        config = {**self.config_entry.data, **self.config_entry.options}
+        device_type = config.get(CONF_DEVICE_TYPE, None)
+        
+        if device_type == DEVICE_TYPE_CLIMATE:
+            return await self.async_step_climate()
+                
+        return self.async_abort(reason="not_configurable")
+        
+    async def async_step_climate(self, user_input=None):
         if user_input is not None:
             overwrite_invalid_user_input(user_input)
             self.hass.config_entries.async_update_entry(
@@ -111,16 +165,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data={})
 
         config = {**self.config_entry.data, **self.config_entry.options}
-        data_schema = vol.Schema(optional_data(config))
-        return self.async_show_form(step_id="user", data_schema=data_schema)
+        data_schema = vol.Schema(climate_data(config))
+        return self.async_show_form(step_id="climate", data_schema=data_schema)
 
 
-def required_data():
+def device_data():
     return {
         vol.Required(CONF_INFRARED_ID): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
-        vol.Required(CONF_CLIMATE_ID): TextSelector(
+        vol.Required(CONF_DEVICE_ID): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
         vol.Required(CONF_NAME): TextSelector(
@@ -128,7 +182,7 @@ def required_data():
         )
     }
 
-def optional_data(config=None):
+def climate_data(config=None):
     if config is None:
         temperature_sensor = vol.Optional(CONF_TEMPERATURE_SENSOR)
         humidity_sensor = vol.Optional(CONF_HUMIDITY_SENSOR)
@@ -215,6 +269,22 @@ def optional_data(config=None):
         )
     }
 
+async def async_is_valid_climate(hass, infrared_id, climate_id):
+    try:
+        api = TuyaClimateAPI(hass)
+        result = await api.async_fetch_data(infrared_id, climate_id)
+        return result
+    except Exception as e:
+        return False
+
+async def async_is_valid_device(hass, infrared_id, device_id):
+    try:
+        api = TuyaGenericAPI(hass)
+        result = await api.async_fetch_data(infrared_id, device_id)
+        return result
+    except Exception as e:
+        return False
+
 def overwrite_invalid_user_input(user_input):
     hvac_modes = user_input.get(CONF_HVAC_MODES, None)
     if hvac_modes is not None and len(hvac_modes) == 0:
@@ -223,11 +293,3 @@ def overwrite_invalid_user_input(user_input):
     fan_modes = user_input.get(CONF_FAN_MODES, None)
     if fan_modes is not None and len(fan_modes) == 0:
         user_input[CONF_FAN_MODES] = DEFAULT_FAN_MODES
-
-async def async_is_valid_device(hass, client, infrared_id, climate_id):
-    try:
-        api = TuyaAPI(hass, client)
-        result = await api.async_fetch_data(infrared_id, climate_id)
-        return result
-    except Exception as e:
-        return False
