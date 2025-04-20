@@ -15,7 +15,7 @@ The main purpose of the integration is to manage air conditioners; the integrati
 
 ## Installation using HACS
 We recommend installing via Home Assistant Community Store (HACS) to always receive the latest integration updates.
-Add this [repository](https://github.com/EnzoD86/tuya-smart-ir-ac) to your custom repositories or click the button below (requires My Homeassistant setup).
+You can find it in the default HACS repo. Just search `Tuya Smart IR AC`.
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=EnzoD86&repository=tuya-smart-ir-ac&category=integration)
 
