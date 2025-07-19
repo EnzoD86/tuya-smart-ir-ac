@@ -114,5 +114,6 @@ TUYA_ENDPOINTS = {
     "EU": "https://openapi.tuyaeu.com",
     "US": "https://openapi.tuyaus.com",
     "IN": "https://openapi.tuyain.com",
-    "CN": "https://openapi.tuyacn.com"
+    "CN": "https://openapi.tuyacn.com",
+    "SG": "https://openapi-sg.iotbing.com"
 }
