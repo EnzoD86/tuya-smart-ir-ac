@@ -1,0 +1,182 @@
+{
+  "entity": {
+    "number": {
+      "temp_hvac_mode_auto": {
+        "name": "Automatisch"
+      },
+      "temp_hvac_mode_cool": {
+        "name": "Kühlen"
+      },
+      "temp_hvac_mode_heat": {
+        "name": "Heizen"
+      }
+    },
+    "select": {
+      "fan_hvac_mode": {
+        "name": "Ventilatorgeschwindigkeit",
+        "state": {
+          "auto": "Automatisch",
+          "low": "Niedrig",
+          "medium": "Mittel",
+          "high": "Hoch"
+        }
+      }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "climate": "Klimaanlage",
+        "generic": "Allgemeines Gerät"
+      }
+    },
+    "hvac_modes": {
+      "options": {
+        "auto": "Automatisch",
+        "cool": "Kühlen",
+        "heat": "Heizen",
+        "dry": "Entfeuchten",
+        "fan_only": "Nur Ventilator",
+        "off": "Ausgeschaltet"
+      }
+    },
+    "fan_modes": {
+      "options": {
+        "auto": "Automatisch",
+        "low": "Niedrig",
+        "medium": "Mittel",
+        "high": "Hoch"
+      }
+    },
+    "hvac_power_on": {
+      "options": {
+        "never": "Nie",
+        "always": "Immer",
+        "only_off": "Nur wenn ausgeschaltet (nicht empfohlen)"
+      }
+    },
+    "temp_power_on": {
+      "options": {
+        "never": "Nie",
+        "always": "Immer",
+        "only_off": "Nur wenn ausgeschaltet (nicht empfohlen)"
+      }
+    },
+    "fan_power_on": {
+      "options": {
+        "never": "Nie",
+        "always": "Immer",
+        "only_off": "Nur wenn ausgeschaltet (nicht empfohlen)"
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Gerätekonfiguration",
+        "data": {
+          "device_type": "Gerätetyp"
+        }
+      },
+      "climate": {
+        "title": "Klimaanlagenkonfiguration",
+        "data": {
+          "infrared_id": "Infrarot-Hub-ID",
+          "device_id": "Klimaanlagen-ID",
+          "name": "Name der Klimaanlage",
+          "temperature_sensor": "Temperatursensor",
+          "humidity_sensor": "Feuchtigkeitssensor",
+          "min_temp": "Mindesttemperatur",
+          "max_temp": "Höchsttemperatur",
+          "temp_step": "Temperaturschritt",
+          "hvac_modes": "Unterstützte HVAC-Modi",
+          "fan_modes": "Unterstützte Ventilatormodi",
+          "temp_hvac_mode": "Standardtemperaturen beim Einstellen des HVAC-Modus",
+          "fan_hvac_mode": "Standard-Ventilatorgeschwindigkeit beim Einstellen des HVAC-Modus",
+          "extra_sensors": "Konfigurierte Sensoren anzeigen"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "Kompatibilitätsoptionen",
+            "data": {
+              "hvac_power_on": "Beim Einstellen des HVAC-Modus einschalten erzwingen",
+              "temp_power_on": "Beim Einstellen der Temperatur einschalten erzwingen",
+              "fan_power_on": "Beim Einstellen der Ventilatorgeschwindigkeit einschalten erzwingen",
+              "dry_min_temp": "Mindesttemperatur im Entfeuchtungsmodus festlegen",
+              "dry_min_fan": "Minimale Ventilatorgeschwindigkeit im Entfeuchtungsmodus festlegen"
+            }
+          }
+        }
+      },
+      "generic": {
+        "title": "Allgemeine Gerätekonfiguration",
+        "data": {
+          "infrared_id": "Infrarot-Hub-ID",
+          "device_id": "Geräte-ID",
+          "name": "Gerätename"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Dieses Gerät wurde bereits konfiguriert.",
+      "connection": "Verbindung zum Gerät fehlgeschlagen; siehe Protokoll für weitere Informationen."
+    },
+    "abort": {
+      "credentials": "Integration nicht konfiguriert oder ungültige Anmeldedaten."
+    }
+  },
+  "options": {
+    "step": {
+      "climate": {
+        "title": "Klimaanlagenkonfiguration",
+        "data": {
+          "temperature_sensor": "Temperatursensor",
+          "humidity_sensor": "Feuchtigkeitssensor",
+          "min_temp": "Mindesttemperatur",
+          "max_temp": "Höchsttemperatur",
+          "temp_step": "Temperaturschritt",
+          "hvac_modes": "Unterstützte HVAC-Modi",
+          "fan_modes": "Unterstützte Ventilatormodi",
+          "temp_hvac_mode": "Standardtemperaturen beim Einstellen des HVAC-Modus",
+          "fan_hvac_mode": "Standard-Ventilatorgeschwindigkeit beim Einstellen des HVAC-Modus",
+          "extra_sensors": "Konfigurierte Sensoren anzeigen"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "Kompatibilitätsoptionen",
+            "data": {
+              "hvac_power_on": "Beim Einstellen des HVAC-Modus einschalten erzwingen",
+              "temp_power_on": "Beim Einstellen der Temperatur einschalten erzwingen",
+              "fan_power_on": "Beim Einstellen der Ventilatorgeschwindigkeit einschalten erzwingen",
+              "dry_min_temp": "Mindesttemperatur im Entfeuchtungsmodus festlegen",
+              "dry_min_fan": "Minimale Ventilatorgeschwindigkeit im Entfeuchtungsmodus festlegen"
+            }
+          }
+        }
+      }
+    },
+    "abort": {
+      "not_configurable": "Gerät nicht konfigurierbar!"
+    }
+  },
+  "exceptions": {
+    "climate_error_turn_on": {
+      "message": "Einschalten fehlgeschlagen"
+    },
+    "climate_error_turn_off": {
+      "message": "Ausschalten fehlgeschlagen"
+    },
+    "climate_error_temperature": {
+      "message": "Temperaturänderung fehlgeschlagen"
+    },
+    "climate_error_fan_mode": {
+      "message": "Ändern der Ventilatorgeschwindigkeit fehlgeschlagen"
+    },
+    "climate_error_hvac_mode": {
+      "message": "Ändern des HVAC-Modus fehlgeschlagen"
+    },
+    "device_error_send_command": {
+      "message": "Befehl konnte nicht gesendet werden"
+    }
+  }
+}

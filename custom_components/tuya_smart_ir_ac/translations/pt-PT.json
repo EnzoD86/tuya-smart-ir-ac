@@ -1,0 +1,182 @@
+{
+  "entity": {
+    "number": {
+      "temp_hvac_mode_auto": {
+        "name": "Automático"
+      },
+      "temp_hvac_mode_cool": {
+        "name": "Arrefecimento"
+      },
+      "temp_hvac_mode_heat": {
+        "name": "Aquecimento"
+      }
+    },
+    "select": {
+      "fan_hvac_mode": {
+        "name": "Velocidade da ventoinha",
+        "state": {
+          "auto": "Automático",
+          "low": "Baixa",
+          "medium": "Média",
+          "high": "Alta"
+        }
+      }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "climate": "ar condicionado",
+        "generic": "Dispositivo genérico"
+      }
+    },
+    "hvac_modes": {
+      "options": {
+        "auto": "Automático",
+        "cool": "Arrefecimento",
+        "heat": "Aquecimento",
+        "dry": "Desumidificar",
+        "fan_only": "Apenas ventoinha",
+        "off": "Desligado"
+      }
+    },
+    "fan_modes": {
+      "options": {
+        "auto": "Automático",
+        "low": "Baixa",
+        "medium": "Média",
+        "high": "Alta"
+      }
+    },
+    "hvac_power_on": {
+      "options": {
+        "never": "Nunca",
+        "always": "Sempre",
+        "only_off": "Apenas se estiver desligado (não recomendado)"
+      }
+    },
+    "temp_power_on": {
+      "options": {
+        "never": "Nunca",
+        "always": "Sempre",
+        "only_off": "Apenas se estiver desligado (não recomendado)"
+      }
+    },
+    "fan_power_on": {
+      "options": {
+        "never": "Nunca",
+        "always": "Sempre",
+        "only_off": "Apenas se estiver desligado (não recomendado)"
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuração do dispositivo",
+         "data": {
+            "device_type": "Tipo de dispositivo"
+         }
+      },
+      "climate": {
+        "title": "Configuração do ar condicionado",
+        "data": {
+          "infrared_id": "ID do hub infravermelhos",
+          "device_id": "ID do ar condicionado",
+          "name": "Nome do ar condicionado",
+          "temperature_sensor": "Sensor de temperatura",
+          "humidity_sensor": "Sensor de humidade",
+          "min_temp": "Temperatura mínima",
+          "max_temp": "Temperatura máxima",
+          "temp_step": "Incremento de temperatura",
+          "hvac_modes": "Modos de HVAC suportados",
+          "fan_modes": "Modos de ventoinha suportados",
+          "temp_hvac_mode": "Temperaturas padrão ao definir o modo HVAC",
+          "fan_hvac_mode": "Velocidade padrão da ventoinha ao definir o modo HVAC",
+          "extra_sensors": "Expor os sensores configurados"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "Opções de compatibilidade",
+            "data": {
+              "hvac_power_on": "Forçar ligar ao definir o modo HVAC",
+              "temp_power_on": "Forçar ligar ao definir a temperatura",
+              "fan_power_on": "Forçar ligar ao definir a velocidade da ventoinha",
+              "dry_min_temp": "Definir temperatura mínima no modo desumidificar",
+              "dry_min_fan": "Definir velocidade mínima da ventoinha no modo desumidificar"
+            }
+          }
+        }
+      },
+      "generic": {
+        "title": "Configuração genérica do dispositivo",
+        "data": {
+          "infrared_id": "ID do hub infravermelhos",
+          "device_id": "ID do ar condicionado",
+          "name": "Nome do dispositivo"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Este dispositivo já foi configurado.",
+      "connection": "Não foi possível ligar ao dispositivo; verifique o registo para mais informações."
+    },
+    "abort": {
+      "credentials": "Integração não configurada ou credenciais incorretas."
+    }
+  },
+  "options": {
+    "step": {
+      "climate": {
+        "title": "Configuração do ar condicionado",
+        "data": {
+          "temperature_sensor": "Sensor de temperatura",
+          "humidity_sensor": "Sensor de humidade",
+          "min_temp": "Temperatura mínima",
+          "max_temp": "Temperatura máxima",
+          "temp_step": "Incremento da temperatura",
+          "hvac_modes": "Modos de HVAC suportados",
+          "fan_modes": "Modos de ventoinha suportados",
+          "temp_hvac_mode": "Temperaturas padrão ao definir o modo HVAC",
+          "fan_hvac_mode": "Velocidade padrão da ventoinha ao definir o modo HVAC",
+          "extra_sensors": "Expor os sensores configurados"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "Opções de compatibilidade",
+            "data": {
+              "hvac_power_on": "Forçar ligar ao definir o modo HVAC",
+              "temp_power_on": "Forçar ligar ao definir a temperatura",
+              "fan_power_on": "Forçar ligar ao definir a velocidade da ventoinha",
+              "dry_min_temp": "Definir temperatura mínima no modo desumidificar",
+              "dry_min_fan": "Definir velocidade mínima da ventoinha no modo desumidificar"
+            }
+          }
+        }
+      }
+    },
+    "abort": {
+      "not_configurable": "Dispositivo não configurável!"
+    }
+  },
+  "exceptions": {
+    "climate_error_turn_on": {
+      "message": "Não foi possível ligar"
+    },
+    "climate_error_turn_off": {
+      "message": "Não foi possível desligar"
+    },
+    "climate_error_temperature": {
+      "message": "Não foi possível alterar a temperatura"
+    },
+    "climate_error_fan_mode": {
+      "message": "Não foi possível alterar a velocidade da ventoinha"
+    },
+    "climate_error_hvac_mode": {
+      "message": "Não foi possível alterar o modo HVAC"
+    },
+    "device_error_send_command": {
+      "message": "Não foi possível enviar o comando"
+    }
+  }
+}

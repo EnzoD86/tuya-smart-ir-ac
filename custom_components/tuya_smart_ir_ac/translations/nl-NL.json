@@ -1,0 +1,182 @@
+{
+  "entity": {
+    "number": {
+      "temp_hvac_mode_auto": {
+        "name": "Automatisch"
+      },
+      "temp_hvac_mode_cool": {
+        "name": "Koelen"
+      },
+      "temp_hvac_mode_heat": {
+        "name": "Verwarmen"
+      }
+    },
+    "select": {
+      "fan_hvac_mode": {
+        "name": "Ventilatorsnelheid",
+        "state": {
+          "auto": "Automatisch",
+          "low": "Laag",
+          "medium": "Middel",
+          "high": "Hoog"
+        }
+      }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "climate": "Airconditioning",
+        "generic": "Generiek apparaat"
+      }
+    },
+    "hvac_modes": {
+      "options": {
+        "auto": "Automatisch",
+        "cool": "Koelen",
+        "heat": "Verwarmen",
+        "dry": "Ontvochtigen",
+        "fan_only": "Alleen ventilator",
+        "off": "Uitgeschakeld"
+      }
+    },
+    "fan_modes": {
+      "options": {
+        "auto": "Automatisch",
+        "low": "Laag",
+        "medium": "Middel",
+        "high": "Hoog"
+      }
+    },
+    "hvac_power_on": {
+      "options": {
+        "never": "Nooit",
+        "always": "Altijd",
+        "only_off": "Alleen indien uitgeschakeld (niet aanbevolen)"
+      }
+    },
+    "temp_power_on": {
+      "options": {
+        "never": "Nooit",
+        "always": "Altijd",
+        "only_off": "Alleen indien uitgeschakeld (niet aanbevolen)"
+      }
+    },
+    "fan_power_on": {
+      "options": {
+        "never": "Nooit",
+        "always": "Altijd",
+        "only_off": "Alleen indien uitgeschakeld (niet aanbevolen)"
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Apparaatconfiguratie",
+        "data": {
+          "device_type": "Type apparaat"
+        }
+      },
+      "climate": {
+        "title": "Configuratie van airconditioning",
+        "data": {
+          "infrared_id": "Infrarood hub ID",
+          "device_id": "Airconditioning ID",
+          "name": "Naam van de airconditioning",
+          "temperature_sensor": "Temperatuursensor",
+          "humidity_sensor": "Vochtigheidssensor",
+          "min_temp": "Minimumtemperatuur",
+          "max_temp": "Maximumtemperatuur",
+          "temp_step": "Temperatuurstap",
+          "hvac_modes": "Ondersteunde HVAC-modi",
+          "fan_modes": "Ondersteunde ventilatormodi",
+          "temp_hvac_mode": "Standaardtemperaturen bij het instellen van de HVAC-modus",
+          "fan_hvac_mode": "Standaard ventilatorsnelheid bij het instellen van de HVAC-modus",
+          "extra_sensors": "Geconfigureerde sensoren weergeven"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "Compatibiliteitsopties",
+            "data": {
+              "hvac_power_on": "Forceren inschakelen bij instellen HVAC-modus",
+              "temp_power_on": "Forceren inschakelen bij instellen temperatuur",
+              "fan_power_on": "Forceren inschakelen bij instellen ventilatorsnelheid",
+              "dry_min_temp": "Minimale temperatuur instellen in ontvochtigingsmodus",
+              "dry_min_fan": "Minimale ventilatorsnelheid instellen in ontvochtigingsmodus"
+            }
+          }
+        }
+      },
+      "generic": {
+        "title": "Generieke apparaatconfiguratie",
+        "data": {
+          "infrared_id": "Infrarood hub ID",
+          "device_id": "Apparaat ID",
+          "name": "Naam van het apparaat"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Dit apparaat is al geconfigureerd.",
+      "connection": "Kan geen verbinding maken met apparaat; zie logboek voor meer informatie."
+    },
+    "abort": {
+      "credentials": "Integratie niet geconfigureerd of ongeldige inloggegevens."
+    }
+  },
+  "options": {
+    "step": {
+      "climate": {
+        "title": "Configuratie van airconditioning",
+        "data": {
+          "temperature_sensor": "Temperatuursensor",
+          "humidity_sensor": "Vochtigheidssensor",
+          "min_temp": "Minimumtemperatuur",
+          "max_temp": "Maximumtemperatuur",
+          "temp_step": "Temperatuurstap",
+          "hvac_modes": "Ondersteunde HVAC-modi",
+          "fan_modes": "Ondersteunde ventilatormodi",
+          "temp_hvac_mode": "Standaardtemperaturen bij het instellen van de HVAC-modus",
+          "fan_hvac_mode": "Standaard ventilatorsnelheid bij het instellen van de HVAC-modus",
+          "extra_sensors": "Geconfigureerde sensoren weergeven"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "Compatibiliteitsopties",
+            "data": {
+              "hvac_power_on": "Forceren inschakelen bij instellen HVAC-modus",
+              "temp_power_on": "Forceren inschakelen bij instellen temperatuur",
+              "fan_power_on": "Forceren inschakelen bij instellen ventilatorsnelheid",
+              "dry_min_temp": "Minimale temperatuur instellen in ontvochtigingsmodus",
+              "dry_min_fan": "Minimale ventilatorsnelheid instellen in ontvochtigingsmodus"
+            }
+          }
+        }
+      }
+    },
+    "abort": {
+      "not_configurable": "Apparaat niet configureerbaar!"
+    }
+  },
+  "exceptions": {
+    "climate_error_turn_on": {
+      "message": "Kan niet inschakelen"
+    },
+    "climate_error_turn_off": {
+      "message": "Kan niet uitschakelen"
+    },
+    "climate_error_temperature": {
+      "message": "Kan temperatuur niet wijzigen"
+    },
+    "climate_error_fan_mode": {
+      "message": "Kan ventilatorsnelheid niet wijzigen"
+    },
+    "climate_error_hvac_mode": {
+      "message": "Kan HVAC-modus niet wijzigen"
+    },
+    "device_error_send_command": {
+      "message": "Kan commando niet verzenden"
+    }
+  }
+}
