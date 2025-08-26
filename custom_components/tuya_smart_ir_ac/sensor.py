@@ -61,7 +61,11 @@ class TuyaTemperatureSensor(SensorEntity, TuyaClimateEntity):
 
     @property    
     def native_unit_of_measurement(self):
-        return UnitOfTemperature.CELSIUS
+        if self._temperature_sensor:
+            sensor_state = self.hass.states.get(self._temperature_sensor)
+            if sensor_state is not None:
+                return sensor_state.attributes.get("unit_of_measurement")
+        return UnitOfTemperature.CELSIUS  # fallback
 
     @property
     def native_value(self):

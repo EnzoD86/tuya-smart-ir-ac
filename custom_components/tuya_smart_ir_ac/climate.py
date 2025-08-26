@@ -3,6 +3,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -76,9 +77,27 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaClimateEn
 
     @property
     def current_temperature(self):
-        sensor_state = self.hass.states.get(self._temperature_sensor) if self._temperature_sensor is not None else None
-        return float(sensor_state.state) if valid_sensor_state(sensor_state) else None
+        if not self._temperature_sensor:
+            return None
 
+        sensor_state = self.hass.states.get(self._temperature_sensor)
+        if not valid_sensor_state(sensor_state):
+            return None
+
+        try:
+            value = float(sensor_state.state)
+        except (ValueError, TypeError):
+            return None
+
+        unit = sensor_state.attributes.get("unit_of_measurement")
+
+        if unit == UnitOfTemperature.FAHRENHEIT:
+            # Convert °F → °C
+            return TemperatureConverter.convert(value, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS)
+        
+        # Already °C (or no unit info, assume °C)
+        return value
+    
     @property
     def current_humidity(self):
         sensor_state = self.hass.states.get(self._humidity_sensor) if self._humidity_sensor is not None else None
