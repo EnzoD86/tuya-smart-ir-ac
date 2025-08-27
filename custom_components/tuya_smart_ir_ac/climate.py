@@ -91,11 +91,9 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaClimateEn
 
         unit = sensor_state.attributes.get("unit_of_measurement")
 
-        if unit == UnitOfTemperature.FAHRENHEIT:
-            # Convert °F → °C
-            return TemperatureConverter.convert(value, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS)
-        
-        # Already °C (or no unit info, assume °C)
+        if unit != self.temperature_unit:
+            return TemperatureConverter.convert(value, unit, self.temperature_unit)
+
         return value
     
     @property
