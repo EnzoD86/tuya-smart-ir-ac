@@ -1,5 +1,7 @@
 from homeassistant.const import (
     Platform,
+    UnitOfTemperature,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME
 )
 from homeassistant.components.climate.const import (
@@ -7,6 +9,7 @@ from homeassistant.components.climate.const import (
     FAN_LOW,
     HVACMode
 )
+from homeassistant.util.unit_conversion import TemperatureConverter
 from .const import (
     DOMAIN,
     MANUFACTURER,
@@ -43,6 +46,10 @@ from .const import (
     POWER_ON_NEVER,
     POWER_ON_ALWAYS,
     POWER_ON_ONLY_OFF
+)
+from .helpers import (
+    valid_sensor_state,
+    convert_to_float
 )
 
 
@@ -154,3 +161,43 @@ class TuyaClimateEntity():
             return True
             
         return False
+        
+    def get_temperature_unit_of_measurement(self):
+        if self._temperature_sensor is not None:
+            sensor_state = self.hass.states.get(self._temperature_sensor)
+            if sensor_state is not None:
+                return sensor_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return UnitOfTemperature.CELSIUS
+
+    def get_temperature_value(self, convert = False):
+        if self._temperature_sensor is None:
+            return None
+
+        sensor_state = self.hass.states.get(self._temperature_sensor)
+        if valid_sensor_state(sensor_state) is False:
+            return None
+        
+        value = convert_to_float(sensor_state.state)
+        if value is None:
+            return None
+
+        if convert is True:
+            unit = sensor_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            if unit != self.temperature_unit:
+                return TemperatureConverter.convert(value, unit, self.temperature_unit)    
+
+        return value
+
+    def get_humidity_value(self):
+        if self._humidity_sensor is None:
+            return None
+
+        sensor_state = self.hass.states.get(self._humidity_sensor)
+        if valid_sensor_state(sensor_state) is False:
+            return None
+        
+        value = convert_to_float(sensor_state.state)
+        if value is None:
+            return None
+        
+        return value

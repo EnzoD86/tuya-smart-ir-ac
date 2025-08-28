@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     PERCENTAGE,
-    UnitOfTemperature
+    ATTR_ENTITY_ID
 )
 from .const import (
     DEVICE_TYPE_CLIMATE,
@@ -17,7 +17,6 @@ from .const import (
     CONF_HUMIDITY_SENSOR,
     DEFAULT_EXTRA_SENSORS
 )
-from .helpers import valid_sensor_state
 from .entity import TuyaClimateEntity
 
 
@@ -61,23 +60,18 @@ class TuyaTemperatureSensor(SensorEntity, TuyaClimateEntity):
 
     @property    
     def native_unit_of_measurement(self):
-        if self._temperature_sensor:
-            sensor_state = self.hass.states.get(self._temperature_sensor)
-            if sensor_state is not None:
-                return sensor_state.attributes.get("unit_of_measurement")
-        return UnitOfTemperature.CELSIUS  # fallback
+        return self.get_temperature_unit_of_measurement()
 
     @property
     def native_value(self):
-        sensor_state = self.hass.states.get(self._temperature_sensor) if self._temperature_sensor is not None else None
-        return float(sensor_state.state) if valid_sensor_state(sensor_state) else None
+        return self.get_temperature_value()
 
     async def async_added_to_hass(self):
         self.hass.bus.async_listen(EVENT_STATE_CHANGED, self._async_handle_event)
 
     @callback
     async def _async_handle_event(self, event):
-        if event.data.get("entity_id") == self._temperature_sensor:
+        if event.data.get(ATTR_ENTITY_ID) == self._temperature_sensor:
             self.async_write_ha_state()
 
 
@@ -111,13 +105,12 @@ class TuyaHumiditySensor(SensorEntity, TuyaClimateEntity):
 
     @property
     def native_value(self):
-        sensor_state = self.hass.states.get(self._humidity_sensor) if self._humidity_sensor is not None else None
-        return float(sensor_state.state) if valid_sensor_state(sensor_state) else None
+        return self.get_humidity_value()
 
     async def async_added_to_hass(self):
         self.hass.bus.async_listen(EVENT_STATE_CHANGED, self._async_handle_event)
 
     @callback
     async def _async_handle_event(self, event):
-        if event.data.get("entity_id") == self._humidity_sensor:
+        if event.data.get(ATTR_ENTITY_ID) == self._humidity_sensor:
             self.async_write_ha_state()
