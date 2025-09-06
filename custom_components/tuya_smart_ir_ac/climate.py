@@ -11,6 +11,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
+    ATTR_ENTITY_ID,
     UnitOfTemperature
 )
 from .const import (
@@ -76,13 +77,11 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaClimateEn
 
     @property
     def current_temperature(self):
-        sensor_state = self.hass.states.get(self._temperature_sensor) if self._temperature_sensor is not None else None
-        return float(sensor_state.state) if valid_sensor_state(sensor_state) else None
-
+        return self.get_temperature_value(convert = True)
+    
     @property
     def current_humidity(self):
-        sensor_state = self.hass.states.get(self._humidity_sensor) if self._humidity_sensor is not None else None
-        return float(sensor_state.state) if valid_sensor_state(sensor_state) else None
+        return self.get_humidity_value()
 
     @property
     def hvac_modes(self):
@@ -108,7 +107,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaClimateEn
 
     @callback
     async def _async_handle_event(self, event):
-        if event.data.get("entity_id") in [self._temperature_sensor, self._humidity_sensor]:
+        if event.data.get(ATTR_ENTITY_ID) in [self._temperature_sensor, self._humidity_sensor]:
             self.async_write_ha_state()
 
     @callback

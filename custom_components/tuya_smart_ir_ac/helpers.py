@@ -37,3 +37,9 @@ def valid_sensor_state(sensor_state):
 
 def valid_number_data(number_data):
     return number_data is not None and number_data.native_value is not None
+
+def convert_to_float(value):
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
