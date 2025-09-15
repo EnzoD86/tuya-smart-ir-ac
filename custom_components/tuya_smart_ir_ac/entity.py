@@ -9,7 +9,6 @@ from homeassistant.components.climate.const import (
     FAN_LOW,
     HVACMode
 )
-from homeassistant.util.unit_conversion import TemperatureConverter
 from .const import (
     DOMAIN,
     MANUFACTURER,
@@ -49,6 +48,7 @@ from .const import (
 )
 from .helpers import (
     valid_sensor_state,
+    convert_temperature,
     convert_to_float
 )
 
@@ -183,8 +183,7 @@ class TuyaClimateEntity():
 
         if convert is True:
             unit = sensor_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            if unit != self.temperature_unit:
-                return TemperatureConverter.convert(value, unit, self.temperature_unit)    
+            return convert_temperature(value, unit, self.temperature_unit)
 
         return value
 
