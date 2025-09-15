@@ -1,11 +1,6 @@
-from homeassistant.const import (
-    STATE_UNKNOWN, 
-    STATE_UNAVAILABLE
-)
-from .const import (
-    TUYA_HVAC_MODES,
-    TUYA_FAN_MODES
-)
+from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
+from .const import TUYA_HVAC_MODES, TUYA_FAN_MODES
 
 
 def tuya_temp(temp):
@@ -37,6 +32,14 @@ def valid_sensor_state(sensor_state):
 
 def valid_number_data(number_data):
     return number_data is not None and number_data.native_value is not None
+
+def convert_temperature(value, from_unit, to_unit):
+    if from_unit == to_unit or from_unit not in TemperatureConverter.VALID_UNITS or to_unit not in TemperatureConverter.VALID_UNITS:
+        return value
+    try:
+        return TemperatureConverter.convert(value, from_unit, to_unit)
+    except (ValueError, TypeError):
+        return value
 
 def convert_to_float(value):
     try:
