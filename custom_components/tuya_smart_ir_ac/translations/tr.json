@@ -27,7 +27,8 @@
     "device_type": {
       "options": {
         "climate": "Klima",
-        "generic": "Genel cihaz"
+        "generic": "Genel cihaz",
+        "sensor": "Sıcaklık/nem sensörü (deneysel)"
       }
     },
     "hvac_modes": {
@@ -74,9 +75,9 @@
     "step": {
       "user": {
         "title": "Cihaz konfigürasyonu",
-         "data": {
-            "device_type": "Cihaz türü"
-         }
+        "data": {
+          "device_type": "Cihaz türü"
+        }
       },
       "climate": {
         "title": "Klima yapılandırması",
@@ -112,7 +113,14 @@
         "title": "Genel cihaz konfigürasyonu",
         "data": {
           "infrared_id": "Kızılötesi hub kimliği",
-          "device_id": "Klima kimliği",
+          "device_id": "Cihaz kimliği",
+          "name": "Cihaz adı"
+        }
+      },
+      "sensor": {
+        "title": "Sıcaklık/nem sensörü yapılandırması",
+        "data": {
+          "device_id": "Cihaz kimliği",
           "name": "Cihaz adı"
         }
       }
@@ -127,7 +135,7 @@
   },
   "options": {
     "step": {
-      "air_conditioner": {
+      "climate": {
         "title": "Klima yapılandırması",
         "data": {
           "temperature_sensor": "Sıcaklık sensörü",

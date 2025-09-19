@@ -27,7 +27,8 @@
     "device_type": {
       "options": {
         "climate": "Climatizzatore d'aria",
-        "generic": "Dispositivo generico"
+        "generic": "Dispositivo generico",
+        "sensor": "Sensore temperatura/umidità (sperimentale)"
       }
     },
     "hvac_modes": {
@@ -112,6 +113,13 @@
         "title": "Configurazione dispositivo generico",
         "data": {
           "infrared_id": "ID hub infrarossi",
+          "device_id": "ID dispositivo",
+          "name": "Nome dispositivo"
+        }
+      },
+      "sensor": {
+        "title": "Configurazione sensore temperatura/umidità",
+        "data": {
           "device_id": "ID dispositivo",
           "name": "Nome dispositivo"
         }

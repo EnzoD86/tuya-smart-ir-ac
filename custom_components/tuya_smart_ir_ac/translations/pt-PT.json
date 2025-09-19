@@ -26,8 +26,9 @@
   "selector": {
     "device_type": {
       "options": {
-        "climate": "ar condicionado",
-        "generic": "Dispositivo genérico"
+        "climate": "Ar condicionado",
+        "generic": "Dispositivo genérico",
+        "sensor": "Sensor de temperatura/humidade (experimental)"
       }
     },
     "hvac_modes": {
@@ -74,9 +75,9 @@
     "step": {
       "user": {
         "title": "Configuração do dispositivo",
-         "data": {
-            "device_type": "Tipo de dispositivo"
-         }
+        "data": {
+          "device_type": "Tipo de dispositivo"
+        }
       },
       "climate": {
         "title": "Configuração do ar condicionado",
@@ -112,7 +113,14 @@
         "title": "Configuração genérica do dispositivo",
         "data": {
           "infrared_id": "ID do hub infravermelhos",
-          "device_id": "ID do ar condicionado",
+          "device_id": "ID do dispositivo",
+          "name": "Nome do dispositivo"
+        }
+      },
+      "sensor": {
+        "title": "Configuração do sensor de temperatura/humidade",
+        "data": {
+          "device_id": "ID do dispositivo",
           "name": "Nome do dispositivo"
         }
       }

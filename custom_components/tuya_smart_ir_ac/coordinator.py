@@ -3,26 +3,20 @@ import async_timeout
 from datetime import timedelta
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.exceptions import ServiceValidationError
-from .helpers import (
-    hass_temperature,
-    hass_fan_mode,
-    hass_hvac_mode,
-    tuya_temp,
-    tuya_mode,
-    tuya_wind
-)
 from .const import (
     DOMAIN,
     FIRST_UPDATE,
     UPDATE_INTERVAL,
     UPDATE_TIMEOUT
 )
-from .api import TuyaClimateAPI
+from .helpers import tuya_temp, tuya_mode, tuya_wind
+from .api import TuyaClimateAPI, TuyaSensorAPI
+from .model import TuyaClimateData, TuyaSensorData
 
 _LOGGER = logging.getLogger(__package__)
 
 
-class TuyaCoordinator(DataUpdateCoordinator):
+class TuyaClimateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, custom_update_interval=UPDATE_INTERVAL):
         super().__init__(
             hass,
@@ -35,6 +29,11 @@ class TuyaCoordinator(DataUpdateCoordinator):
         self._first_update = True
         self._custom_update_interval = custom_update_interval
 
+    def init_interval(self):
+        self._first_update = True
+        self.update_interval = timedelta(seconds=FIRST_UPDATE)
+        self._schedule_refresh()
+
     def is_available(self, climate_id):
         return self.data and self.data.get(climate_id, None) is not None
 
@@ -42,7 +41,7 @@ class TuyaCoordinator(DataUpdateCoordinator):
         all_data = await self._api.async_fetch_all_data(climate_ids)
         devices = {}
         for data in all_data:
-            devices[data.get("devId")] = TuyaData().parse_data(data)
+            devices[data.get("devId")] = TuyaClimateData().parse_data(data)
         return devices
 
     async def async_turn_on(self, infrared_id, climate_id):
@@ -101,18 +100,42 @@ class TuyaCoordinator(DataUpdateCoordinator):
             data.fan_mode = fan_mode if fan_mode is not None else data.fan_mode
 
 
-class TuyaData(object):
-    def parse_data(self, data):
-        self.power = data.get("powerOpen")
-        self.hvac_mode = hass_hvac_mode(data.get("mode"))
-        self.temperature = hass_temperature(data.get("temp"))
-        self.fan_mode = hass_fan_mode(data.get("fan"))
-        return self
-
-    def __eq__(self, data):
-        return (
-            self.power == data.power and
-            self.hvac_mode == data.hvac_mode and 
-            self.temperature == data.temperature and
-            self.fan_mode == data.fan_mode
+class TuyaSensorCoordinator(DataUpdateCoordinator):
+    def __init__(self, hass):
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=FIRST_UPDATE),
+            always_update=False
         )
+        self._api = TuyaSensorAPI(hass)
+        self._first_update = True
+        self._custom_update_interval = 300
+
+    def init_interval(self):
+        self._first_update = True
+        self.update_interval = timedelta(seconds=FIRST_UPDATE)
+        self._schedule_refresh()
+
+    def is_available(self, device_id):
+        return self.data and self.data.get(device_id, None) is not None
+
+    async def async_fetch_data(self, device_ids):
+        devices = {}
+        for device_id in device_ids:
+            data = await self._api.async_fetch_data(device_id)    
+            devices[device_id] = TuyaSensorData().parse_data(data)
+        return devices
+
+    async def _async_update_data(self):
+        try:
+            if self._first_update:
+                self._first_update = False
+                self.update_interval = timedelta(seconds=self._custom_update_interval)
+
+            async with async_timeout.timeout(UPDATE_TIMEOUT):
+                device_ids = set(self.async_contexts())
+                return await self.async_fetch_data(device_ids)
+        except Exception as e:
+            raise UpdateFailed(f"error communicating with Tuya API {e}")

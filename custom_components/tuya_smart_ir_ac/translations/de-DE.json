@@ -27,7 +27,8 @@
     "device_type": {
       "options": {
         "climate": "Klimaanlage",
-        "generic": "Allgemeines Gerät"
+        "generic": "Allgemeines Gerät",
+        "sensor": "Temperatur-/Feuchtigkeitssensor (experimentell)"
       }
     },
     "hvac_modes": {
@@ -112,6 +113,13 @@
         "title": "Allgemeine Gerätekonfiguration",
         "data": {
           "infrared_id": "Infrarot-Hub-ID",
+          "device_id": "Geräte-ID",
+          "name": "Gerätename"
+        }
+      },
+      "sensor": {
+        "title": "Konfiguration des Temperatur-/Feuchtigkeitssensors",
+        "data": {
           "device_id": "Geräte-ID",
           "name": "Gerätename"
         }

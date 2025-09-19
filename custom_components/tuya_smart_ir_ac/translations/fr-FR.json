@@ -27,7 +27,8 @@
     "device_type": {
       "options": {
         "climate": "Climatiseur",
-        "generic": "Appareil générique"
+        "generic": "Appareil générique",
+        "sensor": "Capteur de température/humidité (expérimental)"
       }
     },
     "hvac_modes": {
@@ -112,6 +113,13 @@
         "title": "Configuration d'un appareil générique",
         "data": {
           "infrared_id": "ID du hub infrarouge",
+          "device_id": "ID de l'appareil",
+          "name": "Nom de l'appareil"
+        }
+      },
+      "sensor": {
+        "title": "Configuration du capteur de température/humidité",
+        "data": {
           "device_id": "ID de l'appareil",
           "name": "Nom de l'appareil"
         }

@@ -1,7 +1,5 @@
 from homeassistant.components.button import ButtonEntity
-from homeassistant.const import (
-    CONF_NAME
-)
+from homeassistant.const import CONF_NAME
 from .const import (
     DOMAIN,
     SERVICE,

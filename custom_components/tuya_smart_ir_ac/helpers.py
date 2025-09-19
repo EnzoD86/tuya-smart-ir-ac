@@ -1,6 +1,6 @@
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
-from .const import TUYA_HVAC_MODES, TUYA_FAN_MODES
+from .const import TUYA_HVAC_MODES, TUYA_FAN_MODES, BATTERY_LEVELS
 
 
 def tuya_temp(temp):
@@ -24,8 +24,11 @@ def hass_hvac_mode(mode):
 def hass_fan_mode(wind):
     return TUYA_FAN_MODES.get(wind, None)
 
-def hass_temperature(temperature):
-    return float(temperature)
+def hass_battery_state(battery):  
+    return BATTERY_LEVELS.get(battery, None)
+
+def hass_temperature(temperature, convert = False):
+    return float(temperature) if convert is False else int(temperature) / 10.0
 
 def valid_sensor_state(sensor_state):
     return sensor_state is not None and sensor_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]

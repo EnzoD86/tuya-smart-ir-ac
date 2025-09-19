@@ -200,3 +200,20 @@ class TuyaClimateEntity():
             return None
         
         return value
+
+
+class TuyaSensorEntity():
+    def __init__(self, config, sensor_type):
+        self._device_id = config.get(CONF_DEVICE_ID)
+        self._name = config.get(CONF_NAME)
+        self._sensor_type = sensor_type
+
+    def tuya_device_info(self):
+        return {
+            "name": self._name,
+            "identifiers": {(DOMAIN, self._name)},
+            "manufacturer": MANUFACTURER
+        }
+
+    def tuya_unique_id(self):
+        return f"{self._device_id}_{self._sensor_type}"

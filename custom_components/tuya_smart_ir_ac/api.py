@@ -1,8 +1,7 @@
 import logging
-from .const import (
-    DOMAIN,
-    CLIENT
-)
+from .const import DOMAIN, CLIENT
+from .model import TuyaAPIData
+
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -20,7 +19,7 @@ class TuyaClimateAPI:
             _LOGGER.debug(f"API fetch_all_data response: {str(result)}")
             if result.get("success"):
                 return result.get("result")
-            raise Exception(TuyaDetails(url, "", result).to_dict())
+            raise Exception(TuyaAPIData(url, "", result).to_dict())
         except Exception as e:
             _LOGGER.error(f"Error fetching all data for climates {str(climate_ids)}: {e}")
             raise Exception(e)
@@ -33,7 +32,7 @@ class TuyaClimateAPI:
             _LOGGER.debug(f"API fetch_data response: {str(result)}")
             if result.get("success"):
                 return result.get("result")
-            raise Exception(TuyaDetails(url, "", result).to_dict())
+            raise Exception(TuyaAPIData(url, "", result).to_dict())
         except Exception as e:
             _LOGGER.error(f"Error fetching data for climate {climate_id}: {e}")
             raise Exception(e)
@@ -47,7 +46,7 @@ class TuyaClimateAPI:
             result = await self._hass.async_add_executor_job(self._client.post, url, command)
             _LOGGER.debug(f"API send_command response: {str(result)}")
             if not result.get("success"):
-                raise Exception(TuyaDetails(url, command, result).to_dict())
+                raise Exception(TuyaAPIData(url, command, result).to_dict())
         except Exception as e:
             _LOGGER.error(f"Error sending command to climate {climate_id}: {e}")
             raise Exception(e)
@@ -61,7 +60,7 @@ class TuyaClimateAPI:
             result = await self._hass.async_add_executor_job(self._client.post, url, command)
             _LOGGER.debug(f"API send_multiple_command response: {str(result)}")
             if not result.get("success"):
-                raise Exception(TuyaDetails(url, command, result).to_dict())
+                raise Exception(TuyaAPIData(url, command, result).to_dict())
         except Exception as e:
             _LOGGER.error(f"Error sending multiple command to climate {climate_id}: {e}")
             raise Exception(e)
@@ -80,7 +79,7 @@ class TuyaGenericAPI:
             _LOGGER.debug(f"API fetch_data response: {str(result)}")
             if result.get("success"):
                 return result.get("result")
-            raise Exception(TuyaDetails(url, "", result).to_dict())
+            raise Exception(TuyaAPIData(url, "", result).to_dict())
         except Exception as e:
             _LOGGER.error(f"Error fetching data for device {device_id}: {e}")
             raise Exception(e)
@@ -94,16 +93,26 @@ class TuyaGenericAPI:
             result = await self._hass.async_add_executor_job(self._client.post, url, command)
             _LOGGER.debug(f"API send_command response: {str(result)}")
             if not result.get("success"):
-                raise Exception(TuyaDetails(url, command, result).to_dict())
+                raise Exception(TuyaAPIData(url, command, result).to_dict())
         except Exception as e:
             _LOGGER.error(f"Error sending command to device {device_id}: {e}")
             raise Exception(e)
 
-class TuyaDetails(object):
-    def __init__(self, url, request, response):
-        self.url = url
-        self.request = request
-        self.response = response
 
-    def to_dict(self):
-        return vars(self)
+class TuyaSensorAPI:
+    def __init__(self, hass):
+        self._hass = hass
+        self._client = hass.data.get(DOMAIN, {}).get(CLIENT)
+
+    async def async_fetch_data(self, device_id):
+        try:
+            url = f"/v2.0/cloud/thing/{device_id}/shadow/properties"
+            _LOGGER.debug(f"API fetch_data url: {url}")
+            result = await self._hass.async_add_executor_job(self._client.get, url)
+            _LOGGER.debug(f"API fetch_data response: {str(result)}")
+            if result.get("success"):
+                return result.get("result")
+            raise Exception(TuyaAPIData(url, "", result).to_dict())
+        except Exception as e:
+            _LOGGER.error(f"Error fetching data for thing {device_id}: {e}")
+            raise Exception(e)

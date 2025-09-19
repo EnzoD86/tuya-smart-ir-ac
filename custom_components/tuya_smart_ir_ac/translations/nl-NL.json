@@ -27,7 +27,8 @@
     "device_type": {
       "options": {
         "climate": "Airconditioning",
-        "generic": "Generiek apparaat"
+        "generic": "Generiek apparaat",
+        "sensor": "Temperatuur-/vochtigheidssensor (experimenteel)"
       }
     },
     "hvac_modes": {
@@ -112,6 +113,13 @@
         "title": "Generieke apparaatconfiguratie",
         "data": {
           "infrared_id": "Infrarood hub ID",
+          "device_id": "Apparaat ID",
+          "name": "Naam van het apparaat"
+        }
+      },
+      "sensor": {
+        "title": "Temperatuur-/vochtigheidssensor configuratie",
+        "data": {
           "device_id": "Apparaat ID",
           "name": "Naam van het apparaat"
         }

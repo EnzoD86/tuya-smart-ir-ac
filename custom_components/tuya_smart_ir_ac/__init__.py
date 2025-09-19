@@ -6,25 +6,20 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     CLIENT,
-    COORDINATOR,
+    CLIMATE_COORDINATOR,
+    SENSOR_COORDINATOR,
     SERVICE,
     DEVICE_TYPE_CLIMATE,
+    DEVICE_TYPE_SENSOR,
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
     CONF_TUYA_COUNTRY,
     CONF_UPDATE_INTERVAL,
-    CONF_COMPATIBILITY_OPTIONS,
-    CONF_HVAC_POWER_ON,
-    CONF_DRY_MIN_TEMP,
-    CONF_DRY_MIN_FAN,
-    CONF_DEVICE_ID,
     CONF_DEVICE_TYPE,
     UPDATE_INTERVAL,
-    TUYA_ENDPOINTS,
-    POWER_ON_NEVER,
-    POWER_ON_ALWAYS
+    TUYA_ENDPOINTS
 )
-from .coordinator import TuyaCoordinator
+from .coordinator import TuyaClimateCoordinator, TuyaSensorCoordinator
 from .service import TuyaService
 
 _LOGGER = logging.getLogger(__package__)
@@ -61,14 +56,21 @@ async def async_setup(hass, config):
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][CLIENT] = client
-    hass.data[DOMAIN][COORDINATOR] = TuyaCoordinator(hass, update_interval)
+    hass.data[DOMAIN][CLIMATE_COORDINATOR] = TuyaClimateCoordinator(hass, update_interval)
+    hass.data[DOMAIN][SENSOR_COORDINATOR] = TuyaSensorCoordinator(hass)
     hass.data[DOMAIN][SERVICE] = TuyaService(hass)
     return True
 
 async def async_setup_entry(hass, config_entry):
-    await update_entry_configuration(hass, config_entry)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     config_entry.async_on_unload(config_entry.add_update_listener(async_update_entry))
+    device_type = config_entry.data.get(CONF_DEVICE_TYPE, None)
+    if device_type == DEVICE_TYPE_CLIMATE:
+        climate_coordinator = hass.data.get(DOMAIN).get(CLIMATE_COORDINATOR)
+        climate_coordinator.init_interval()
+    if device_type == DEVICE_TYPE_SENSOR:
+        sensor_coordinator = hass.data.get(DOMAIN).get(SENSOR_COORDINATOR)
+        sensor_coordinator.init_interval()
     return True
 
 async def async_unload_entry(hass, config_entry):
@@ -77,56 +79,3 @@ async def async_unload_entry(hass, config_entry):
 
 async def async_update_entry(hass, config_entry):
     await hass.config_entries.async_reload(config_entry.entry_id)
-
-async def update_entry_configuration(hass, config_entry):
-    update = False
-    data = {**config_entry.data}
-
-    if data.get("climate_id", None) is not None:
-        update = True
-        data[CONF_DEVICE_ID] = data["climate_id"] 
-        del data["climate_id"]
-        
-    if data.get(CONF_DEVICE_TYPE, None) is None:
-        update = True
-        data[CONF_DEVICE_TYPE] = DEVICE_TYPE_CLIMATE
-
-    if (data.get(CONF_HVAC_POWER_ON, None) is not None or
-        data.get(CONF_DRY_MIN_TEMP, None) is not None or
-        data.get(CONF_DRY_MIN_FAN, None) is not None):
-        
-        if data.get(CONF_COMPATIBILITY_OPTIONS, None) is None:
-            update = True
-            data[CONF_COMPATIBILITY_OPTIONS] = {}
-
-        if data.get(CONF_HVAC_POWER_ON, None) is not None:
-            update = True
-            data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] = data[CONF_HVAC_POWER_ON]
-            del data[CONF_HVAC_POWER_ON]
-
-        if data.get(CONF_DRY_MIN_TEMP, None) is not None:
-            update = True
-            data[CONF_COMPATIBILITY_OPTIONS][CONF_DRY_MIN_TEMP] = data[CONF_DRY_MIN_TEMP]
-            del data[CONF_DRY_MIN_TEMP]
-
-        if data.get(CONF_DRY_MIN_FAN, None) is not None:
-            update = True
-            data[CONF_COMPATIBILITY_OPTIONS][CONF_DRY_MIN_FAN] = data[CONF_DRY_MIN_FAN]
-            del data[CONF_DRY_MIN_FAN]
-
-        
-    if data.get(CONF_COMPATIBILITY_OPTIONS, {}).get(CONF_HVAC_POWER_ON, None) is not None:
-        if data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] is False:
-            update = True
-            data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] = POWER_ON_NEVER
-        
-        if data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] is True:
-            update = True
-            data[CONF_COMPATIBILITY_OPTIONS][CONF_HVAC_POWER_ON] = POWER_ON_ALWAYS
-
-    if update is True:
-        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=1, version=1)
-        hass.config_entries._async_schedule_save()
-        _LOGGER.debug("Update configuration successful")
-
-    return True
