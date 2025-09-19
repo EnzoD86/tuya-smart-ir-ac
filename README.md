@@ -13,9 +13,12 @@ The purpose of this integration is to manage air conditioners, but other devices
 
 This integration has been tested on the following devices:
 
-![344095726-d887c8a1-9e66-4552-835e-bbe333482a85](https://github.com/user-attachments/assets/0c1ed6ea-a2b7-43ca-a979-94ff6e3499dc)
+<img width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/0c1ed6ea-a2b7-43ca-a979-94ff6e3499dc" />
 
-![349898076-b50941eb-8681-4425-ba35-86eafa2ae182](https://github.com/user-attachments/assets/c811bdf9-c9cf-4df3-a1b8-fd4cc7152db9)
+<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/c811bdf9-c9cf-4df3-a1b8-fd4cc7152db9" />
+
+<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/e6d6a44f-41b3-4fff-be7f-390dd3a1d344" />
+
 
 >  **This repository was cloned from [DavidIlie's project](https://github.com/DavidIlie/tuya-smart-ir-ac) because it had not been updated for some time.**
 
