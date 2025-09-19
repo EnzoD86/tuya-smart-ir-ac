@@ -13,7 +13,7 @@ The purpose of this integration is to manage air conditioners, but other devices
 
 This integration has been tested on the following devices:
 
-<img width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/0c1ed6ea-a2b7-43ca-a979-94ff6e3499dc" />
+<img width="400" height="200" alt="image" src="https://github.com/user-attachments/assets/0c1ed6ea-a2b7-43ca-a979-94ff6e3499dc" />
 
 <img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/c811bdf9-c9cf-4df3-a1b8-fd4cc7152db9" />
 
