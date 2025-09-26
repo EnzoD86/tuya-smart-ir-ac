@@ -4,13 +4,13 @@
 
 from __future__ import annotations
 
+import aiohttp
+import asyncio
 import hashlib
 import hmac
 import json
 import time
 from typing import Any, Dict, Optional, Tuple
-
-import requests
 
 from .openlogging import filter_logger, logger
 from .version import VERSION
@@ -30,7 +30,6 @@ class TuyaTokenInfo:
         expire_time: Valid period in seconds.
         refresh_token: Refresh token.
         uid: Tuya user ID.
-        is_token_refreshing: If a token refresh is in progress.
     """
 
     def __init__(self, token_response: Dict[str, Any] = None):
@@ -44,7 +43,6 @@ class TuyaTokenInfo:
         self.access_token = result.get("access_token", "")
         self.refresh_token = result.get("refresh_token", "")
         self.uid = result.get("uid", "")
-        self.is_token_refreshing = False
 
 
 class TuyaOpenAPI:
@@ -63,7 +61,7 @@ class TuyaOpenAPI:
         lang: str = "en",
     ):
         """Init TuyaOpenAPI."""
-        self.session = requests.session()
+        self.session = aiohttp.ClientSession()
 
         self.endpoint = endpoint
         self.access_id = access_id
@@ -73,9 +71,11 @@ class TuyaOpenAPI:
         self.token_info: TuyaTokenInfo = None
 
         self.dev_channel: str = ""
+        
+        self.lock = asyncio.Lock()
 
     # https://developer.tuya.com/docs/iot/open-api/api-reference/singnature?id=Ka43a5mtx1gsc
-    def _calculate_sign(
+    async def _calculate_sign(
         self,
         method: str,
         path: str,
@@ -132,36 +132,36 @@ class TuyaOpenAPI:
         )
         return sign, t
 
-    def __refresh_access_token_if_need(self, path: str):
-        if self.is_connect() is False:
+    async def _refresh_access_token_if_need(self, path: str):
+        if await self.is_connect() is False:
             return
 
         if path.startswith(TO_B_TOKEN_API):
             return
 
-        # should use refresh token?
+        if await self._is_token_valid():
+            return
+
+        async with self.lock:        
+            if await self._is_token_valid():
+                return
+
+            response = await self.get(
+                TO_B_REFRESH_TOKEN_API.format(self.token_info.refresh_token)
+            )
+        
+            self.token_info = TuyaTokenInfo(response)
+
+    async def _is_token_valid(self):
         now = int(time.time() * 1000)
         expired_time = self.token_info.expire_time
+        return expired_time - 60 * 1000 > now  # 1min
 
-        if expired_time - 60 * 1000 > now:  # 1min
-            return
-
-        if self.token_info.is_token_refreshing:
-            return
-
-        self.token_info.is_token_refreshing = True
-
-        response = self.get(
-            TO_B_REFRESH_TOKEN_API.format(self.token_info.refresh_token)
-        )
-
-        self.token_info = TuyaTokenInfo(response)
-
-    def set_dev_channel(self, dev_channel: str):
+    async def set_dev_channel(self, dev_channel: str):
         """Set dev channel."""
         self.dev_channel = dev_channel
 
-    def connect(
+    async def connect(
         self
     ) -> Dict[str, Any]:
         """Connect to Tuya Cloud.
@@ -169,7 +169,7 @@ class TuyaOpenAPI:
         Returns:
             response: connect response
         """
-        response = self.get(TO_B_TOKEN_API, {"grant_type": 1})
+        response = await self.get(TO_B_TOKEN_API, {"grant_type": 1})
 
         if not response["success"]:
             return response
@@ -179,11 +179,11 @@ class TuyaOpenAPI:
 
         return response
 
-    def is_connect(self) -> bool:
+    async def is_connect(self) -> bool:
         """Is connect to tuya cloud."""
         return self.token_info is not None and len(self.token_info.access_token) > 0
 
-    def __request(
+    async def __request(
         self,
         method: str,
         path: str,
@@ -191,13 +191,13 @@ class TuyaOpenAPI:
         body: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
 
-        self.__refresh_access_token_if_need(path)
+        await self._refresh_access_token_if_need(path)
 
         access_token = ""
         if self.token_info:
             access_token = self.token_info.access_token
 
-        sign, t = self._calculate_sign(method, path, params, body)
+        sign, t = await self._calculate_sign(method, path, params, body)
         headers = {
             "client_id": self.access_id,
             "sign": sign,
@@ -219,17 +219,16 @@ class TuyaOpenAPI:
                 t = {int(time.time()*1000)}"
         )
 
-        response = self.session.request(
+        async with self.session.request(
             method, self.endpoint + path, params=params, json=body, headers=headers
-        )
+        ) as response:
+            if response.ok is False:
+                logger.error(
+                    f"Response error: code={response.status_code}, body={response.body}"
+                )
+                return None
 
-        if response.ok is False:
-            logger.error(
-                f"Response error: code={response.status_code}, body={response.body}"
-            )
-            return None
-
-        result = response.json()
+            result = await response.json()
 
         logger.debug(
             f"Response: {json.dumps(filter_logger(result), ensure_ascii=False, indent=2)}"
@@ -237,11 +236,11 @@ class TuyaOpenAPI:
 
         if result.get("code", -1) == TUYA_ERROR_CODE_TOKEN_INVALID:
             self.token_info = None
-            self.connect()
+            await self.connect()
 
         return result
 
-    def get(
+    async def get(
         self, path: str, params: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Http Get.
@@ -255,9 +254,9 @@ class TuyaOpenAPI:
         Returns:
             response: response body
         """
-        return self.__request("GET", path, params, None)
+        return await self.__request("GET", path, params, None)
 
-    def post(
+    async def post(
         self, path: str, body: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Http Post.
@@ -271,9 +270,9 @@ class TuyaOpenAPI:
         Returns:
             response: response body
         """
-        return self.__request("POST", path, None, body)
+        return await self.__request("POST", path, None, body)
 
-    def put(
+    async def put(
         self, path: str, body: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Http Put.
@@ -287,9 +286,9 @@ class TuyaOpenAPI:
         Returns:
             response: response body
         """
-        return self.__request("PUT", path, None, body)
+        return await self.__request("PUT", path, None, body)
 
-    def delete(
+    async def delete(
         self, path: str, params: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Http Delete.
@@ -303,4 +302,4 @@ class TuyaOpenAPI:
         Returns:
             response: response body
         """
-        return self.__request("DELETE", path, params, None)
+        return await self.__request("DELETE", path, params, None)

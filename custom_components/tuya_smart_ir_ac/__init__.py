@@ -49,7 +49,7 @@ async def async_setup(hass, config):
     update_interval = domain_config.get(CONF_UPDATE_INTERVAL)
     
     client = TuyaOpenAPI(api_endpoint, access_id, access_secret)
-    res = await hass.async_add_executor_job(client.connect)
+    res = await client.connect()
     if not res.get("success"):
         _LOGGER.error(f"Tuya Open API login error: {str(res.get("msg"))}")
         return False

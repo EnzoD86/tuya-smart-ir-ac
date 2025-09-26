@@ -15,7 +15,7 @@ class TuyaClimateAPI:
         try:
             url = f"/v1.0/cloud/rc/infrared/ac/status/batch?device_ids={",".join(climate_ids)}"
             _LOGGER.debug(f"API fetch_all_data url: {url}")
-            result = await self._hass.async_add_executor_job(self._client.get, url)
+            result = await self._client.get(url)
             _LOGGER.debug(f"API fetch_all_data response: {str(result)}")
             if result.get("success"):
                 return result.get("result")
@@ -28,7 +28,7 @@ class TuyaClimateAPI:
         try:
             url = f"/v2.0/infrareds/{infrared_id}/remotes/{climate_id}/ac/status"
             _LOGGER.debug(f"API fetch_data url: {url}")
-            result = await self._hass.async_add_executor_job(self._client.get, url)
+            result = await self._client.get(url)
             _LOGGER.debug(f"API fetch_data response: {str(result)}")
             if result.get("success"):
                 return result.get("result")
@@ -43,7 +43,7 @@ class TuyaClimateAPI:
             _LOGGER.debug(f"API send_command url: {url}")
             command = { "code": code, "value": value }
             _LOGGER.debug(f"API send_command request: {command}")
-            result = await self._hass.async_add_executor_job(self._client.post, url, command)
+            result = await self._client.post(url, command)
             _LOGGER.debug(f"API send_command response: {str(result)}")
             if not result.get("success"):
                 raise Exception(TuyaAPIData(url, command, result).to_dict())
@@ -57,7 +57,7 @@ class TuyaClimateAPI:
             _LOGGER.debug(f"API send_multiple_command url: {url}")
             command = { "power": power, "mode": mode, "temp": temp, "wind": wind }
             _LOGGER.debug(f"API send_multiple_command request: {command}")
-            result = await self._hass.async_add_executor_job(self._client.post, url, command)
+            result = await self._client.post(url, command)
             _LOGGER.debug(f"API send_multiple_command response: {str(result)}")
             if not result.get("success"):
                 raise Exception(TuyaAPIData(url, command, result).to_dict())
@@ -75,7 +75,7 @@ class TuyaGenericAPI:
         try:
             url = f"/v2.0/infrareds/{infrared_id}/remotes/{device_id}/keys"
             _LOGGER.debug(f"API fetch_data url: {url}")
-            result = await self._hass.async_add_executor_job(self._client.get, url)
+            result = await self._client.get(url)
             _LOGGER.debug(f"API fetch_data response: {str(result)}")
             if result.get("success"):
                 return result.get("result")
@@ -90,7 +90,7 @@ class TuyaGenericAPI:
             _LOGGER.debug(f"API send_command url: {url}")
             command = { "category_id": category_id, "key_id": key_id, "key": key }
             _LOGGER.debug(f"API send_command request: {command}")
-            result = await self._hass.async_add_executor_job(self._client.post, url, command)
+            result = await self._client.post(url, command)
             _LOGGER.debug(f"API send_command response: {str(result)}")
             if not result.get("success"):
                 raise Exception(TuyaAPIData(url, command, result).to_dict())
@@ -108,7 +108,7 @@ class TuyaSensorAPI:
         try:
             url = f"/v2.0/cloud/thing/{device_id}/shadow/properties"
             _LOGGER.debug(f"API fetch_data url: {url}")
-            result = await self._hass.async_add_executor_job(self._client.get, url)
+            result = await self._client.get(url)
             _LOGGER.debug(f"API fetch_data response: {str(result)}")
             if result.get("success"):
                 return result.get("result")
