@@ -57,8 +57,8 @@ Add the following sections in your configuration.yaml and restart HA (Tuya Acces
 ### Example
 ```yaml
 tuya_smart_ir_ac:
-  access_id: "tuya_access_id_example"
-  access_secret: "tuya_access_secret_example"
+  access_id: "ragk5v98sfrtfapmnddf"
+  access_secret: "26c64414d81e43a692e7f8f714ea3b2b"
   country: "EU"
 ```
 
