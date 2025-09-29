@@ -29,6 +29,7 @@ from .const import (
     CONF_FAN_POWER_ON,
     CONF_DRY_MIN_TEMP,
     CONF_DRY_MIN_FAN,
+    CONF_TEMP_UNIT,
     DEFAULT_MIN_TEMP,
     DEFAULT_MAX_TEMP,
     DEFAULT_PRECISION,
@@ -206,6 +207,7 @@ class TuyaSensorEntity():
     def __init__(self, config, sensor_type):
         self._device_id = config.get(CONF_DEVICE_ID)
         self._name = config.get(CONF_NAME)
+        self._unit_of_measurement = config.get(CONF_TEMP_UNIT, UnitOfTemperature.CELSIUS)
         self._sensor_type = sensor_type
 
     def tuya_device_info(self):

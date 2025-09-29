@@ -1,4 +1,4 @@
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_LOW,
@@ -55,6 +55,7 @@ CONF_FAN_POWER_ON = "fan_power_on"
 CONF_DRY_MIN_TEMP = "dry_min_temp"
 CONF_DRY_MIN_FAN = "dry_min_fan"
 CONF_SENSOR_TYPES = "sensor_types"
+CONF_TEMP_UNIT = "temp_unit"
 
 DEFAULT_MIN_TEMP = 16
 DEFAULT_MAX_TEMP = 30
@@ -106,6 +107,11 @@ BATTERY_LEVELS = {
     "high": 100,
     "middle": 50,
     "low": 10
+}
+
+TUYA_TEMP_UNIT = {
+    "c": UnitOfTemperature.CELSIUS,
+    "f": UnitOfTemperature.FAHRENHEIT
 }
 
 TUYA_HVAC_MODES = {

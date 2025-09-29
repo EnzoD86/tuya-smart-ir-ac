@@ -169,7 +169,7 @@ class TuyaSensorTemperatureSensor(SensorEntity, CoordinatorEntity, TuyaSensorEnt
 
     @property    
     def native_unit_of_measurement(self):
-        return UnitOfTemperature.CELSIUS
+        return self._unit_of_measurement
 
     @callback
     def _handle_coordinator_update(self):

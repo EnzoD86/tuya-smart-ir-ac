@@ -45,6 +45,7 @@ from .const import (
     CONF_DRY_MIN_TEMP,
     CONF_DRY_MIN_FAN,
     CONF_SENSOR_TYPES,
+    CONF_TEMP_UNIT,
     DEFAULT_DEVICE_TYPES,
     DEFAULT_MIN_TEMP,
     DEFAULT_MAX_TEMP,
@@ -152,6 +153,8 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "connection"
             else:
                 user_input[CONF_DEVICE_TYPE] = DEVICE_TYPE_SENSOR
+                if data.temp_unit_convert is not None:
+                    user_input[CONF_TEMP_UNIT] = data.temp_unit_convert
                 user_input[CONF_SENSOR_TYPES] = []
                 if data.temp_current is not None:
                     user_input[CONF_SENSOR_TYPES].append(SENSOR_TEMPERATURE)

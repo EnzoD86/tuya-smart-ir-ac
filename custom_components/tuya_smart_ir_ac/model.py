@@ -2,7 +2,8 @@ from .helpers import (
     hass_temperature,
     hass_fan_mode,
     hass_hvac_mode,
-    hass_battery_state
+    hass_battery_state,
+    hass_temp_unit
 )
 
 
@@ -57,7 +58,7 @@ class TuyaGenericKeyData(object):
 class TuyaSensorData(object):
     def parse_data(self, data):
         properties = data.get("properties")   
-        self.temp_unit_convert = self.get_property(properties, "temp_unit_convert")
+        self.temp_unit_convert = hass_temp_unit(self.get_property(properties, "temp_unit_convert"))
         self.temp_current = hass_temperature(self.get_property(properties, "temp_current"), convert = True)
         self.humidity_value = self.get_property(properties, "humidity_value")
         self.battery_state = hass_battery_state(self.get_property(properties, "battery_state"))
