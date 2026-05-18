@@ -49,11 +49,11 @@
   "selector": {
     "country": {
       "options": {
-        "EU": "Europa",
-        "US": "Amerika",
-        "IN": "India",
-        "CN": "China",
-        "SG": "Singapore"
+        "eu": "Europa",
+        "us": "Amerika",
+        "in": "India",
+        "cn": "China",
+        "sg": "Singapore"
       }
     },
     "device_type": {

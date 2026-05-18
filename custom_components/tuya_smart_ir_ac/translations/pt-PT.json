@@ -49,11 +49,11 @@
   "selector": {
     "country": {
       "options": {
-        "EU": "Europa",
-        "US": "América",
-        "IN": "Índia",
-        "CN": "China",
-        "SG": "Singapura"
+        "eu": "Europa",
+        "us": "América",
+        "in": "Índia",
+        "cn": "China",
+        "sg": "Singapura"
       }
     },
     "device_type": {
@@ -300,7 +300,7 @@
     },
     "abort": {
       "device_not_configurable": "Dispositivo não configurável.",
-      "device_not_found": Nenhum dispositivo encontrado."
+      "device_not_found": "Nenhum dispositivo encontrado."
     }
   },
   "exceptions": {
