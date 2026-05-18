@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required("access_id"): cv.string,
         vol.Required("access_secret"): cv.string,
-        vol.Required("country"): vol.In(TUYA_ENDPOINTS.keys()),
+        vol.Required("country"): vol.All(vol.Coerce(str), str.lower, vol.In(TUYA_ENDPOINTS.keys())),
         vol.Optional("update_interval", default=UPDATE_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600))
     })
 }, extra=vol.ALLOW_EXTRA)

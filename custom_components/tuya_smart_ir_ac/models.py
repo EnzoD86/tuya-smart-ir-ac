@@ -26,9 +26,9 @@ type HubConfigEntry = ConfigEntry[RuntimeData]
 class RuntimeData:
     """Isolated, thread-safe runtime data context unique to each individual Hub ConfigEntry."""
     client: TuyaOpenAPI
-    climate_coordinator: Any = None
-    sensor_coordinator: Any = None
-    ir_manager: Any = None
+    climate_coordinator: TuyaClimateCoordinator | None = None
+    sensor_coordinator: TuyaSensorCoordinator | None = None
+    ir_manager: TuyaIRManager | None = None
     hvac_presets: dict[str, Any] = field(default_factory=dict)
 
 
