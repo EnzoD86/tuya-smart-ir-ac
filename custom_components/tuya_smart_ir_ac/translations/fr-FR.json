@@ -1,6 +1,9 @@
 {
   "entity": {
     "number": {
+      "temperature": {
+        "name": "Température"
+      },
       "temp_hvac_mode_auto": {
         "name": "Auto"
       },
@@ -12,6 +15,26 @@
       }
     },
     "select": {
+      "hvac_mode": {
+        "name": "Mode HVAC",
+        "state": {
+          "auto": "Auto",
+          "cool": "Climatisation",
+          "heat": "Chauffage",
+          "dry": "Déshumidification",
+          "fan_only": "Ventilation seule",
+          "off": "Arrêt"
+        }
+      },
+      "fan_mode": {
+        "name": "Vitesse du ventilateur",
+        "state": {
+          "auto": "Auto",
+          "low": "Basse",
+          "medium": "Moyenne",
+          "high": "Haute"
+        }
+      },
       "fan_hvac_mode": {
         "name": "Vitesse du ventilateur",
         "state": {
@@ -24,6 +47,15 @@
     }
   },
   "selector": {
+    "country": {
+      "options": {
+        "EU": "Europe",
+        "US": "Amérique",
+        "IN": "Inde",
+        "CN": "Chine",
+        "SG": "Singapour"
+      }
+    },
     "device_type": {
       "options": {
         "climate": "Climatiseur",
@@ -47,6 +79,21 @@
         "low": "Basse",
         "medium": "Moyenne",
         "high": "Haute"
+      }
+    },
+    "hvac_presets": {
+      "options": {
+        "fan_hvac_mode": "Vitesse du ventilateur par défaut",
+        "temp_hvac_mode": "Température par défaut"
+      }
+    },
+    "optional_entities": {
+      "options": {
+        "current_temperature": "Capteur de température",
+        "current_humidity": "Capteur d'humidité",
+        "hvac_mode": "Contrôle du mode HVAC",
+        "fan_mode": "Contrôle du ventilateur",
+        "temp_setpoint": "Contrôle de la température"
       }
     },
     "hvac_power_on": {
@@ -73,14 +120,68 @@
   },
   "config": {
     "step": {
-      "user": {
-        "title": "Configuration de l'appareil",
-         "data": {
-            "device_type": "Type d'appareil"
-         }
+      "hub_settings": {
+        "title": "Paramètres du Hub",
+        "description": "Saisissez vos identifiants API Tuya Cloud.",
+        "data": {
+          "access_id": "ID d'accès Tuya",
+          "access_secret": "Clé secrète d'accès Tuya",
+          "country": "API pays Tuya",
+          "climate_update_interval": "Intervalle de mise à jour du climatiseur",
+          "sensor_update_interval": "Intervalle de mise à jour du capteur de température/humidité"
+        }
+      }
+    },
+    "error": {
+      "hub_already_configured": "Ce hub est déjà configuré."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configuration Tuya Smart IR",
+        "menu_options": {
+          "device_management": "Gestion des appareils",
+          "hub_settings": "Paramètres du Hub"
+        }
       },
-      "climate": {
-        "title": "Configuration du climatiseur",
+      "device_management": {
+        "title": "Gestion des appareils",
+        "menu_options": {
+          "climate_management": "Gestion des climatiseurs",
+          "generic_management": "Gestion des appareils génériques",
+          "sensor_management": "Gestion des capteurs de température/humidité",
+          "back_to_init": "⬅️ Retour au menu principal"
+        }
+      },
+      "climate_management": {
+        "title": "Gestion des climatiseurs",
+        "menu_options": {
+          "add_climate": "Ajouter un nouveau climatiseur",
+          "edit_climate": "Modifier un climatiseur existant",
+          "remove_climate": "Supprimer un climatiseur existant",
+          "back_to_devices": "⬅️ Retour à la gestion des appareils"
+        }
+      },
+      "generic_management": {
+        "title": "Gestion des appareils génériques",
+        "menu_options": {
+          "add_generic": "Ajouter un nouveau appareil générique",
+          "remove_generic": "Supprimer un appareil générique existant",
+          "back_to_devices": "⬅️ Retour à la gestion des appareils"
+        }
+      },
+      "sensor_management": {
+        "title": "Gestion des capteurs de température/humidité",
+        "menu_options": {
+          "add_sensor": "Ajouter un nouveau capteur de température/humidité",
+          "remove_sensor": "Supprimer un capteur de température/humidité existant",
+          "back_to_devices": "⬅️ Retour à la gestion des appareils"
+        }
+      },
+      "add_climate": {
+        "title": "Ajouter un climatiseur",
+        "description": "Saisissez les données pour associer un nouveau climatiseur.",
         "data": {
           "infrared_id": "ID du hub infrarouge",
           "device_id": "ID du climatiseur",
@@ -92,9 +193,8 @@
           "temp_step": "Pas de température",
           "hvac_modes": "Modes HVAC pris en charge",
           "fan_modes": "Modes de ventilation pris en charge",
-          "temp_hvac_mode": "Températures par défaut lors du réglage du mode HVAC",
-          "fan_hvac_mode": "Vitesse du ventilateur par défaut lors du réglage du mode HVAC",
-          "extra_sensors": "Expose les capteurs configurés"
+          "hvac_presets": "Préréglages automatiques HVAC",
+          "optional_entities": "Entités optionnelles"
         },
         "sections": {
           "compatibility_options": {
@@ -109,34 +209,9 @@
           }
         }
       },
-      "generic": {
-        "title": "Configuration d'un appareil générique",
-        "data": {
-          "infrared_id": "ID du hub infrarouge",
-          "device_id": "ID de l'appareil",
-          "name": "Nom de l'appareil"
-        }
-      },
-      "sensor": {
-        "title": "Configuration du capteur de température/humidité",
-        "data": {
-          "device_id": "ID de l'appareil",
-          "name": "Nom de l'appareil"
-        }
-      }
-    },
-    "error": {
-      "already_configured": "Cet appareil a déjà été configuré.",
-      "connection": "Impossible de se connecter à l'appareil ; consultez le journal pour plus d'informations."
-    },
-    "abort": {
-      "credentials": "Intégration non configurée ou identifiants incorrects."
-    }
-  },
-  "options": {
-    "step": {
-      "climate": {
-        "title": "Configuration du climatiseur",
+      "edit_climate": {
+        "title": "Modifier un climatiseur",
+        "description": "Mettre à jour les options du climatiseur.",
         "data": {
           "temperature_sensor": "Capteur de température",
           "humidity_sensor": "Capteur d'humidité",
@@ -145,9 +220,8 @@
           "temp_step": "Pas de température",
           "hvac_modes": "Modes HVAC pris en charge",
           "fan_modes": "Modes de ventilation pris en charge",
-          "temp_hvac_mode": "Températures par défaut lors du réglage du mode HVAC",
-          "fan_hvac_mode": "Vitesse du ventilateur par défaut lors du réglage du mode HVAC",
-          "extra_sensors": "Expose les capteurs configurés"
+          "hvac_presets": "Préréglages automatiques HVAC",
+          "optional_entities": "Entités optionnelles"
         },
         "sections": {
           "compatibility_options": {
@@ -161,10 +235,72 @@
             }
           }
         }
+      },
+      "remove_climate": {
+        "title": "Supprimer un climatiseur",
+        "description": "Sélectionnez le climatiseur que vous souhaitez retirer du Hub.",
+        "data": {
+          "climate_id": "Climatiseur"
+        }
+      },
+      "add_generic": {
+        "title": "Ajouter un appareil générique",
+        "description": "Saisissez les données pour associer un nouvel appareil générique.",
+        "data": {
+          "device_id": "ID de l'appareil",
+          "infrared_id": "ID du hub infrarouge",
+          "name": "Nom de l'appareil"
+        }
+      },
+      "add_sensor": {
+        "title": "Ajouter un capteur de température/humidité",
+        "description": "Saisissez les données pour associer un nouveau capteur de température/humidité.",
+        "data": {
+          "device_id": "ID de l'appareil",
+          "name": "Nom de l'appareil"
+        }
+      },
+      "hub_settings": {
+        "title": "Paramètres du Hub",
+        "description": "Modifier les identifiants d'accès et les intervalles de mise à jour des données.",
+        "data": {
+          "access_id": "ID d'accès Tuya",
+          "access_secret": "Clé secrète d'accès Tuya",
+          "country": "API pays Tuya",
+          "climate_update_interval": "Intervalle de mise à jour du climatiseur",
+          "sensor_update_interval": "Intervalle de mise à jour du capteur de température/humidité"
+        }
+      },
+      "select_climate": {
+        "title": "Sélectionner un climatiseur",
+        "description": "Choisissez le climatiseur que vous souhaitez gérer.",
+        "data": {
+          "climate_id": "Climatiseur"
+        }
+      },
+      "select_generic": {
+        "title": "Sélectionner un appareil générique",
+        "description": "Choisissez l'appareil générique que vous souhaitez gérer.",
+        "data": {
+          "generic_id": "Appareil générique"
+        }
+      },
+      "select_sensor": {
+        "title": "Sélectionner un capteur de température/humidité",
+        "description": "Choisissez le capteur de température/humidité que vous souhaitez gérer.",
+        "data": {
+          "sensor_id": "Capteur de température/humidité"
+        }
       }
     },
+    "error": {
+      "device_already_configured": "Cet appareil a déjà été configuré.",
+      "device_already_configured_on_other_hub": "Cet appareil est déjà configuré sur un autre Hub.",
+      "tuya_api_error": "Erreur Cloud Tuya: {error_info}"
+    },
     "abort": {
-      "not_configurable": "Appareil non configurable !"
+      "device_not_configurable": "Appareil non configurable .",
+      "device_not_found": "Aucun appareil trouvé."
     }
   },
   "exceptions": {

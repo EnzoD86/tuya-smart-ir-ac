@@ -1,6 +1,9 @@
 {
   "entity": {
     "number": {
+      "temperature": {
+        "name": "Temperatura"
+      },
       "temp_hvac_mode_auto": {
         "name": "Automático"
       },
@@ -12,6 +15,26 @@
       }
     },
     "select": {
+      "hvac_mode": {
+        "name": "Modo HVAC",
+        "state": {
+          "auto": "Automático",
+          "cool": "Resfriar",
+          "heat": "Aquecimento",
+          "dry": "Desumidificar",
+          "fan_only": "Apenas ventilador",
+          "off": "Desligado"
+        }
+      },
+      "fan_mode": {
+        "name": "Velocidade do ventilador",
+        "state": {
+          "auto": "Automático",
+          "low": "Baixa",
+          "medium": "Média",
+          "high": "Alta"
+        }
+      },
       "fan_hvac_mode": {
         "name": "Velocidade do ventilador",
         "state": {
@@ -24,6 +47,15 @@
     }
   },
   "selector": {
+    "country": {
+      "options": {
+        "EU": "Europa",
+        "US": "América",
+        "IN": "Índia",
+        "CN": "China",
+        "SG": "Cingapura"
+      }
+    },
     "device_type": {
       "options": {
         "climate": "Ar-condicionado",
@@ -47,6 +79,21 @@
         "low": "Baixa",
         "medium": "Média",
         "high": "Alta"
+      }
+    },
+    "hvac_presets": {
+      "options": {
+        "fan_hvac_mode": "Velocidade padrão do ventilador",
+        "temp_hvac_mode": "Temperatura padrão"
+      }
+    },
+    "optional_entities": {
+      "options": {
+        "current_temperature": "Sensor de temperatura",
+        "current_humidity": "Sensor de umidade",
+        "hvac_mode": "Controle do modo HVAC",
+        "fan_mode": "Controle do ventilador",
+        "temp_setpoint": "Controle de temperatura"
       }
     },
     "hvac_power_on": {
@@ -73,14 +120,68 @@
   },
   "config": {
     "step": {
-      "user": {
-        "title": "Configuração do dispositivo",
+      "hub_settings": {
+        "title": "Configurações do Hub",
+        "description": "Insira suas credenciais da API Tuya Cloud.",
         "data": {
-          "device_type": "Tipo de dispositivo"
+          "access_id": "ID de acesso Tuya",
+          "access_secret": "Chave secreta de acesso Tuya",
+          "country": "API do país Tuya",
+          "climate_update_interval": "Intervalo de atualização do ar-condicionado",
+          "sensor_update_interval": "Intervalo de atualização do sensor de temperatura/umidade"
+        }
+      }
+    },
+    "error": {
+      "hub_already_configured": "Este hub já está configurado."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configuração do Tuya Smart IR",
+        "menu_options": {
+          "device_management": "Gerenciamento de Dispositivos",
+          "hub_settings": "Configurações do Hub"
         }
       },
-      "climate": {
-        "title": "Configuração do ar-condicionado",
+      "device_management": {
+        "title": "Gerenciamento de Dispositivos",
+        "menu_options": {
+          "climate_management": "Gerenciamento de Ar-condicionado",
+          "generic_management": "Gerenciamento de Dispositivos Genéricos",
+          "sensor_management": "Gerenciamento de Sensores de Temperatura/Umidade",
+          "back_to_init": "⬅️ Voltar ao Menu Principal"
+        }
+      },
+      "climate_management": {
+        "title": "Gerenciamento de Ar-condicionado",
+        "menu_options": {
+          "add_climate": "Adicionar um novo ar-condicionado",
+          "edit_climate": "Editar um ar-condicionado existente",
+          "remove_climate": "Remover un ar-condicionado existente",
+          "back_to_devices": "⬅️ Voltar ao Gerenciamento de Dispositivos"
+        }
+      },
+      "generic_management": {
+        "title": "Gerenciamento de Dispositivos Genéricos",
+        "menu_options": {
+          "add_generic": "Adicionar um novo dispositivo genérico",
+          "remove_generic": "Remover um dispositivo genérico existente",
+          "back_to_devices": "⬅️ Voltar ao Gerenciamento de Dispositivos"
+        }
+      },
+      "sensor_management": {
+        "title": "Gerenciamento de Sensores de Temperatura/Umidade",
+        "menu_options": {
+          "add_sensor": "Adicionar um novo sensor de temperatura/umidade",
+          "remove_sensor": "Remover um sensor de temperatura/umidade existente",
+          "back_to_devices": "⬅️ Voltar ao Gerenciamento de Dispositivos"
+        }
+      },
+      "add_climate": {
+        "title": "Adicionar Ar-condicionado",
+        "description": "Insira os dados para emparelhar um novo ar-condicionado.",
         "data": {
           "infrared_id": "ID do hub infravermelho",
           "device_id": "ID do ar-condicionado",
@@ -92,9 +193,8 @@
           "temp_step": "Incremento de temperatura",
           "hvac_modes": "Modos de HVAC suportados",
           "fan_modes": "Modos de ventilador suportados",
-          "temp_hvac_mode": "Temperaturas padrão ao definir o modo HVAC",
-          "fan_hvac_mode": "Velocidade padrão do ventilador ao definir o modo HVAC",
-          "extra_sensors": "Expor os sensores configurados"
+          "hvac_presets": "Predefinições automáticas de HVAC",
+          "optional_entities": "Entidades opcionais"
         },
         "sections": {
           "compatibility_options": {
@@ -109,34 +209,9 @@
           }
         }
       },
-      "generic": {
-        "title": "Configuração genérica do dispositivo",
-        "data": {
-          "infrared_id": "ID do hub infravermelho",
-          "device_id": "ID do dispositivo",
-          "name": "Nome do dispositivo"
-        }
-      },
-      "sensor": {
-        "title": "Configuração do sensor de temperatura/umidade",
-        "data": {
-          "device_id": "ID do dispositivo",
-          "name": "Nome do dispositivo"
-        }
-      }
-    },
-    "error": {
-      "already_configured": "Este dispositivo já foi configurado.",
-      "connection": "Não foi possível conectar ao dispositivo; verifique o log para mais informações."
-    },
-    "abort": {
-      "credentials": "Integração não configurada ou credenciais incorretas."
-    }
-  },
-  "options": {
-    "step": {
-      "climate": {
-        "title": "Configuração do ar-condicionado",
+      "edit_climate": {
+        "title": "Editar Ar-condicionado",
+        "description": "Atualize as opções do ar-condicionado.",
         "data": {
           "temperature_sensor": "Sensor de temperatura",
           "humidity_sensor": "Sensor de umidade",
@@ -145,9 +220,8 @@
           "temp_step": "Incremento de temperatura",
           "hvac_modes": "Modos de HVAC suportados",
           "fan_modes": "Modos de ventilador suportados",
-          "temp_hvac_mode": "Temperaturas padrão ao definir o modo HVAC",
-          "fan_hvac_mode": "Velocidade padrão do ventilador ao definir o modo HVAC",
-          "extra_sensors": "Expor os sensores configurados"
+          "hvac_presets": "Predefinições automáticas de HVAC",
+          "optional_entities": "Entidades opcionais"
         },
         "sections": {
           "compatibility_options": {
@@ -161,10 +235,72 @@
             }
           }
         }
+      },
+      "remove_climate": {
+        "title": "Remover Ar-condicionado",
+        "description": "Selecione o ar-condicionado que deseja remover do Hub.",
+        "data": {
+          "climate_id": "Ar-condicionado"
+        }
+      },
+      "add_generic": {
+        "title": "Adicionar Dispositivo Genérico",
+        "description": "Insira os dados para emparelhar um novo dispositivo genérico.",
+        "data": {
+          "device_id": "ID do dispositivo",
+          "infrared_id": "ID do hub infravermelho",
+          "name": "Nome do dispositivo"
+        }
+      },
+      "add_sensor": {
+        "title": "Adicionar Sensor de Temperatura/Umidade",
+        "description": "Insira os dados para emparelhar um novo sensor de temperatura/umidade.",
+        "data": {
+          "device_id": "ID do dispositivo",
+          "name": "Nome do dispositivo"
+        }
+      },
+      "hub_settings": {
+        "title": "Configurações do Hub",
+        "description": "Modificar credenciais de acesso e intervalos de atualização de dados.",
+        "data": {
+          "access_id": "ID de acesso Tuya",
+          "access_secret": "Chave secreta de acesso Tuya",
+          "country": "API do país Tuya",
+          "climate_update_interval": "Intervalo de atualização do ar-condicionado",
+          "sensor_update_interval": "Intervalo de atualização do sensor de temperatura/umidade"
+        }
+      },
+      "select_climate": {
+        "title": "Selecionar Ar-condicionado",
+        "description": "Escolha o ar-condicionado que deseja gerenciar.",
+        "data": {
+          "climate_id": "Ar-condicionado"
+        }
+      },
+      "select_generic": {
+        "title": "Selecionar Dispositivo Genérico",
+        "description": "Escolha o dispositivo genérico que deseja gerenciar.",
+        "data": {
+          "generic_id": "Dispositivo genérico"
+        }
+      },
+      "select_sensor": {
+        "title": "Selecionar Sensor de Temperatura/Umidade",
+        "description": "Escolha o sensor de temperatura/umidade que deseja gerenciar.",
+        "data": {
+          "sensor_id": "Sensor de temperatura/umidade"
+        }
       }
     },
+    "error": {
+      "device_already_configured": "Este dispositivo já foi configurado.",
+      "device_already_configured_on_other_hub": "Este dispositivo já está configurado em outro Hub.",
+      "tuya_api_error": "Erro na Cloud Tuya: {error_info}"
+    },
     "abort": {
-      "not_configurable": "Dispositivo não configurável!"
+      "device_not_configurable": "Dispositivo não configurável.",
+      "device_not_found": "Nenhum dispositivo encontrado."
     }
   },
   "exceptions": {

@@ -1,4 +1,10 @@
-from homeassistant.components.number import RestoreNumber
+import logging
+from typing import Any
+
+from homeassistant.components.number import (
+    NumberEntity,
+    RestoreNumber
+)
 from homeassistant.components.number.const import (
     NumberDeviceClass,
     NumberMode
@@ -7,78 +13,131 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTemperature
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.components.climate import HVACMode
+
 from .const import (
-    DEVICE_TYPE_CLIMATE,
-    CONF_DEVICE_TYPE,
-    CONF_TEMP_HVAC_MODE,
-    DEFAULT_TEMP_HVAC_MODE,
-    DEFAULT_TEMP_HVAC_MODES
+    CONF_HVAC_PRESETS,
+    CONF_OPTIONAL_ENTITIES,
+    DEVICE_TYPE_CLIMATES,
+    SUPPORTED_TEMP_HVAC_MODES,
+    PRESET_TEMP_HVAC_MODE,
+    ENTITY_TEMPERATURE_SETPOINT,
 )
-from .helpers import valid_number_data
+from .helpers import (
+    valid_number_data,
+    clamp_to_boundaries
+)
 from .entity import TuyaClimateEntity
+from .models import HubConfigEntry, RuntimeData
+
+_LOGGER = logging.getLogger(__package__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    device_type = config_entry.data.get(CONF_DEVICE_TYPE, None)
-    if device_type == DEVICE_TYPE_CLIMATE: 
-        temp_hvac_mode = config_entry.data.get(CONF_TEMP_HVAC_MODE, DEFAULT_TEMP_HVAC_MODE)
-        if temp_hvac_mode:
-            async_add_entities(TuyaNumber(config_entry.data, temp_hvac_mode) for temp_hvac_mode in DEFAULT_TEMP_HVAC_MODES)
+async def async_setup_entry(
+    hass: HomeAssistant, 
+    config_entry: HubConfigEntry, 
+    async_add_entities
+) -> None:
+    """Set up Tuya number entities from a config entry."""
+    active_entities = []
+    climates_data = config_entry.options.get(DEVICE_TYPE_CLIMATES, [])
+    runtime_data = config_entry.runtime_data
+
+    for config_data in climates_data:
+        hvac_presets = config_data.get(CONF_HVAC_PRESETS, [])
+        if PRESET_TEMP_HVAC_MODE in hvac_presets:
+            for mode in SUPPORTED_TEMP_HVAC_MODES:  
+                entity = TuyaPresetTemperatureNumber(config_data, runtime_data, mode)
+                active_entities.append(entity)
+
+        optional_entities = config_data.get(CONF_OPTIONAL_ENTITIES, [])    
+        if optional_entities:
+            if ENTITY_TEMPERATURE_SETPOINT in optional_entities:
+                entity = TuyaTemperatureSetPointNumber(config_data, runtime_data)
+                active_entities.append(entity)
+
+    if active_entities:
+        async_add_entities(active_entities)
 
 
-class TuyaNumber(RestoreNumber, TuyaClimateEntity):
-    def __init__(self, config, temp_hvac_mode):
+class TuyaPresetTemperatureNumber(RestoreNumber, TuyaClimateEntity):
+    """Representation of a Tuya preset temperature configuration entity."""
+
+    def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData, temp_hvac_mode: str) -> None:
+        """Initialize the preset temperature entity."""
+        TuyaClimateEntity.__init__(self, config_data, runtime_data, f"{PRESET_TEMP_HVAC_MODE}_{temp_hvac_mode}")
         RestoreNumber.__init__(self)
-        TuyaClimateEntity.__init__(self, config)
         self._temp_hvac_mode = temp_hvac_mode
 
-    @property
-    def has_entity_name(self):
-        return True
+        self._attr_has_entity_name = True
+        self._attr_translation_key = f"{PRESET_TEMP_HVAC_MODE}_{temp_hvac_mode}"
+        self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_device_class = NumberDeviceClass.TEMPERATURE
+        self._attr_mode = NumberMode.SLIDER
+        self._attr_native_min_value = self._min_temp
+        self._attr_native_max_value = self._max_temp
+        self._attr_native_step = self._temp_step
+        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
-    @property
-    def translation_key(self):
-        return f"{CONF_TEMP_HVAC_MODE}_{self._temp_hvac_mode}"
-
-    @property
-    def unique_id(self):
-        return self.number_unique_id(self._temp_hvac_mode)
-
-    @property
-    def device_info(self):
-        return self.tuya_device_info()
-
-    @property
-    def entity_category(self):
-        return EntityCategory.CONFIG
-
-    @property
-    def device_class(self):
-        return NumberDeviceClass.TEMPERATURE
-
-    @property
-    def mode(self):
-        return NumberMode.SLIDER
-
-    @property
-    def native_min_value(self):
-        return self._min_temp
-
-    @property
-    def native_max_value(self):
-        return self._max_temp
-
-    @property
-    def native_step(self):
-        return self._temp_step
-
-    @property
-    def native_unit_of_measurement(self):
-        return UnitOfTemperature.CELSIUS
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
+        """Handle entity data restoration and sync with central hvac_presets."""
+        await super().async_added_to_hass()
         last_number = await self.async_get_last_number_data()
-        self._attr_native_value = last_number.native_value if valid_number_data(last_number) else (self._min_temp + self._max_temp) / 2
+        
+        if valid_number_data(last_number):
+            restored_value = last_number.native_value
+            self._attr_native_value = clamp_to_boundaries(restored_value, self._min_temp, self._max_temp)
+            if self._attr_native_value != restored_value:
+                _LOGGER.warning(
+                    "Restored preset value %s for %s was out of bounds. Clamped to %s due to configuration changes",
+                    restored_value, self._temp_hvac_mode, self._attr_native_value
+                )
+        else:
+            calculated_fallback = (self._min_temp + self._max_temp) / 2
+            self._attr_native_value = clamp_to_boundaries(calculated_fallback, self._min_temp, self._max_temp)
+            _LOGGER.debug(
+                "No restored state for %s configuration preset, using default fallback value: %s", 
+                self._temp_hvac_mode, self._attr_native_value
+            )
 
-    async def async_set_native_value(self, value):
+        self.set_hvac_preset_temperature(self._temp_hvac_mode, self._attr_native_value)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set new local preset temperature and commit the state change to RuntimeData."""
+        _LOGGER.debug("Updating preset temperature for %s mode to %s", self._temp_hvac_mode, value)
         self._attr_native_value = value
+        self.set_hvac_preset_temperature(self._temp_hvac_mode, value)
+        self.async_write_ha_state()
+
+
+class TuyaTemperatureSetPointNumber(NumberEntity, CoordinatorEntity, TuyaClimateEntity):
+    """Representation of a Tuya temperature setpoint dynamic entity linked to the coordinator."""
+
+    def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
+        """Initialize the temperature setpoint entity."""
+        TuyaClimateEntity.__init__(self, config_data, runtime_data, ENTITY_TEMPERATURE_SETPOINT)
+        super().__init__(runtime_data.climate_coordinator)
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = f"{ENTITY_TEMPERATURE_SETPOINT}"
+        self._attr_device_class = NumberDeviceClass.TEMPERATURE
+        self._attr_mode = NumberMode.SLIDER
+        self._attr_native_min_value = self._min_temp
+        self._attr_native_max_value = self._max_temp
+        self._attr_native_step = self._temp_step
+        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+
+    @property
+    def native_value(self) -> float | None:
+        """Return target climate temperature setpoint value fetched from coordinator cache data."""
+        if self.coordinator.data and (data := self.coordinator.data.get(self._climate_id)):
+            return float(data.temperature) if data.temperature is not None else None
+        return None
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Transmit new target temperature setpoint using central execution logic."""
+        _LOGGER.debug("Sending immediate target temperature override to %s for device %s", value, self._name)
+        await self.async_execute_set_temperature(value)
+        self.async_write_ha_state()

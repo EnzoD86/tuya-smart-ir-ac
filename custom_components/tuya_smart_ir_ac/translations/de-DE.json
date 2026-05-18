@@ -1,6 +1,9 @@
 {
   "entity": {
     "number": {
+      "temperature": {
+        "name": "Temperatur"
+      },
       "temp_hvac_mode_auto": {
         "name": "Automatisch"
       },
@@ -12,6 +15,26 @@
       }
     },
     "select": {
+      "hvac_mode": {
+        "name": "HVAC-Modus",
+        "state": {
+          "auto": "Automatisch",
+          "cool": "Kühlen",
+          "heat": "Heizen",
+          "dry": "Entfeuchten",
+          "fan_only": "Nur Ventilator",
+          "off": "Ausgeschaltet"
+        }
+      },
+      "fan_mode": {
+        "name": "Ventilatorgeschwindigkeit",
+        "state": {
+          "auto": "Automatisch",
+          "low": "Niedrig",
+          "medium": "Mittel",
+          "high": "Hoch"
+        }
+      },
       "fan_hvac_mode": {
         "name": "Ventilatorgeschwindigkeit",
         "state": {
@@ -24,11 +47,20 @@
     }
   },
   "selector": {
+    "country": {
+      "options": {
+        "EU": "Europa",
+        "US": "Amerika",
+        "IN": "Indien",
+        "CN": "China",
+        "SG": "Singapur"
+      }
+    },
     "device_type": {
       "options": {
         "climate": "Klimaanlage",
         "generic": "Allgemeines Gerät",
-        "sensor": "Temperatur-/Feuchtigkeitssensor (experimentell)"
+        "sensor": "Temperatur-/Feuchtigkeitssensor (experimenteel)"
       }
     },
     "hvac_modes": {
@@ -47,6 +79,21 @@
         "low": "Niedrig",
         "medium": "Mittel",
         "high": "Hoch"
+      }
+    },
+    "hvac_presets": {
+      "options": {
+        "fan_hvac_mode": "Standard-Ventilatorgeschwindigkeit",
+        "temp_hvac_mode": "Standardtemperatur"
+      }
+    },
+    "optional_entities": {
+      "options": {
+        "current_temperature": "Temperatursensor",
+        "current_humidity": "Feuchtigkeitssensor",
+        "hvac_mode": "HVAC-Steuerung",
+        "fan_mode": "Ventilatorsteuerung",
+        "temp_setpoint": "Temperatursteuerung"
       }
     },
     "hvac_power_on": {
@@ -73,14 +120,68 @@
   },
   "config": {
     "step": {
-      "user": {
-        "title": "Gerätekonfiguration",
+      "hub_settings": {
+        "title": "Hub-Einstellungen",
+        "description": "Geben Sie Ihre Tuya Cloud-API-Anmeldedaten ein.",
         "data": {
-          "device_type": "Gerätetyp"
+          "access_id": "Tuya Access ID",
+          "access_secret": "Tuya Access Secret",
+          "country": "Tuya Länder-API",
+          "climate_update_interval": "Aktualisierungsintervall der Klimaanlage",
+          "sensor_update_interval": "Aktualisierungsintervall des Temperatur-/Feuchtigkeitssensors"
+        }
+      }
+    },
+    "error": {
+      "hub_already_configured": "Dieser Hub ist bereits konfiguriert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tuya Smart IR Konfiguration",
+        "menu_options": {
+          "device_management": "Geräteverwaltung",
+          "hub_settings": "Hub-Einstellungen"
         }
       },
-      "climate": {
-        "title": "Klimaanlagenkonfiguration",
+      "device_management": {
+        "title": "Geräteverwaltung",
+        "menu_options": {
+          "climate_management": "Klimaanlagenverwaltung",
+          "generic_management": "Verwaltung allgemeiner Geräte",
+          "sensor_management": "Verwaltung von Temperatur-/Feuchtigkeitssensoren",
+          "back_to_init": "⬅️ Zurück zum Hauptmenü"
+        }
+      },
+      "climate_management": {
+        "title": "Klimaanlagenverwaltung",
+        "menu_options": {
+          "add_climate": "Neue Klimaanlage hinzufügen",
+          "edit_climate": "Bestehende Klimaanlage bearbeiten",
+          "remove_climate": "Bestehende Klimaanlage entfernen",
+          "back_to_devices": "⬅️ Zurück zur Geräteverwaltung"
+        }
+      },
+      "generic_management": {
+        "title": "Verwaltung allgemeiner Geräte",
+        "menu_options": {
+          "add_generic": "Neues allgemeines Gerät hinzufügen",
+          "remove_generic": "Bestehendes allgemeines Gerät entfernen",
+          "back_to_devices": "⬅️ Zurück zur Geräteverwaltung"
+        }
+      },
+      "sensor_management": {
+        "title": "Verwaltung von Temperatur-/Feuchtigkeitssensoren",
+        "menu_options": {
+          "add_sensor": "Neuen Temperatur-/Feuchtigkeitssensor hinzufügen",
+          "remove_sensor": "Bestehenden Temperatur-/Feuchtigkeitssensor entfernen",
+          "back_to_devices": "⬅️ Zurück zur Geräteverwaltung"
+        }
+      },
+      "add_climate": {
+        "title": "Klimaanlage hinzufügen",
+        "description": "Geben Sie die Daten ein, um eine neue Klimaanlage zu koppeln.",
         "data": {
           "infrared_id": "Infrarot-Hub-ID",
           "device_id": "Klimaanlagen-ID",
@@ -92,9 +193,8 @@
           "temp_step": "Temperaturschritt",
           "hvac_modes": "Unterstützte HVAC-Modi",
           "fan_modes": "Unterstützte Ventilatormodi",
-          "temp_hvac_mode": "Standardtemperaturen beim Einstellen des HVAC-Modus",
-          "fan_hvac_mode": "Standard-Ventilatorgeschwindigkeit beim Einstellen des HVAC-Modus",
-          "extra_sensors": "Konfigurierte Sensoren anzeigen"
+          "hvac_presets": "Automatische HVAC-Voreinstellungen",
+          "optional_entities": "Optionale Entitäten"
         },
         "sections": {
           "compatibility_options": {
@@ -109,34 +209,9 @@
           }
         }
       },
-      "generic": {
-        "title": "Allgemeine Gerätekonfiguration",
-        "data": {
-          "infrared_id": "Infrarot-Hub-ID",
-          "device_id": "Geräte-ID",
-          "name": "Gerätename"
-        }
-      },
-      "sensor": {
-        "title": "Konfiguration des Temperatur-/Feuchtigkeitssensors",
-        "data": {
-          "device_id": "Geräte-ID",
-          "name": "Gerätename"
-        }
-      }
-    },
-    "error": {
-      "already_configured": "Dieses Gerät wurde bereits konfiguriert.",
-      "connection": "Verbindung zum Gerät fehlgeschlagen; siehe Protokoll für weitere Informationen."
-    },
-    "abort": {
-      "credentials": "Integration nicht konfiguriert oder ungültige Anmeldedaten."
-    }
-  },
-  "options": {
-    "step": {
-      "climate": {
-        "title": "Klimaanlagenkonfiguration",
+      "edit_climate": {
+        "title": "Klimaanlage bearbeiten",
+        "description": "Aktualisieren Sie die Optionen für die Klimaanlage.",
         "data": {
           "temperature_sensor": "Temperatursensor",
           "humidity_sensor": "Feuchtigkeitssensor",
@@ -145,9 +220,8 @@
           "temp_step": "Temperaturschritt",
           "hvac_modes": "Unterstützte HVAC-Modi",
           "fan_modes": "Unterstützte Ventilatormodi",
-          "temp_hvac_mode": "Standardtemperaturen beim Einstellen des HVAC-Modus",
-          "fan_hvac_mode": "Standard-Ventilatorgeschwindigkeit beim Einstellen des HVAC-Modus",
-          "extra_sensors": "Konfigurierte Sensoren anzeigen"
+          "hvac_presets": "Automatische HVAC-Voreinstellungen",
+          "optional_entities": "Optionale Entitäten"
         },
         "sections": {
           "compatibility_options": {
@@ -161,10 +235,72 @@
             }
           }
         }
+      },
+      "remove_climate": {
+        "title": "Klimaanlage entfernen",
+        "description": "Wählen Sie die Klimaanlage aus, die Sie aus dem Hub entfernen möchten.",
+        "data": {
+          "climate_id": "Klimaanlage"
+        }
+      },
+      "add_generic": {
+        "title": "Allgemeines Gerät hinzufügen",
+        "description": "Geben Sie die Daten ein, um ein neues allgemeines Gerät zu koppeln.",
+        "data": {
+          "device_id": "Geräte-ID",
+          "infrared_id": "Infrarot-Hub-ID",
+          "name": "Gerätename"
+        }
+      },
+      "add_sensor": {
+        "title": "Temperatur-/Feuchtigkeitssensor hinzufügen",
+        "description": "Geben Sie die Daten ein, um einen neuen Temperatur-/Feuchtigkeitssensor zu koppeln.",
+        "data": {
+          "device_id": "Geräte-ID",
+          "name": "Gerätename"
+        }
+      },
+      "hub_settings": {
+        "title": "Hub-Einstellungen",
+        "description": "Zugangsdaten und Datenaktualisierungsintervalle ändern.",
+        "data": {
+          "access_id": "Tuya Access ID",
+          "access_secret": "Tuya Access Secret",
+          "country": "Tuya Länder-API",
+          "climate_update_interval": "Aktualisierungsintervall der Klimaanlage",
+          "sensor_update_interval": "Aktualisierungsintervall des Temperatur-/Feuchtigkeitssensors"
+        }
+      },
+      "select_climate": {
+        "title": "Klimaanlage auswählen",
+        "description": "Wählen Sie die Klimaanlage aus, die Sie verwalten möchten.",
+        "data": {
+          "climate_id": "Klimaanlage"
+        }
+      },
+      "select_generic": {
+        "title": "Allgemeines Gerät auswählen",
+        "description": "Wählen Sie das allgemeine Gerät aus, das Sie verwalten möchten.",
+        "data": {
+          "generic_id": "Allgemeines Gerät"
+        }
+      },
+      "select_sensor": {
+        "title": "Temperatur-/Feuchtigkeitssensor auswählen",
+        "description": "Wählen Sie den Temperatur-/Feuchtigkeitssensor aus, den Sie verwalten möchten.",
+        "data": {
+          "sensor_id": "Temperatur-/Feuchtigkeitssensor"
+        }
       }
     },
+    "error": {
+      "device_already_configured": "Dieses Gerät wurde bereits konfiguriert.",
+      "device_already_configured_on_other_hub": "Dieses Gerät ist bereits auf einem anderen Hub konfiguriert.",
+      "tuya_api_error": "Tuya Cloud Fehler: {error_info}"
+    },
     "abort": {
-      "not_configurable": "Gerät nicht konfigurierbar!"
+      "device_not_configurable": "Gerät nicht konfigurierbar.",
+      "device_not_found": "Keine Geräte gefunden."
     }
   },
   "exceptions": {

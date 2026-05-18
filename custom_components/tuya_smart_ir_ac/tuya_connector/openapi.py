@@ -179,6 +179,11 @@ class TuyaOpenAPI:
 
         return response
 
+    async def close(self) -> None:
+        """Close the underlying aiohttp client session."""
+        if self.session and not self.session.closed:
+            await self.session.close()
+
     async def is_connect(self) -> bool:
         """Is connect to tuya cloud."""
         return self.token_info is not None and len(self.token_info.access_token) > 0
