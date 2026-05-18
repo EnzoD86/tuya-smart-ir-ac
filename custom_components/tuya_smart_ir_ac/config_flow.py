@@ -133,7 +133,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_ACCESS_ID: access_id,
                 CONF_ACCESS_SECRET: import_config.get("access_secret"),
-                CONF_TUYA_COUNTRY: import_config.get("country"),
+                CONF_TUYA_COUNTRY: import_config.get("country").lower(),
                 CONF_CLIMATE_UPDATE_INTERVAL: import_config.get("update_interval") or UPDATE_INTERVAL,
                 CONF_SENSOR_UPDATE_INTERVAL: UPDATE_INTERVAL
             }
