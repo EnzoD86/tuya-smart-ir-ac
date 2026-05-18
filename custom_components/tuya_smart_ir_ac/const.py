@@ -157,9 +157,9 @@ TUYA_FAN_MODES = {
 }
 
 TUYA_ENDPOINTS = {
-    "EU": "https://openapi.tuyaeu.com",
-    "US": "https://openapi.tuyaus.com",
-    "IN": "https://openapi.tuyain.com",
-    "CN": "https://openapi.tuyacn.com",
-    "SG": "https://openapi-sg.iotbing.com",
+    "eu": "https://openapi.tuyaeu.com",
+    "us": "https://openapi.tuyaus.com",
+    "in": "https://openapi.tuyain.com",
+    "cn": "https://openapi.tuyacn.com",
+    "sg": "https://openapi-sg.iotbing.com",
 }
