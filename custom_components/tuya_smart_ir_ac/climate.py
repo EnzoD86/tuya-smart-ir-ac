@@ -49,18 +49,18 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaClimateEn
 
         self._attr_has_entity_name = True
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_icon = "mdi:air-conditioner"
+        self._attr_min_temp = self._min_temp
+        self._attr_max_temp = self._max_temp
+        self._attr_target_temperature_step = self._temp_step
+        self._attr_hvac_modes = self._hvac_modes
+        self._attr_fan_modes = self._fan_modes
         self._attr_supported_features = (
             ClimateEntityFeature.TURN_OFF 
             | ClimateEntityFeature.TURN_ON 
             | ClimateEntityFeature.TARGET_TEMPERATURE 
             | ClimateEntityFeature.FAN_MODE
         )
-        
-        self._attr_min_temp = self._min_temp
-        self._attr_max_temp = self._max_temp
-        self._attr_target_temperature_step = self._temp_step
-        self._attr_hvac_modes = self._hvac_modes
-        self._attr_fan_modes = self._fan_modes
 
         self._fallback_hvac_mode = HVACMode.OFF
         self._fallback_target_temperature = 25.0
