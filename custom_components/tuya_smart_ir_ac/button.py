@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from .const import (
     DOMAIN,
     MANUFACTURER,
-    MODEL,
+    GENERIC_MODEL,
     CONF_INFRARED_ID,
     CONF_DEVICE_ID,
     DEVICE_TYPE_GENERICS
@@ -92,7 +92,7 @@ class TuyaButton(ButtonEntity):
             name=device_name,
             identifiers={(DOMAIN, f"{config_entry.entry_id}_{device_id}")},
             manufacturer=MANUFACTURER,
-            model=MODEL,
+            model=GENERIC_MODEL,
         )
 
     async def async_press(self) -> None:

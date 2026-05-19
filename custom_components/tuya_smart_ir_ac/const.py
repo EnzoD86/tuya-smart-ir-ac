@@ -10,7 +10,9 @@ from homeassistant.const import Platform, UnitOfTemperature
 # Core Integration Setup
 DOMAIN = "tuya_smart_ir_ac"
 MANUFACTURER = "Tuya"
-MODEL = "Smart IR"
+CLIMATE_MODEL = "IR Air Conditioning"
+GENERIC_MODEL = "IR Remote Control"
+SENSOR_MODEL = "T & H Sensor"
 
 # Platforms supported by this integration
 PLATFORMS = [

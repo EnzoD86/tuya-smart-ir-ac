@@ -17,7 +17,8 @@ from homeassistant.components.climate.const import (
 from .const import (
     DOMAIN,
     MANUFACTURER,
-    MODEL,
+    CLIMATE_MODEL,
+    SENSOR_MODEL,
     CONF_INFRARED_ID,
     CONF_DEVICE_ID,
     CONF_TEMPERATURE_SENSOR,
@@ -99,7 +100,7 @@ class TuyaClimateEntity:
             name=self._name,
             identifiers={(DOMAIN, base_id)},
             manufacturer=MANUFACTURER,
-            model=MODEL,
+            model=CLIMATE_MODEL,
         )
 
     @property
@@ -329,7 +330,7 @@ class TuyaSensorEntity:
             name=self._name,
             identifiers={(DOMAIN, self._device_id)},
             manufacturer=MANUFACTURER,
-            model=MODEL,
+            model=SENSOR_MODEL,
         )
 
     @property
