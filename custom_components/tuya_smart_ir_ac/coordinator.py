@@ -32,12 +32,12 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}_{entry.title}_climate",
+            name=f"[{entry.title}] Climate Coordinator",
             update_interval=timedelta(seconds=custom_update_interval),
             always_update=False
         )
         self.entry = entry
-        self._api = TuyaClimateAPI(hass, client=client)
+        self._api = TuyaClimateAPI(hass, client=client, log_prefix=f"[{entry.title}]")
 
     def is_available(self, climate_id: str) -> bool:
         """Check if the climate device is available in the fetched data."""
@@ -60,11 +60,14 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
                 return result.data
         except UpdateFailed:
             raise
+        except TimeoutError as e:
+            raise UpdateFailed(f"Timeout communicating with Tuya API: {e}")
         except Exception as e:
             raise UpdateFailed(f"Error communicating with Tuya API: {e}")
 
     async def async_turn_on(self, infrared_id: str, climate_id: str):
         """Send IR command to turn on the climate entity and update local cache."""
+        _LOGGER.debug("[%s] Sending IR command to turn ON climate", climate_id)
         result = await self._api.async_send_command(infrared_id, climate_id, "power", "1")
         if not result.success:
             _LOGGER.error("Failed to turn on climate %s: %s", climate_id, result.error_info)
@@ -74,6 +77,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 
     async def async_turn_off(self, infrared_id: str, climate_id: str):
         """Send IR command to turn off the climate entity and update local cache."""
+        _LOGGER.debug("[%s] Sending IR command to turn OFF climate", climate_id)
         result = await self._api.async_send_command(infrared_id, climate_id, "power", "0")
         if not result.success:
             _LOGGER.error("Failed to turn off climate %s: %s", climate_id, result.error_info)
@@ -83,6 +87,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 
     async def async_set_temperature(self, infrared_id: str, climate_id: str, temperature: float):
         """Send IR command to set target temperature and update local cache."""
+        _LOGGER.debug("[%s] Sending IR command to set temperature to %s°C", climate_id, temperature)
         result = await self._api.async_send_command(infrared_id, climate_id, "temp", tuya_temp(temperature))
         if not result.success:
             _LOGGER.error("Failed to set temperature for climate %s: %s", climate_id, result.error_info)
@@ -92,6 +97,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 
     async def async_set_fan_mode(self, infrared_id: str, climate_id: str, fan_mode: str):
         """Send IR command to set fan mode and update local cache."""
+        _LOGGER.debug("[%s] Sending IR command to set fan mode to %s", climate_id, fan_mode)
         result = await self._api.async_send_command(infrared_id, climate_id, "wind", tuya_wind(fan_mode))
         if not result.success:
             _LOGGER.error("Failed to set fan mode for climate %s: %s", climate_id, result.error_info)
@@ -101,6 +107,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 
     async def async_set_hvac_mode(self, infrared_id: str, climate_id: str, hvac_mode: HVACMode, temperature: float, fan_mode: str):
         """Send a combined multi-command IR packet (Mode, Temp, Fan) and update local cache."""
+        _LOGGER.debug("[%s] Sending combined IR packet -> Mode: %s, Temp: %s, Fan: %s", climate_id, hvac_mode, temperature, fan_mode)
         result = await self._api.async_send_multiple_command(
             infrared_id, climate_id, "1", tuya_mode(hvac_mode), tuya_temp(temperature), tuya_wind(fan_mode)
         )
@@ -134,12 +141,12 @@ class TuyaSensorCoordinator(DataUpdateCoordinator[dict[str, TuyaSensorData]]):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}_{entry.title}_sensor",
+            name=f"[{entry.title}] Sensor Coordinator",
             update_interval=timedelta(seconds=custom_update_interval),
             always_update=False
         )
         self.entry = entry
-        self._api = TuyaSensorAPI(hass, client=client)
+        self._api = TuyaSensorAPI(hass, client=client, log_prefix=f"[{entry.title}]")
 
     def is_available(self, device_id: str) -> bool:
         """Check if the sensor device is available in the fetched data."""
@@ -162,5 +169,7 @@ class TuyaSensorCoordinator(DataUpdateCoordinator[dict[str, TuyaSensorData]]):
                 return result.data
         except UpdateFailed:
             raise
+        except TimeoutError as e:
+            raise UpdateFailed(f"Timeout communicating with Tuya API for sensors: {e}")
         except Exception as e:
             raise UpdateFailed(f"Error communicating with Tuya API for sensors: {e}")

@@ -59,6 +59,11 @@ async def async_setup_entry(
                 active_entities.append(entity)
 
     if active_entities:
+        _LOGGER.debug(
+            "[%s] Initialized %d number platform entities", 
+            config_entry.title, 
+            len(active_entities)
+        )
         async_add_entities(active_entities)
 
 
@@ -89,24 +94,14 @@ class TuyaPresetTemperatureNumber(RestoreNumber, TuyaClimateEntity):
         if valid_number_data(last_number):
             restored_value = last_number.native_value
             self._attr_native_value = clamp_to_boundaries(restored_value, self._min_temp, self._max_temp)
-            if self._attr_native_value != restored_value:
-                _LOGGER.warning(
-                    "Restored preset value %s for %s was out of bounds. Clamped to %s due to configuration changes",
-                    restored_value, self._temp_hvac_mode, self._attr_native_value
-                )
         else:
             calculated_fallback = (self._min_temp + self._max_temp) / 2
             self._attr_native_value = clamp_to_boundaries(calculated_fallback, self._min_temp, self._max_temp)
-            _LOGGER.debug(
-                "No restored state for %s configuration preset, using default fallback value: %s", 
-                self._temp_hvac_mode, self._attr_native_value
-            )
 
         self.set_hvac_preset_temperature(self._temp_hvac_mode, self._attr_native_value)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new local preset temperature and commit the state change to RuntimeData."""
-        _LOGGER.debug("Updating preset temperature for %s mode to %s", self._temp_hvac_mode, value)
         self._attr_native_value = value
         self.set_hvac_preset_temperature(self._temp_hvac_mode, value)
         self.async_write_ha_state()
@@ -138,6 +133,5 @@ class TuyaTemperatureSetPointNumber(NumberEntity, CoordinatorEntity, TuyaClimate
 
     async def async_set_native_value(self, value: float) -> None:
         """Transmit new target temperature setpoint using central execution logic."""
-        _LOGGER.debug("Sending immediate target temperature override to %s for device %s", value, self._name)
         await self.async_execute_set_temperature(value)
         self.async_write_ha_state()

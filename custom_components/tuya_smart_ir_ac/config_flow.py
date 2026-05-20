@@ -76,7 +76,7 @@ from .const import (
     TUYA_ENDPOINTS,
     UPDATE_INTERVAL,
 )
-from .models import(
+from .models import (
     TuyaGenericData,
     TuyaSensorData,
     TuyaAPIResult
@@ -96,47 +96,57 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step when adding the integration via the UI."""
         return await self.async_step_hub_settings(user_input)
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> FlowResult:
+        """Handle fallback authentication recovery trigger."""
+        return await self.async_step_hub_settings()
+
     async def async_step_hub_settings(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the central configuration step for API credentials."""
-        if user_input is not None:
-            access_id = user_input['access_id']
-            await self.async_set_unique_id(f"tuya_hub_{access_id}")
-            self._abort_if_unique_id_configured()
+        """Single step handler for both initial setup and re-authentication."""
+        errors: dict[str, str] = {}
+        
+        entry_id = self.context.get("entry_id")
+        entry = self.hass.config_entries.async_get_entry(entry_id) if entry_id else None
 
-            return self.async_create_entry(
-                title=f"Tuya Smart IR Hub ({access_id})",
-                data=user_input,
-                options={
-                    DEVICE_TYPE_CLIMATES: [], 
-                    DEVICE_TYPE_GENERICS: [], 
-                    DEVICE_TYPE_SENSORS: []
-                }
-            )
+        if user_input is not None:
+            if entry and user_input.get(CONF_ACCESS_ID) != entry.data.get(CONF_ACCESS_ID):
+                errors[CONF_ACCESS_ID] = "cannot_change_access_id"
+
+            if not errors:
+                new_data = {**entry.data, **user_input} if entry else user_input
+                
+                if not entry:
+                    access_id = user_input[CONF_ACCESS_ID]
+                    await self.async_set_unique_id(f"tuya_hub_{access_id}")
+                    self._abort_if_unique_id_configured()
+                
+                errors = await async_validate_and_connect(new_data)
+                if not errors:
+                    if entry:
+                        return self.async_update_reload_and_abort(entry, data=new_data)
+                    
+                    return self.async_create_entry(
+                        title=f"Tuya Smart IR Hub ({access_id})",
+                        data=user_input,
+                        options={
+                            DEVICE_TYPE_CLIMATES: [],
+                            DEVICE_TYPE_GENERICS: [],
+                            DEVICE_TYPE_SENSORS: [],
+                        },
+                    )
+
+        current_data = {**(entry.data if entry else {}), **(user_input or {})}
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(hub_data_schema()), current_data
+        )
 
         return self.async_show_form(
             step_id="hub_settings", 
-            data_schema=vol.Schema(hub_data_schema())
-        )
-        
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Handle migration and import from old YAML configuration schemas."""
-        _LOGGER.debug("Old YAML configuration detected: %s", import_config)
-        
-        access_id = import_config.get(CONF_ACCESS_ID)
-        await self.async_set_unique_id(f"tuya_hub_{access_id}")
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=f"Tuya Smart IR Hub ({access_id})",
-            data={
-                CONF_ACCESS_ID: access_id,
-                CONF_ACCESS_SECRET: import_config.get("access_secret"),
-                CONF_TUYA_COUNTRY: import_config.get("country").lower(),
-                CONF_CLIMATE_UPDATE_INTERVAL: import_config.get("update_interval") or UPDATE_INTERVAL,
-                CONF_SENSOR_UPDATE_INTERVAL: UPDATE_INTERVAL
-            }
+            data_schema=schema, 
+            errors=errors
         )
 
     @staticmethod
@@ -214,20 +224,39 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Expose core system settings and parameters update options form."""
-        if user_input is not None:
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, 
-                data={**self.config_entry.data, **user_input}
-            )
-            return self.async_create_entry(
-                title="",
-                data=self.config_entry.options
-            )
+        errors: dict[str, str] = {}
 
-        config = {**self.config_entry.data, **self.config_entry.options}
+        if user_input is not None:
+            if user_input.get(CONF_ACCESS_ID) != self.config_entry.data.get(CONF_ACCESS_ID):
+                errors[CONF_ACCESS_ID] = "cannot_change_access_id"
+
+            if not errors:
+                new_data = {**self.config_entry.data, **user_input}
+                
+                errors = await async_validate_and_connect(new_data)
+                if not errors:
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, 
+                        data=new_data
+                    )
+                    return self.async_create_entry(
+                        title="",
+                        data=self.config_entry.options
+                    )
+
+        current_data = {
+            **self.config_entry.data, 
+            **self.config_entry.options, 
+            **(user_input or {})
+        }
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(hub_data_schema()), current_data
+        )
+
         return self.async_show_form(
             step_id="hub_settings",
-            data_schema=vol.Schema(hub_data_schema(config))
+            data_schema=schema,
+            errors=errors
         )
 
     async def async_step_add_climate(
@@ -242,6 +271,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             infrared_id = user_input.get(CONF_INFRARED_ID)
             climate_id = user_input.get(CONF_DEVICE_ID)
+            name = user_input.get(CONF_NAME)
 
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 for cat in [DEVICE_TYPE_CLIMATES, DEVICE_TYPE_GENERICS, DEVICE_TYPE_SENSORS]:
@@ -250,6 +280,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             errors["base"] = "device_already_configured"
                         else:
                             errors["base"] = "device_already_configured_on_other_hub"
+                        _LOGGER.warning("[%s] Aborting climate addition: device ID %s is already registered", name, climate_id)
                         break
                 if errors:
                     break
@@ -261,6 +292,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if not result.success:
                     errors["base"] = "tuya_api_error"
                     placeholders["error_info"] = result.error_info
+                    _LOGGER.error("[%s] Tuya API rejection validation failed for climate target %s: %s", name, climate_id, result.error_info)
                 else:
                     current_options = dict(self.config_entry.options)
                     climates = list(current_options.get(DEVICE_TYPE_CLIMATES, []))
@@ -272,7 +304,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="add_climate",
-            data_schema=vol.Schema({**device1_data(), **climate_data()}),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({**device1_data(), **climate_data()}), user_input or {}
+            ),
             errors=errors,
             description_placeholders=placeholders
         )
@@ -289,7 +323,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         index = next((i for i, c in enumerate(climates) if self._get_device_id_pair(c) == self._selected_device_id), None)
         
         if index is None:
-            return self.async_abort(reason="device_not_configurable")
+            _LOGGER.error("Requested modification failed: Device pairing signature %s not found", self._selected_device_id)
+            return self.async_abort(reason="device_not_found")
 
         if user_input is not None:
             overwrite_invalid_user_input(user_input)
@@ -300,9 +335,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 data={**self.config_entry.options, DEVICE_TYPE_CLIMATES: climates}
             )
 
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(climate_data()), climates[index]
+        )
+
         return self.async_show_form(
             step_id="edit_climate",
-            data_schema=vol.Schema(climate_data(climates[index]))
+            data_schema=schema
         )
 
     async def async_step_remove_climate(
@@ -352,6 +391,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             infrared_id = user_input.get(CONF_INFRARED_ID)
             device_id = user_input.get(CONF_DEVICE_ID)
+            name = user_input.get(CONF_NAME)
             
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 for cat in [DEVICE_TYPE_CLIMATES, DEVICE_TYPE_GENERICS, DEVICE_TYPE_SENSORS]:
@@ -360,6 +400,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             errors["base"] = "device_already_configured"
                         else:
                             errors["base"] = "device_already_configured_on_other_hub"
+                        _LOGGER.warning("[%s] Aborting generic addition: device ID %s is already registered", name, device_id)
                         break
                 if errors:
                     break
@@ -371,6 +412,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if not result.success:
                     errors["base"] = "tuya_api_error"
                     placeholders["error_info"] = result.error_info
+                    _LOGGER.error("[%s] Tuya API rejection validation failed for generic target %s: %s", name, device_id, result.error_info)
                 else:
                     current_options = dict(self.config_entry.options)
                     generics = list(current_options.get(DEVICE_TYPE_GENERICS, []))
@@ -381,8 +423,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     )
 
         return self.async_show_form(
-            step_id="add_generic", 
-            data_schema=vol.Schema(device1_data()),
+            step_id="add_generic",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(device1_data()), user_input or {}
+            ),
             errors=errors,
             description_placeholders=placeholders
         )
@@ -434,12 +478,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_add_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle discovery and validation sequence mapping for standalone sensors."""
+        """Handle discovery and validation sequence mapping for temperature/humidity sensors."""
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
 
         if user_input is not None:
             device_id = user_input.get(CONF_DEVICE_ID)
+            name = user_input.get(CONF_NAME)
             
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 for cat in [DEVICE_TYPE_CLIMATES, DEVICE_TYPE_GENERICS, DEVICE_TYPE_SENSORS]:
@@ -448,6 +493,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             errors["base"] = "device_already_configured"
                         else:
                             errors["base"] = "device_already_configured_on_other_hub"
+                        _LOGGER.warning("[%s] Aborting: Temperature/Humidity sensor ID %s is already registered", name, device_id)
                         break
                 if errors:
                     break
@@ -459,6 +505,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if not result.success:
                     errors["base"] = "tuya_api_error"
                     placeholders["error_info"] = result.error_info
+                    _LOGGER.error("[%s] Tuya API validation failed for environmental sensor %s: %s", name, device_id, result.error_info)
                 else:
                     sensor_data: TuyaSensorData = result.data
                     
@@ -483,7 +530,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="add_sensor",
-            data_schema=vol.Schema(device2_data()),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(device2_data()), user_input or {}
+            ),
             errors=errors,
             description_placeholders=placeholders
         )
@@ -491,7 +540,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_remove_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Drop targeted independent environmental tracking hardware mapping."""
+        """Drop targeted temperature/humidity tracking hardware mapping."""
         if not getattr(self, "_selected_device_id", None):
             self._next_action = "async_step_remove_sensor"
             return await self.async_step_select_sensor()
@@ -548,30 +597,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Fetch references to assigned Standalone Sensor domain arrays from options."""
         return list(self.config_entry.options.get(DEVICE_TYPE_SENSORS, []))
 
-def hub_data_schema(config: Mapping[str, Any] | None = None) -> dict[vol.Marker, Any]:
+
+def hub_data_schema() -> dict[vol.Marker, Any]:
     """Generate configuration schema layout defining core Tuya API credentials."""
-    base_config = config or {}
-
-    access_id = vol.Required(CONF_ACCESS_ID, default=base_config.get(CONF_ACCESS_ID))
-    access_secret = vol.Required(CONF_ACCESS_SECRET, default=base_config.get(CONF_ACCESS_SECRET))
-    tuya_country = vol.Required(CONF_TUYA_COUNTRY, default=base_config.get(CONF_TUYA_COUNTRY))
-    climate_update_interval = vol.Required(
-        CONF_CLIMATE_UPDATE_INTERVAL,
-        default=base_config.get(CONF_CLIMATE_UPDATE_INTERVAL, UPDATE_INTERVAL)
-    )
-    sensor_update_interval = vol.Required(
-        CONF_SENSOR_UPDATE_INTERVAL, 
-        default=base_config.get(CONF_SENSOR_UPDATE_INTERVAL, UPDATE_INTERVAL)
-    )
-
     return {
-        access_id: TextSelector(
+        vol.Required(CONF_ACCESS_ID): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
-        access_secret: TextSelector(
+        vol.Required(CONF_ACCESS_SECRET): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
-        tuya_country: SelectSelector(
+        vol.Required(CONF_TUYA_COUNTRY): SelectSelector(
             SelectSelectorConfig(
                 options=list(TUYA_ENDPOINTS.keys()),
                 multiple=False,
@@ -579,12 +615,12 @@ def hub_data_schema(config: Mapping[str, Any] | None = None) -> dict[vol.Marker,
                 translation_key=CONF_TUYA_COUNTRY
             )
         ),
-        climate_update_interval: NumberSelector(
+        vol.Required(CONF_CLIMATE_UPDATE_INTERVAL, default=UPDATE_INTERVAL): NumberSelector(
             NumberSelectorConfig(
                 min=10, max=3600, step=1, mode=NumberSelectorMode.BOX
             )
         ),
-        sensor_update_interval: NumberSelector(
+        vol.Required(CONF_SENSOR_UPDATE_INTERVAL, default=UPDATE_INTERVAL): NumberSelector(
             NumberSelectorConfig(
                 min=10, max=3600, step=1, mode=NumberSelectorMode.BOX
             )
@@ -616,123 +652,148 @@ def device2_data() -> dict[vol.Marker, Any]:
         )
     }
 
-def climate_data(config: dict[str, Any] | None = None) -> dict[vol.Marker, Any]:
+def climate_data() -> dict[vol.Marker, Any]:
     """Generate options parameter validation schema exclusively matching Climate limits."""
-    base_config = config or {}
-    compatibility = base_config.get(CONF_COMPATIBILITY_OPTIONS, {})
-
-    temperature_sensor = vol.Optional(CONF_TEMPERATURE_SENSOR, default=base_config.get(CONF_TEMPERATURE_SENSOR, vol.UNDEFINED))
-    humidity_sensor = vol.Optional(CONF_HUMIDITY_SENSOR, default=base_config.get(CONF_HUMIDITY_SENSOR, vol.UNDEFINED))
-    
-    temp_min = vol.Required(CONF_TEMP_MIN, default=base_config.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP))
-    temp_max = vol.Required(CONF_TEMP_MAX, default=base_config.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP))
-    temp_step = vol.Required(CONF_TEMP_STEP, default=base_config.get(CONF_TEMP_STEP, DEFAULT_PRECISION))
-    
-    hvac_modes = vol.Required(CONF_HVAC_MODES, default=base_config.get(CONF_HVAC_MODES, SUPPORTED_HVAC_MODES))
-    fan_modes = vol.Required(CONF_FAN_MODES, default=base_config.get(CONF_FAN_MODES, SUPPORTED_FAN_MODES))
-    hvac_preset = vol.Optional(CONF_HVAC_PRESETS, default=base_config.get(CONF_HVAC_PRESETS, []))
-    optional_entities = vol.Optional(CONF_OPTIONAL_ENTITIES, default=base_config.get(CONF_OPTIONAL_ENTITIES, []))
-
-    hvac_power_on = vol.Optional(CONF_HVAC_POWER_ON, default=compatibility.get(CONF_HVAC_POWER_ON, DEFAULT_HVAC_POWER_ON))
-    temp_power_on = vol.Optional(CONF_TEMP_POWER_ON, default=compatibility.get(CONF_TEMP_POWER_ON, DEFAULT_TEMP_POWER_ON))        
-    fan_power_on = vol.Optional(CONF_FAN_POWER_ON, default=compatibility.get(CONF_FAN_POWER_ON, DEFAULT_FAN_POWER_ON))        
-    dry_min_temp = vol.Optional(CONF_DRY_MIN_TEMP, default=compatibility.get(CONF_DRY_MIN_TEMP, DEFAULT_DRY_MIN_TEMP))
-    dry_min_fan = vol.Optional(CONF_DRY_MIN_FAN, default=compatibility.get(CONF_DRY_MIN_FAN, DEFAULT_DRY_MIN_FAN))
-
     return {
-        temperature_sensor: EntitySelector(
+        vol.Optional(CONF_TEMPERATURE_SENSOR): EntitySelector(
             EntitySelectorConfig(
                 domain=Platform.SENSOR,
                 device_class=SensorDeviceClass.TEMPERATURE,
-                multiple=False
+                multiple=False,
             )
         ),
-        humidity_sensor: EntitySelector(
+        vol.Optional(CONF_HUMIDITY_SENSOR): EntitySelector(
             EntitySelectorConfig(
                 domain=Platform.SENSOR,
                 device_class=SensorDeviceClass.HUMIDITY,
-                multiple=False
+                multiple=False,
             )
         ),
-        temp_min: NumberSelector(
+        vol.Required(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): NumberSelector(
             NumberSelectorConfig(
-                min=DEFAULT_MIN_TEMP, max=DEFAULT_MAX_TEMP, step=1, mode=NumberSelectorMode.BOX
+                min=DEFAULT_MIN_TEMP,
+                max=DEFAULT_MAX_TEMP,
+                step=1,
+                mode=NumberSelectorMode.BOX,
             )
         ),
-        temp_max: NumberSelector(
+        vol.Required(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): NumberSelector(
             NumberSelectorConfig(
-                min=DEFAULT_MIN_TEMP, max=DEFAULT_MAX_TEMP, step=1, mode=NumberSelectorMode.BOX
+                min=DEFAULT_MIN_TEMP,
+                max=DEFAULT_MAX_TEMP,
+                step=1,
+                mode=NumberSelectorMode.BOX,
             )
         ),
-        temp_step: NumberSelector(
-            NumberSelectorConfig(min=0.1, max=1, step=0.1, mode=NumberSelectorMode.BOX)
+        vol.Required(CONF_TEMP_STEP, default=DEFAULT_PRECISION): NumberSelector(
+            NumberSelectorConfig(
+                min=0.1, max=1, step=0.1, mode=NumberSelectorMode.BOX
+            )
         ),
-        hvac_modes: SelectSelector(
+        vol.Required(CONF_HVAC_MODES, default=SUPPORTED_HVAC_MODES): SelectSelector(
             SelectSelectorConfig(
                 options=SUPPORTED_HVAC_MODES,
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_HVAC_MODES
+                translation_key=CONF_HVAC_MODES,
             )
         ),
-        fan_modes: SelectSelector(
+        vol.Required(CONF_FAN_MODES, default=SUPPORTED_FAN_MODES): SelectSelector(
             SelectSelectorConfig(
                 options=SUPPORTED_FAN_MODES,
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_FAN_MODES
+                translation_key=CONF_FAN_MODES,
             )
         ),
-        hvac_preset: SelectSelector(
+        vol.Optional(CONF_HVAC_PRESETS, default=[]): SelectSelector(
             SelectSelectorConfig(
                 options=SUPPORTED_HVAC_PRESETS,
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_HVAC_PRESETS
+                translation_key=CONF_HVAC_PRESETS,
             )
         ),
-        optional_entities: SelectSelector(
+        vol.Optional(CONF_OPTIONAL_ENTITIES, default=[]): SelectSelector(
             SelectSelectorConfig(
                 options=SUPPORTED_OPTIONAL_ENTITIES,
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_OPTIONAL_ENTITIES
+                translation_key=CONF_OPTIONAL_ENTITIES,
             )
         ),
         vol.Required(CONF_COMPATIBILITY_OPTIONS): data_entry_flow.section(
             vol.Schema(
                 {
-                    hvac_power_on: SelectSelector(
+                    vol.Optional(
+                        CONF_HVAC_POWER_ON, default=DEFAULT_HVAC_POWER_ON
+                    ): SelectSelector(
                         SelectSelectorConfig(
                             options=SUPPORTED_POWER_ON_MODES,
                             multiple=False,
                             mode=SelectSelectorMode.LIST,
-                            translation_key=CONF_HVAC_POWER_ON
+                            translation_key=CONF_HVAC_POWER_ON,
                         )
                     ),
-                    temp_power_on: SelectSelector(
-                        SelectSelectorConfig(
-                            options=SUPPORTED_POWER_ON_MODES,
-                            multiple=False, mode=SelectSelectorMode.LIST,
-                            translation_key=CONF_TEMP_POWER_ON
-                        )
-                    ),
-                    fan_power_on: SelectSelector(
+                    vol.Optional(
+                        CONF_TEMP_POWER_ON, default=DEFAULT_TEMP_POWER_ON
+                    ): SelectSelector(
                         SelectSelectorConfig(
                             options=SUPPORTED_POWER_ON_MODES,
                             multiple=False,
                             mode=SelectSelectorMode.LIST,
-                            translation_key=CONF_FAN_POWER_ON
+                            translation_key=CONF_TEMP_POWER_ON,
                         )
                     ),
-                    dry_min_temp: BooleanSelector(),
-                    dry_min_fan: BooleanSelector()
+                    vol.Optional(
+                        CONF_FAN_POWER_ON, default=DEFAULT_FAN_POWER_ON
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=SUPPORTED_POWER_ON_MODES,
+                            multiple=False,
+                            mode=SelectSelectorMode.LIST,
+                            translation_key=CONF_FAN_POWER_ON,
+                        )
+                    ),
+                    vol.Optional(
+                        CONF_DRY_MIN_TEMP, default=DEFAULT_DRY_MIN_TEMP
+                    ): BooleanSelector(),
+                    vol.Optional(
+                        CONF_DRY_MIN_FAN, default=DEFAULT_DRY_MIN_FAN
+                    ): BooleanSelector(),
                 }
             ),
-            {"collapsed": True}
-        )
+            {"collapsed": True},
+        ),
     }
 
+
+async def async_validate_and_connect(data: dict[str, Any]) -> dict[str, str]:
+    """Validate credentials against the Tuya OpenAPI backend."""
+    errors: dict[str, str] = {}
+    
+    # Estrazione dell'endpoint in base al paese selezionato
+    api_endpoint = TUYA_ENDPOINTS.get(data.get(CONF_TUYA_COUNTRY))
+    if not api_endpoint:
+        errors[CONF_TUYA_COUNTRY] = "invalid_country"
+        return errors
+
+    client = TuyaOpenAPI(api_endpoint, data[CONF_ACCESS_ID], data[CONF_ACCESS_SECRET])
+    
+    try:
+        res = await client.connect()
+        if not res.get("success"):
+            errors["base"] = "invalid_auth"
+            _LOGGER.error("Tuya authentication failed: %s", res.get("msg"))
+    except Exception as err:
+        errors["base"] = "cannot_connect"
+        _LOGGER.exception("Unexpected error connecting to Tuya API: %s", err)
+    finally:
+        # Pulizia della sessione a prescindere dall'esito
+        if client.session and not client.session.closed:
+            await client.session.close()
+            
+    return errors
 
 async def async_get_climate_device(
     hass: HomeAssistant, client: TuyaOpenAPI, infrared_id: str, climate_id: str
@@ -751,7 +812,7 @@ async def async_get_generic_device(
 async def async_get_sensor_device(
     hass: HomeAssistant, client: TuyaOpenAPI, device_id: str
 ) -> TuyaAPIResult:
-    """Validate external hardware communication for temeprature/humidty sensor via central API."""
+    """Validate external hardware communication for temperature/humidity sensor via central API."""
     return await TuyaSensorAPI(hass, client).async_fetch_data(device_id)
 
 

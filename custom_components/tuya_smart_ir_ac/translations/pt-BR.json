@@ -133,7 +133,9 @@
       }
     },
     "error": {
-      "hub_already_configured": "Este hub já está configurado."
+      "cannot_change_access_id": "O Access ID não pode ser modificado para um hub existente.",
+      "cannot_connect": "Falha ao conectar aos servidores da Tuya. Por favor, verifique sua rede.",
+      "invalid_auth": "Falha na autenticação: Access ID ou Access Secret inválidos."
     }
   },
   "options": {
@@ -294,12 +296,13 @@
       }
     },
     "error": {
+      "cannot_change_access_id": "O Access ID não pode ser modificado para um hub existente.",
       "device_already_configured": "Este dispositivo já foi configurado.",
       "device_already_configured_on_other_hub": "Este dispositivo já está configurado em outro Hub.",
+      "invalid_auth": "Falha na autenticação: Access ID ou Access Secret inválidos.",
       "tuya_api_error": "Erro na Cloud Tuya: {error_info}"
     },
     "abort": {
-      "device_not_configurable": "Dispositivo não configurável.",
       "device_not_found": "Nenhum dispositivo encontrado."
     }
   },

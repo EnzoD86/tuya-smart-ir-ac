@@ -4,6 +4,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .tuya_connector import TuyaOpenAPI
 from .const import (
@@ -35,45 +36,54 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Tuya Smart IR Hub component from YAML configuration."""
-    if DOMAIN in config:
-        domain_config = config[DOMAIN]
+    if DOMAIN not in config:
+        return True
 
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": "import"},
-                data=domain_config,
-            )
+    if hass.config_entries.async_entries(DOMAIN):
+        _LOGGER.warning(
+            "Legacy YAML configuration detected under '%s:', but the integration is already configured via UI. "
+            "Please remove the YAML lines from your configuration.yaml to prevent this warning.",
+            DOMAIN
         )
+        return True
+
+    domain_config = config[DOMAIN]
+    _LOGGER.info("First-time YAML configuration detected, initiating import into UI")
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data=domain_config,
+        )
+    )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
     """Set up Tuya Smart IR Hub from a config entry."""
+    _LOGGER.debug("[%s] Starting Hub initialization", entry.title)
     data = entry.data
-
+    
     if CONF_ACCESS_ID not in data:
-        _LOGGER.debug(
-            "Legacy standalone device entry '%s' detected. Freezing setup to allow Hub migration.", 
-            entry.title
-        )
+        _LOGGER.debug("Legacy standalone entry '%s' detected. Skipping.", entry.title)
         return False
 
     if not all(key in entry.options for key in ["climates", "generics", "sensors"]):
         await _async_migrate_old_entries(hass, entry)
         
-    tuya_country = data.get(CONF_TUYA_COUNTRY)
-    api_endpoint = TUYA_ENDPOINTS.get(tuya_country)
-
-    _LOGGER.info("Initializing Tuya Smart IR Hub: %s", entry.title)
-
+    api_endpoint = TUYA_ENDPOINTS.get(data.get(CONF_TUYA_COUNTRY))
     client = TuyaOpenAPI(api_endpoint, data[CONF_ACCESS_ID], data[CONF_ACCESS_SECRET])
+    
     res = await client.connect()
-
     if not res.get("success"):
         _LOGGER.error("Tuya Hub Login Error: %s", res.get("msg"))
-        return False
+
+        if client.session and not client.session.closed:
+            await client.session.close()
+
+        raise ConfigEntryAuthFailed(f"Tuya authentication failed: {res.get('msg')}")
 
     climate_interval = data.get(CONF_CLIMATE_UPDATE_INTERVAL, UPDATE_INTERVAL)
     sensor_interval = data.get(CONF_SENSOR_UPDATE_INTERVAL, UPDATE_INTERVAL)
@@ -88,22 +98,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         client=client,
         climate_coordinator=climate_coordinator,
         sensor_coordinator=sensor_coordinator,
-        ir_manager=TuyaIRManager(hass, client=client)
+        ir_manager=TuyaIRManager(hass, entry, client)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    entry.async_on_unload(entry.add_update_listener(async_update_entry))
+    _LOGGER.debug("[%s] Hub initialization completed", entry.title)
     
+    entry.async_on_unload(entry.add_update_listener(async_update_entry))
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
-    """Unload a config entry."""
+    """Unload a config entry and clean up active cloud sessions."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     
     if unload_ok:
-        await entry.runtime_data.client.session.close()
+        if entry.runtime_data and entry.runtime_data.client and entry.runtime_data.client.session:
+            await entry.runtime_data.client.session.close()
 
         if entry.disabled_by is None:
             device_registry = dr.async_get(hass)
@@ -115,13 +126,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool
 
 
 async def async_update_entry(hass: HomeAssistant, entry: HubConfigEntry) -> None:
-    """Handle options update by reloading the entry."""
+    """Handle options update by reloading the entry integration flow."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def _async_migrate_old_entries(hass: HomeAssistant, hub_entry: HubConfigEntry) -> None:
-    """Migrate legacy independent device config entries into the centralized Hub options."""
-    _LOGGER.info("Checking for old devices to migrate from the old Config Flow... ")
+    """Migrate legacy independent device config entries into centralized Hub options dictionary."""
+    _LOGGER.info("Checking for legacy devices to migrate under the centralized Hub architecture...")
 
     current_climates = list(hub_entry.options.get("climates", []))
     current_generics = list(hub_entry.options.get("generics", []))
@@ -138,7 +149,7 @@ async def _async_migrate_old_entries(hass: HomeAssistant, hub_entry: HubConfigEn
             continue
 
         old_type = old_entry.data.get("device_type")
-        _LOGGER.info("Found old entry '%s' [%s]. Migration in progress...", old_entry.title, old_type)
+        _LOGGER.info("Found legacy entity entry '%s' [%s]. Migrating preferences...", old_entry.title, old_type)
 
         device_payload = {
             "entry_id": old_entry.entry_id,
@@ -163,19 +174,14 @@ async def _async_migrate_old_entries(hass: HomeAssistant, hub_entry: HubConfigEn
             })
             
             hvac_presets = []
-            temp_hvac_mode = old_entry.data.get("temp_hvac_mode", False)
-            if temp_hvac_mode:
+            if old_entry.data.get("temp_hvac_mode", False):
                 hvac_presets.append("temp_hvac_mode")
-            
-            fan_hvac_mode = old_entry.data.get("fan_hvac_mode", False)
-            if fan_hvac_mode:
+            if old_entry.data.get("fan_hvac_mode", False):
                 hvac_presets.append("fan_hvac_mode")
             
             optional_entities = []
-            extra_sensors = old_entry.data.get("extra_sensors", False)
-            if extra_sensors:
-                optional_entities.append("current_temperature")
-                optional_entities.append("current_humidity")
+            if old_entry.data.get("extra_sensors", False):
+                optional_entities.extend(["current_temperature", "current_humidity"])
                 
             device_payload.update({
                 "hvac_presets": hvac_presets,
@@ -205,7 +211,7 @@ async def _async_migrate_old_entries(hass: HomeAssistant, hub_entry: HubConfigEn
 
         entries_to_remove.append(old_entry)
 
-    _LOGGER.info("Saving structured device lists into Hub.")
+    _LOGGER.info("Committing updated and structured device arrays into Hub options dictionary.")
     hass.config_entries.async_update_entry(
         hub_entry, 
         options={
@@ -218,7 +224,7 @@ async def _async_migrate_old_entries(hass: HomeAssistant, hub_entry: HubConfigEn
 
     for old_entry in entries_to_remove:
         hass.async_create_task(hass.config_entries.async_remove(old_entry.entry_id))
-        _LOGGER.info("Old entry '%s' permanently removed.", old_entry.title)
+        _LOGGER.info("Legacy individual device entry '%s' permanently purged.", old_entry.title)
         
     if migrated_something:
         hass.async_create_task(

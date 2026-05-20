@@ -133,7 +133,9 @@
       }
     },
     "error": {
-      "hub_already_configured": "Deze hub is al geconfigureerd."
+      "cannot_change_access_id": "De Access ID kan niet worden gewijzigd voor een bestaande hub.",
+      "cannot_connect": "Verbinding met Tuya-servers mislukt. Controleer uw netwerk."
+      "invalid_auth": "Verificatie mislukt: Ongeldige Access ID of Access Secret."
     }
   },
   "options": {
@@ -294,12 +296,13 @@
       }
     },
     "error": {
+      "cannot_change_access_id": "Het Access ID kan niet worden gewijzigd voor een bestaande hub.",
       "device_already_configured": "Dit apparaat is al geconfigureerd.",
       "device_already_configured_on_other_hub": "Dit apparaat is al geconfigureerd op een andere Hub.",
+      "invalid_auth": "Verificatie mislukt: Ongeldige Access ID of Access Secret.",
       "tuya_api_error": "Tuya Cloud Fout: {error_info}"
     },
     "abort": {
-      "device_not_configurable": "Apparaat niet configureerbaar.",
       "device_not_found": "Geen apparaten gevonden."
     }
   },

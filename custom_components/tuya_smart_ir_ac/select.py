@@ -50,6 +50,11 @@ async def async_setup_entry(
                 active_entities.append(entity)
 
     if active_entities:
+        _LOGGER.debug(
+            "[%s] Initialized %d select platform entities", 
+            config_entry.title, 
+            len(active_entities)
+        )
         async_add_entities(active_entities)
 
 
@@ -75,17 +80,12 @@ class TuyaPresetFanSelect(SelectEntity, RestoreEntity, TuyaClimateEntity):
             self._attr_current_option = last_state.state
         else:
             self._attr_current_option = self._attr_options[0] if self._attr_options else None
-            _LOGGER.debug(
-                "No restored state for preset fan memory on device %s, using fallback option: %s", 
-                self._name, self._attr_current_option
-            )
 
         if self._attr_current_option:
             self.set_hvac_preset_fan_mode(self._attr_current_option)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected preset option."""
-        _LOGGER.debug("Updating preset fan speed to %s for device %s", option, self._name)
         self._attr_current_option = option
         self.set_hvac_preset_fan_mode(option)
         self.async_write_ha_state()
@@ -118,7 +118,6 @@ class TuyaHvacModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Forward the selected option to the central execution logic."""
-        _LOGGER.debug("Sending operational mode override to %s for device %s", option, self._name)
         await self.async_execute_set_hvac_mode(HVACMode(option))
         self.async_write_ha_state()
 
@@ -145,6 +144,5 @@ class TuyaFanModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Forward the selected option to the central execution logic."""
-        _LOGGER.debug("Sending fan speed override to %s for device %s", option, self._name)
         await self.async_execute_set_fan_mode(option)
         self.async_write_ha_state()

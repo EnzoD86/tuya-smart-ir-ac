@@ -1,15 +1,16 @@
-import logging
 import asyncio
+import logging
 from typing import Any, Literal
 
 from homeassistant.core import HomeAssistant
 
-from .models import(
+from .models import (
+    TuyaAPIResult,
     TuyaClimateData,
     TuyaGenericData,
     TuyaSensorData,
-    TuyaAPIResult
 )
+from .tuya_connector import TuyaOpenAPI
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -17,10 +18,11 @@ _LOGGER = logging.getLogger(__package__)
 class TuyaBaseAPI:
     """Base class that centralizes and normalizes the output of all Tuya APIs."""
 
-    def __init__(self, hass: HomeAssistant, client: TuyaOpenAPI) -> None:
+    def __init__(self, hass: HomeAssistant, client: TuyaOpenAPI, log_prefix: str = "") -> None:
         """Initialize the base API client."""
         self._hass = hass
         self._client = client
+        self._log_prefix = f"{log_prefix} " if log_prefix else ""
 
     async def _request(
         self, 
@@ -31,12 +33,12 @@ class TuyaBaseAPI:
     ) -> TuyaAPIResult:
         """Execute the request and ALWAYS return a TuyaAPIResult, safely parsing data if a factory is provided."""
         try:
-            _LOGGER.debug("API request %s url: %s payload: %s", method, url, payload)
+            _LOGGER.debug("%sAPI request %s url: %s payload: %s", self._log_prefix, method, url, payload)
             if method == "GET":
                 result = await self._client.get(url, params=payload)
             else:
                 result = await self._client.post(url, body=payload)
-            _LOGGER.debug("API response: %s", result)
+            _LOGGER.debug("%sAPI response: %s", self._log_prefix, result)
         except Exception as err:
             # Level 1: The HTTP client crashed (Timeout, Network Offline, etc.)
             return TuyaAPIResult(
@@ -68,7 +70,7 @@ class TuyaBaseAPI:
             try:
                 data = factory(data)
             except Exception as parse_err:
-                _LOGGER.error("Failed to parse Tuya response with factory: %s", parse_err)
+                _LOGGER.error("%sFailed to parse Tuya response with factory: %s", self._log_prefix, parse_err)
                 return TuyaAPIResult(
                     success=False,
                     error_code="PARSE_ERROR",
@@ -93,12 +95,14 @@ class TuyaClimateAPI(TuyaBaseAPI):
         return await self._request("GET", url, factory=TuyaClimateData.from_raw_data)
 
     async def async_send_command(self, infrared_id: str, climate_id: str, code: str, value: Any) -> TuyaAPIResult:
+        """Send a single discrete infrared command to the targeted air conditioner."""
         url = f"/v2.0/infrareds/{infrared_id}/air-conditioners/{climate_id}/command"
         return await self._request("POST", url, {"code": code, "value": value})
 
     async def async_send_multiple_command(
         self, infrared_id: str, climate_id: str, power: Any, mode: Any, temp: Any, wind: Any
     ) -> TuyaAPIResult:
+        """Send a macro scene state combination command matrix mapping multiple parameters."""
         url = f"/v2.0/infrareds/{infrared_id}/air-conditioners/{climate_id}/scenes/command"
         return await self._request("POST", url, {"power": power, "mode": mode, "temp": temp, "wind": wind})
 
@@ -107,21 +111,23 @@ class TuyaGenericAPI(TuyaBaseAPI):
     """API client wrapper for generic mapped Infrared raw remotes."""
 
     async def async_fetch_data(self, infrared_id: str, device_id: str) -> TuyaAPIResult:
+        """Fetch mapped key layout assignments array configuration for a generic IR remote remote."""
         url = f"/v2.0/infrareds/{infrared_id}/remotes/{device_id}/keys"
         return await self._request("GET", url, factory=TuyaGenericData.from_raw_data)
 
     async def async_send_command(
         self, infrared_id: str, device_id: str, category_id: str, key_id: str, key: str
     ) -> TuyaAPIResult:
+        """Transmit raw key pulse sequences targeting standard remote controller layouts."""
         url = f"/v2.0/infrareds/{infrared_id}/remotes/{device_id}/raw/command"
         return await self._request("POST", url, {"category_id": category_id, "key_id": key_id, "key": key})
 
 
 class TuyaSensorAPI(TuyaBaseAPI):
-    """API client wrapper interacting with cloud-connected physical hardware sensors."""
+    """API client wrapper interacting with standalone environmental Temperature/Humidity sensors."""
 
     async def async_fetch_data(self, device_id: str) -> TuyaAPIResult:
-        """Fetch runtime state for a single standalone sensor entity."""
+        """Fetch runtime shadow state metrics for a single physical temperature/humidity sensor."""
         url = f"/v2.0/cloud/thing/{device_id}/shadow/properties"
         return await self._request("GET", url, factory=TuyaSensorData.from_raw_data)
 
@@ -146,6 +152,6 @@ class TuyaSensorAPI(TuyaBaseAPI):
             if result.success:
                 devices[device_id] = result.data
             else:
-                _LOGGER.warning("Could not fetch data for sensor %s: %s", device_id, result.error_info)
+                _LOGGER.warning("%sCould not fetch data for Temperature/Humidity sensor %s: %s", self._log_prefix, device_id, result.error_info)
 
         return TuyaAPIResult(success=True, data=devices)

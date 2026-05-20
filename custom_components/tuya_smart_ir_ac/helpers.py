@@ -1,4 +1,3 @@
-import logging
 from typing import Any
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -6,8 +5,6 @@ from homeassistant.core import State
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import BATTERY_LEVELS, TUYA_FAN_MODES, TUYA_HVAC_MODES, TUYA_TEMP_UNIT
-
-_LOGGER = logging.getLogger(__package__)
 
 
 def clamp_to_boundaries(value: float, min_boundary: float, max_boundary: float) -> float:
@@ -87,15 +84,13 @@ def valid_number_data(number_data: Any) -> bool:
 
 
 def convert_temperature(value: float, from_unit: str, to_unit: str) -> float:
-    """Safely convert native temperatures between units using core HA logic converters."""
     if (
         from_unit == to_unit 
         or from_unit not in TemperatureConverter.VALID_UNITS 
         or to_unit not in TemperatureConverter.VALID_UNITS
+        or not isinstance(value, (int, float))
+        or not math.isfinite(value)
     ):
         return value
-    try:
-        return TemperatureConverter.convert(value, from_unit, to_unit)
-    except (ValueError, TypeError) as err:
-        _LOGGER.error("Failed to convert temperature from %s to %s: %s", from_unit, to_unit, err)
-        return value
+
+    return TemperatureConverter.convert(value, from_unit, to_unit)

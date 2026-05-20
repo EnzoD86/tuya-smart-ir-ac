@@ -133,7 +133,9 @@
       }
     },
     "error": {
-      "hub_already_configured": "Bu hub zaten yapılandırılmış."
+      "cannot_change_access_id": "Mevcut bir hub için Access ID değiştirilemez.",
+      "cannot_connect": "Tuya sunucularına bağlanılamadı. Lütfen ağınızı kontrol edin.",
+      "invalid_auth": "Kimlik doğrulama başarısız: Geçersiz Access ID veya Access Secret."
     }
   },
   "options": {
@@ -294,12 +296,13 @@
       }
     },
     "error": {
+      "cannot_change_access_id": "Mevcut bir hub için Access ID değiştirilemez.",
       "device_already_configured": "Bu cihaz zaten yapılandırılmış.",
       "device_already_configured_on_other_hub": "Bu cihaz zaten başka bir Hub üzerinde yapılandırılmış.",
+      "invalid_auth": "Kimlik doğrulama başarısız: Geçersiz Access ID veya Access Secret.",
       "tuya_api_error": "Tuya Cloud Hatası: {error_info}"
     },
     "abort": {
-      "device_not_configurable": "Cihaz yapılandırılamıyor.",
       "device_not_found": "Hiçbir cihaz bulunamadı."
     }
   },

@@ -1,4 +1,3 @@
-import logging
 from typing import Any
 
 from homeassistant.core import callback
@@ -63,8 +62,6 @@ from .helpers import (
     convert_temperature,
     convert_to_float,
 )
-
-_LOGGER = logging.getLogger(__package__)
 
 
 class TuyaClimateEntity:
@@ -212,7 +209,7 @@ class TuyaClimateEntity:
         return False
 
     def get_temperature_unit_of_measurement(self) -> str:
-        """Read the measurement scale symbol used by the designated environmental tracking source."""
+        """Read the measurement scale symbol used by the designated temperature tracking source."""
         if self._temperature_sensor is not None:
             if sensor_state := self.hass.states.get(self._temperature_sensor):
                 return sensor_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS)
@@ -254,18 +251,14 @@ class TuyaClimateEntity:
 
     async def async_execute_turn_on(self) -> None:
         """Turn on the climate device power via coordinator service."""
-        _LOGGER.info("Sending power on command for device %s", self._name)
         await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
 
     async def async_execute_turn_off(self) -> None:
         """Turn off the climate device power via coordinator service."""
-        _LOGGER.info("Sending power off command for device %s", self._name)
         await self.coordinator.async_turn_off(self._infrared_id, self._climate_id)
 
     async def async_execute_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode for the climate device via coordinator service."""
-        _LOGGER.info("Setting hvac mode to %s for device %s", hvac_mode, self._name)
-
         if hvac_mode is HVACMode.OFF:
             await self.coordinator.async_turn_off(self._infrared_id, self._climate_id)
         else:
@@ -283,10 +276,8 @@ class TuyaClimateEntity:
         """Set target temperature for the climate device via coordinator service."""
         if hvac_mode is not None:
             if hvac_mode is HVACMode.OFF:
-                _LOGGER.info("Turning off climate control for device %s", self._name)
                 await self.coordinator.async_turn_off(self._infrared_id, self._climate_id)
             else:
-                _LOGGER.info("Setting hvac mode to %s and target temperature to %s for device %s", hvac_mode, value, self._name)
                 fan_mode = self.get_hvac_fan_mode(hvac_mode)
 
                 if self.get_hvac_power_on(self._current_hvac_mode):
@@ -296,8 +287,6 @@ class TuyaClimateEntity:
                     self._infrared_id, self._climate_id, hvac_mode, value, fan_mode
                 )
         else:
-            _LOGGER.info("Setting target temperature to %s for device %s", value, self._name)
-
             if self.get_temp_power_on(self._current_hvac_mode):
                 await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
                 
@@ -305,8 +294,6 @@ class TuyaClimateEntity:
 
     async def async_execute_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode for the climate device via coordinator service."""
-        _LOGGER.info("Setting fan mode to %s for device %s", fan_mode, self._name)
-
         if self.get_fan_power_on(self._current_hvac_mode):
             await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
 
@@ -314,10 +301,10 @@ class TuyaClimateEntity:
 
 
 class TuyaSensorEntity:
-    """Base class for standalone sensor devices managed by this integration."""
+    """Base class for standalone environmental Temperature/Humidity sensor devices managed by this integration."""
 
     def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData, sensor_type: str) -> None:
-        """Initialize core reporting identities and linked climate device metadata."""
+        """Initialize core reporting identities and linked environmental device metadata."""
         self._runtime_data = runtime_data
         self._sensor_type = sensor_type
         
@@ -335,5 +322,5 @@ class TuyaSensorEntity:
 
     @property
     def available(self) -> bool:
-        """Check availability using the coordinator data cache mapping."""
+        """Check environmental sensor availability using the coordinator data cache mapping."""
         return self.coordinator.is_available(self._device_id)

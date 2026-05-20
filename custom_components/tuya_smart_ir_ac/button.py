@@ -37,28 +37,29 @@ async def async_setup_entry(
         if not infrared_id or not device_id:
             continue
 
-        try:
-            device_data = await ir_manager.async_fetch_data(infrared_id, device_id)
+        device_data = await ir_manager.async_fetch_data(infrared_id, device_id)
             
-            for key_data in device_data.key_list:
-                entity = TuyaButton(
-                    config_entry=config_entry,
-                    ir_manager=ir_manager,
-                    infrared_id=infrared_id,
-                    device_id=device_id,
-                    device_name=name,
-                    category_id=device_data.category_id,
-                    key_data=key_data
-                )
-                active_entities.append(entity)
-                
-        except Exception as e:
-            _LOGGER.error(
-                "Failed to load keys for generic IR device %s: %s", 
-                name, e
-            )
+        if device_data is None:
+            _LOGGER.warning("[%s] Skipping IR button setup due to fetch failure", name)
+            continue
+
+        for key_data in device_data.key_list:
+            active_entities.append(TuyaButton(
+                config_entry=config_entry,
+                ir_manager=ir_manager,
+                infrared_id=infrared_id,
+                device_id=device_id,
+                device_name=name,
+                category_id=device_data.category_id,
+                key_data=key_data
+            ))
 
     if active_entities:
+        _LOGGER.debug(
+            "[%s] Initialized %d button platform entities", 
+            config_entry.title, 
+            len(active_entities)
+        )
         async_add_entities(active_entities)
 
 
@@ -96,7 +97,7 @@ class TuyaButton(ButtonEntity):
         )
 
     async def async_press(self) -> None:
-        _LOGGER.debug("Pressing button '%s' for device %s", self._key_name, self._device_name)
+        """Handle the button press action to trigger the remote control execution."""
         await self._ir_manager.async_send_command(
             self._infrared_id, 
             self._device_id, 

@@ -35,6 +35,11 @@ async def async_setup_entry(
         active_entities.append(entity)
 
     if active_entities:
+        _LOGGER.debug(
+            "[%s] Initialized %d climate platform entities", 
+            config_entry.title, 
+            len(active_entities)
+        )
         async_add_entities(active_entities)
 
 
