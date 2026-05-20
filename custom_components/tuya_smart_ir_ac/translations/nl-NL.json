@@ -134,7 +134,7 @@
     },
     "error": {
       "cannot_change_access_id": "De Access ID kan niet worden gewijzigd voor een bestaande hub.",
-      "cannot_connect": "Verbinding met Tuya-servers mislukt. Controleer uw netwerk."
+      "cannot_connect": "Verbinding met Tuya-servers mislukt. Controleer uw netwerk.",
       "invalid_auth": "Verificatie mislukt: Ongeldige Access ID of Access Secret."
     }
   },
