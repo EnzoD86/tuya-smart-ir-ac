@@ -1,3 +1,4 @@
+import math
 from typing import Any
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -85,8 +86,8 @@ def valid_number_data(number_data: Any) -> bool:
 
 def convert_temperature(value: float, from_unit: str, to_unit: str) -> float:
     if (
-        from_unit == to_unit 
-        or from_unit not in TemperatureConverter.VALID_UNITS 
+        from_unit == to_unit
+        or from_unit not in TemperatureConverter.VALID_UNITS
         or to_unit not in TemperatureConverter.VALID_UNITS
         or not isinstance(value, (int, float))
         or not math.isfinite(value)
