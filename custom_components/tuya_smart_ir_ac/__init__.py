@@ -1,8 +1,8 @@
-﻿import logging
+import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
+from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
