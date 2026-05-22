@@ -1,8 +1,8 @@
-import logging
+﻿import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+import homeassistant.helpers.device_registry as dr
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
@@ -75,38 +75,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         
     api_endpoint = TUYA_ENDPOINTS.get(data.get(CONF_TUYA_COUNTRY))
     client = TuyaOpenAPI(api_endpoint, data[CONF_ACCESS_ID], data[CONF_ACCESS_SECRET])
-    
-    res = await client.connect()
-    if not res.get("success"):
-        _LOGGER.error("Tuya Hub Login Error: %s", res.get("msg"))
 
-        if client.session and not client.session.closed:
-            await client.session.close()
+    try:
+        res = await client.connect()
+        if not res.get("success"):
+            _LOGGER.error("Tuya Hub Login Error: %s", res.get("msg"))
+            await client.close()
+            raise ConfigEntryAuthFailed(f"Tuya authentication failed: {res.get('msg')}")
 
-        raise ConfigEntryAuthFailed(f"Tuya authentication failed: {res.get('msg')}")
+        climate_interval = data.get(CONF_CLIMATE_UPDATE_INTERVAL, UPDATE_INTERVAL)
+        sensor_interval = data.get(CONF_SENSOR_UPDATE_INTERVAL, UPDATE_INTERVAL)
 
-    climate_interval = data.get(CONF_CLIMATE_UPDATE_INTERVAL, UPDATE_INTERVAL)
-    sensor_interval = data.get(CONF_SENSOR_UPDATE_INTERVAL, UPDATE_INTERVAL)
+        climate_coordinator = TuyaClimateCoordinator(hass, entry, client, climate_interval)
+        sensor_coordinator = TuyaSensorCoordinator(hass, entry, client, sensor_interval)
 
-    climate_coordinator = TuyaClimateCoordinator(hass, entry, client, climate_interval)
-    sensor_coordinator = TuyaSensorCoordinator(hass, entry, client, sensor_interval)
+        await climate_coordinator.async_config_entry_first_refresh()
+        await sensor_coordinator.async_config_entry_first_refresh()
 
-    await climate_coordinator.async_config_entry_first_refresh()
-    await sensor_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data = RuntimeData(
+            client=client,
+            climate_coordinator=climate_coordinator,
+            sensor_coordinator=sensor_coordinator,
+            ir_manager=TuyaIRManager(hass, entry, client)
+        )
 
-    entry.runtime_data = RuntimeData(
-        client=client,
-        climate_coordinator=climate_coordinator,
-        sensor_coordinator=sensor_coordinator,
-        ir_manager=TuyaIRManager(hass, entry, client)
-    )
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    _LOGGER.debug("[%s] Hub initialization completed", entry.title)
-    
-    entry.async_on_unload(entry.add_update_listener(async_update_entry))
-    return True
-
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        _LOGGER.debug("[%s] Hub initialization completed", entry.title)
+        
+        entry.async_on_unload(entry.add_update_listener(async_update_entry))
+        return True
+    except Exception:
+        if client and client.session and not client.session.closed:
+            await client.close()
+        raise
 
 async def async_unload_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
     """Unload a config entry and clean up active cloud sessions."""
