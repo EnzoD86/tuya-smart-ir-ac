@@ -133,18 +133,13 @@ class TuyaSensorAPI(TuyaBaseAPI):
 
     async def async_fetch_all_data(self, device_ids: list[str]) -> TuyaAPIResult:
         """Fetch runtime states for multiple sensors concurrently and map them into a typed dictionary."""
-        # ARCHITECTURAL NOTE: Tuya does not provide a native batch endpoint for generic/sensor shadow states, 
-        # forcing us to make individual requests per device. To prevent a severe performance bottleneck 
-        # where polling time scales linearly with the number of sensors (e.g., 5 sensors x 200ms = 1s delay), 
-        # we leverage asyncio.gather to fire requests concurrently over the same HTTP Keep-Alive pipeline.
-        #
-        # RATE LIMITING & SCALABILITY SAFETY:
-        # Standard Tuya developer accounts allow ample concurrent GET requests per second. However, 
-        # if an environment scales to a massive number of sensors (e.g., 30+) and triggers a Tuya 
-        # Rate Limit (HTTP 429 / Code 1010), we can safely throttle concurrency without reverting to 
-        # slow sequential execution by introducing an asyncio.Semaphore(3) inside this orchestrator.
-        # Currently, partial failures are caught gracefully per-task without crashing the whole coordinator cycle.
-        tasks = [self.async_fetch_data(device_id) for device_id in device_ids]
+        semaphore = asyncio.Semaphore(3)
+
+        async def _fetch_with_semaphore(device_id: str) -> TuyaAPIResult:
+            async with semaphore:
+                return await self.async_fetch_data(device_id)
+
+        tasks = [_fetch_with_semaphore(device_id) for device_id in device_ids]
         results = await asyncio.gather(*tasks)
 
         devices = {}
