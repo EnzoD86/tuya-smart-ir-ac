@@ -73,7 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
     if not all(key in entry.options for key in ["climates", "generics", "sensors"]):
         await _async_migrate_old_entries(hass, entry)
         
-    api_endpoint = TUYA_ENDPOINTS.get(data.get(CONF_TUYA_COUNTRY))
+    country = data.get(CONF_TUYA_COUNTRY, "")   
+    api_endpoint = TUYA_ENDPOINTS.get(country, "")
     client = TuyaOpenAPI(api_endpoint, data[CONF_ACCESS_ID], data[CONF_ACCESS_SECRET])
     
     res = await client.connect()
