@@ -148,6 +148,25 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=schema, 
             errors=errors
         )
+    
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+        """Handle migration and import from old YAML configuration schemas."""
+        _LOGGER.debug("Old YAML configuration detected: %s", import_config)
+        
+        access_id = import_config.get(CONF_ACCESS_ID)
+        await self.async_set_unique_id(f"tuya_hub_{access_id}")
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=f"Tuya Smart IR Hub ({access_id})",
+            data={
+                CONF_ACCESS_ID: access_id,
+                CONF_ACCESS_SECRET: import_config.get("access_secret"),
+                CONF_TUYA_COUNTRY: import_config.get("country"),
+                CONF_CLIMATE_UPDATE_INTERVAL: import_config.get("update_interval") or UPDATE_INTERVAL,
+                CONF_SENSOR_UPDATE_INTERVAL: UPDATE_INTERVAL
+            }
+        )
 
     @staticmethod
     @callback

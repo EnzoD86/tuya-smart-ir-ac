@@ -51,22 +51,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     if DOMAIN not in config:
         return True
 
-    if hass.config_entries.async_entries(DOMAIN):
-        _LOGGER.warning(
-            "Legacy YAML configuration detected under '%s:', but the integration is already configured via UI. "
-            "Please remove the YAML lines from your configuration.yaml to prevent this warning.",
-            DOMAIN
-        )
-        return True
-
-    domain_config = config[DOMAIN]
-    _LOGGER.info("First-time YAML configuration detected, initiating import into UI")
-
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "import"},
-            data=domain_config,
+            data=config[DOMAIN],
         )
     )
 
