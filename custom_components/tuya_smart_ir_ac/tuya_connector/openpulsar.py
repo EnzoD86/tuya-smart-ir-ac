@@ -1,185 +1,170 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-
-""" This module handle Tuya to B Message Queue by websocket base on websocket-client
-    websocket-client doc: https://websocket-client.readthedocs.io/en/latest/getting_started.html
-"""
-from __future__ import annotations
-
+import asyncio
+import aiohttp
 import base64
 import hashlib
-import ssl
-import threading
 import json
-import time
 import logging
-from typing import Callable
+from typing import Callable, Awaitable, Set, Tuple, Optional
 
-import websocket
 from Crypto.Cipher import AES
 
 from .openlogging import logger
-from .tuya_enums import TuyaCloudPulsarTopic
 
-# basic config
+# Constants
 WEB_SOCKET_QUERY_PARAMS = "?ackTimeoutMillis=3000&subscriptionType=Failover"
-
-CONNECT_TIMEOUT_SECONDS = 3
-CHECK_INTERVAL_SECONDS = 3
-
 PING_INTERVAL_SECONDS = 30
-PING_TIMEOUT_SECONDS = 3
+MAX_RECONNECT_DELAY = 60  # Maximum seconds to wait before reconnecting
 
-RECONNECT_MAX_TIMES = 1000
+class TuyaOpenPulsar:
+    """Tuya Open Pulsar client natively integrated with asyncio and aiohttp."""
 
+    def __init__(
+        self, 
+        ws_endpoint: str,
+        access_id: str, 
+        access_secret: str, 
+        topic: str,
+        session: Optional[aiohttp.ClientSession] = None
+    ):
+        """Initialize the Async Pulsar Client."""
+        self._ws_endpoint = ws_endpoint
+        self._access_id = access_id
+        self._access_secret = access_secret
+        self._topic = topic
+        
+        # Gestione sessione con logica di proprietà
+        self._session = session
+        self._owns_session = session is None
+        
+        self._stop_event = asyncio.Event()
+        self._listeners: Set[Callable[[str], Awaitable[None]]] = set()
+        
+        # Pre-calculate cryptographic assets
+        self._key_bytes = access_secret[8:24].encode('utf-8')
+        self._pwd = self._gen_pwd()
+        self._topic_url = (
+            f"{self._ws_endpoint}ws/v2/consumer/persistent/"
+            f"{self._access_id}/out/{self._topic}/"
+            f"{self._access_id}-sub{WEB_SOCKET_QUERY_PARAMS}"
+        )
 
-class TuyaOpenPulsar(threading.Thread):
-    """Tuya Open Pulsar."""
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Lazy instantiation of the aiohttp session."""
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession()
+            self._owns_session = True
+        return self._session
 
-    def __init__(self,
-                 access_id: str,
-                 access_secret: str,
-                 ws_endpoint: str,
-                 topic: str):
-        """Init TuyaOpenPulsar."""
-        threading.Thread.__init__(self)
-        self._stop_event = threading.Event()
-        self.__reconnect_count = 1
+    def _gen_pwd(self) -> str:
+        """Generate Tuya authentication password token."""
+        secret_hash = hashlib.md5(self._access_secret.encode('utf-8')).hexdigest()
+        mix_str = self._access_id + secret_hash
+        return hashlib.md5(mix_str.encode('utf-8')).hexdigest()[8:24]
 
-        self.__access_id = access_id
-        self.__access_secret = access_secret
-        self.__ws_endpoint = ws_endpoint
-        self.__topic = topic
+    def add_message_listener(self, listener: Callable[[str], Awaitable[None]]):
+        self._listeners.add(listener)
 
-        self.message_listeners = set()
+    def remove_message_listener(self, listener: Callable[[str], Awaitable[None]]):
+        self._listeners.discard(listener)
 
-        header = {"Connection": "Upgrade",
-                  "username": access_id,
-                  "password": self.__gen_pwd()}
-        websocket.setdefaulttimeout(CONNECT_TIMEOUT_SECONDS)
-        self.ws_app = websocket.WebSocketApp(self.__get_topic_url(),
-                                             header=header,
-                                             on_message=self._on_message,
-                                             on_error=self._on_error,
-                                             on_close=self._on_close)
+    def _decrypt_payload(self, raw: str) -> Tuple[str, str]:
+        """Decrypt payload."""
+        raw_data = base64.b64decode(raw)
+        if len(raw_data) > 32:
+            try:
+                nonce = raw_data[:12]
+                ciphertext = raw_data[12:-16]
+                tag = raw_data[-16:]
+                cipher = AES.new(self._key_bytes, AES.MODE_GCM, nonce=nonce)
+                decrypted = cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8')
+                return decrypted, "AES-GCM"
+            except Exception:
+                pass
 
-        # if logger.level == logging.DEBUG:
-        #     websocket.enableTrace(True)
-
-    def _on_message(self, _, message):
-        message_json = json.loads(message)
-        payload = base64.b64decode(message_json["payload"]).decode('ascii')
-        logger.debug("received message origin payload: %s", payload)
         try:
-            self.__message_handler(payload)
-        except Exception as exception:
-            logger.debug(
-                "handler message, a business exception has occurred,e:%s", exception)
-        self.__send_ack(message_json["messageId"])
+            cipher = AES.new(self._key_bytes, AES.MODE_ECB)
+            decrypted = cipher.decrypt(raw_data)
+            padding_len = decrypted[-1]
+            unpadded = decrypted[:-padding_len].decode('utf-8')
+            return unpadded, "AES-ECB"
+        except Exception as ecb_err:
+            logger.error("Decryption failed for both AES-GCM and AES-ECB modes.")
+            raise ecb_err
 
-    def __gen_pwd(self):
-        mix_str = self.__access_id + \
-            TuyaOpenPulsar.__md5_hex(self.__access_secret)
-        return self.__md5_hex(mix_str)[8:24]
+    async def start(self):
+        """Start the asynchronous connection loop."""
+        self._stop_event.clear()
+        asyncio.create_task(self._connect_loop())
 
-    def __get_topic_url(self):
-        return self.__ws_endpoint + "ws/v2/consumer/persistent/"\
-            + self.__access_id + "/out/"\
-            + self.__topic + "/"\
-            + self.__access_id + "-sub"\
-            + WEB_SOCKET_QUERY_PARAMS
+    async def stop(self):
+        """Stop the client and close session only if owned."""
+        self._stop_event.set()
+        self._listeners.clear()
+        if self._owns_session and self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
 
-    def __message_handler(self, payload):
-        """Handle message from Tuya cloud."""
-        data_map = json.loads(payload)
-        decrypt_data = TuyaOpenPulsar.__decrypt_by_aes(
-            data_map['data'], self.__access_secret)
-        logger.debug("received message descripted: %s", decrypt_data)
-
-        for listener in self.message_listeners:
-            listener(decrypt_data)
-
-    @staticmethod
-    def __decrypt_by_aes(raw: str,
-                         key: str) -> str:
-        raw = base64.b64decode(raw)
-        key = key[8:24]
-        cipher = AES.new(key.encode('utf-8'), AES.MODE_ECB)
-        raw = cipher.decrypt(raw)
-        res_str = str(raw, "utf-8")
-        res_str = res_str[:-ord(res_str[-1])]
-        return res_str
-
-    @staticmethod
-    def __md5_hex(md5_str) -> str:
-        md_tool = hashlib.md5()
-        md_tool.update(md5_str.encode('utf-8'))
-        return md_tool.hexdigest()
-
-    def __reconnect(self):
-        logger.debug("ws-client connect status is not ok.\n\
-                     trying to reconnect for the % d time",
-                     self.__reconnect_count)
-        self.__reconnect_count += 1
-        if self.__reconnect_count < RECONNECT_MAX_TIMES:
-            self.__connect()
-
-    def __connect(self):
-        logger.debug("---\nws-client connecting...")
-        self.ws_app.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE},
-                                ping_interval=PING_INTERVAL_SECONDS,
-                                ping_timeout=PING_TIMEOUT_SECONDS)
-
-    def __send_ack(self, message_id):
-        json_str = json.dumps({"messageId": message_id})
-        self.ws_app.send(json_str)
-
-    def _on_error(self, _, error):
-        logger.debug("on error is: %s", error)
-
-    def _on_close(self, ws_app, close_status_code, close_msg):
-        logger.debug(
-            f"Connection closed, code={close_status_code}, close_msg={close_msg}")
-        ws_app.close()
-
-    def run(self):
-        """Method representing the thread's activity
-            which should not be used directly."""
+    async def _connect_loop(self):
+        """Main reconnection loop."""
+        reconnect_delay = 1
+        headers = {
+            "Connection": "Upgrade", 
+            "username": self._access_id, 
+            "password": self._pwd
+        }
 
         while not self._stop_event.is_set():
-
             try:
-                if self.ws_app.sock.status == 101:
-                    logger.debug("ws-client connect status is ok.")
-                    self.__reconnect_count = 1
-            except Exception:
-                self.__reconnect()
+                # Otteniamo la sessione (o la creiamo se necessario)
+                session = await self._get_session()
+                
+                async with session.ws_connect(
+                    self._topic_url, 
+                    headers=headers,
+                    heartbeat=PING_INTERVAL_SECONDS,
+                    ssl=False
+                ) as ws:
+                    logger.info("Successfully connected to Tuya WebSocket.")
+                    reconnect_delay = 1
+                    
+                    async for msg in ws:
+                        if self._stop_event.is_set():
+                            break
+                        if msg.type == aiohttp.WSMsgType.TEXT:
+                            await self._process_message(ws, msg.data)
+                        elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
+                            break
+                            
+            except aiohttp.ClientError as e:
+                logger.debug("WebSocket network error: %s", e)
+            except Exception as e:
+                logger.exception("Unexpected error in Pulsar loop: %s", e)
+                
+            if self._stop_event.is_set():
+                break
+                
+            await asyncio.sleep(reconnect_delay)
+            reconnect_delay = min(reconnect_delay * 2, MAX_RECONNECT_DELAY)
 
-            time.sleep(CHECK_INTERVAL_SECONDS)
-
-    def start(self):
-        """Start Message Queue.
-
-        Start Message Queue thread
-        """
-        logger.debug("start")
-        super().start()
-
-    def stop(self):
-        """Stop Message Queue.
-
-        Stop Message Queue thread
-        """
-        logger.debug("stop")
-        self.message_listeners = set()
-        self.ws_app.close()
-        self.ws_app = None
-        self._stop_event.set()
-
-    def add_message_listener(self, listener: Callable[[str], None]):
-        """Add Message Queue listener."""
-        self.message_listeners.add(listener)
-
-    def remove_message_listener(self, listener: Callable[[str], None]):
-        """Remvoe Message Queue listener."""
-        self.message_listeners.discard(listener)
+    async def _process_message(self, ws: aiohttp.ClientWebSocketResponse, message: str):
+        """Process messages."""
+        try:
+            message_json = json.loads(message)
+            payload_bytes = base64.b64decode(message_json["payload"])
+            data_map = json.loads(payload_bytes.decode('utf-8'))
+            
+            decrypt_data, protocol_used = self._decrypt_payload(data_map['data'])
+            
+            for listener in self._listeners:
+                try:
+                    await listener(decrypt_data)
+                except Exception as e:
+                    logger.error("Error executing async listener: %s", e)
+            
+            ack_payload = json.dumps({"messageId": message_json["messageId"]})
+            await ws.send_str(ack_payload)
+            
+        except Exception as e:
+            logger.error("Error processing incoming message payload: %s", e)

@@ -73,7 +73,7 @@ from .const import (
     SUPPORTED_HVAC_PRESETS,
     SUPPORTED_OPTIONAL_ENTITIES,
     SUPPORTED_POWER_ON_MODES,
-    TUYA_ENDPOINTS,
+    TUYA_API_ENDPOINTS,
     UPDATE_INTERVAL,
 )
 from .models import (
@@ -286,7 +286,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     break
 
             if not errors:
-                client = self.config_entry.runtime_data.client
+                client = self.config_entry.runtime_data.api_client
                 result = await async_get_climate_device(self.hass, client, infrared_id, climate_id)
                 
                 if not result.success:
@@ -406,7 +406,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     break
 
             if not errors:
-                client = self.config_entry.runtime_data.client
+                client = self.config_entry.runtime_data.api_client
                 result = await async_get_generic_device(self.hass, client, infrared_id, device_id)
                 
                 if not result.success:
@@ -499,7 +499,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     break
 
             if not errors:
-                client = self.config_entry.runtime_data.client
+                client = self.config_entry.runtime_data.api_client
                 result = await async_get_sensor_device(self.hass, client, device_id)
                 
                 if not result.success:
@@ -609,7 +609,7 @@ def hub_data_schema() -> dict[vol.Marker, Any]:
         ),
         vol.Required(CONF_TUYA_COUNTRY): SelectSelector(
             SelectSelectorConfig(
-                options=list(TUYA_ENDPOINTS.keys()),
+                options=list(TUYA_API_ENDPOINTS.keys()),
                 multiple=False,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_TUYA_COUNTRY
@@ -773,7 +773,7 @@ async def async_validate_and_connect(data: dict[str, Any]) -> dict[str, str]:
     errors: dict[str, str] = {}
     
     # Estrazione dell'endpoint in base al paese selezionato
-    api_endpoint = TUYA_ENDPOINTS.get(data.get(CONF_TUYA_COUNTRY))
+    api_endpoint = TUYA_API_ENDPOINTS.get(data.get(CONF_TUYA_COUNTRY))
     if not api_endpoint:
         errors[CONF_TUYA_COUNTRY] = "invalid_country"
         return errors
@@ -789,9 +789,7 @@ async def async_validate_and_connect(data: dict[str, Any]) -> dict[str, str]:
         errors["base"] = "cannot_connect"
         _LOGGER.exception("Unexpected error connecting to Tuya API: %s", err)
     finally:
-        # Pulizia della sessione a prescindere dall'esito
-        if client.session and not client.session.closed:
-            await client.session.close()
+        await client.close()
             
     return errors
 

@@ -1,12 +1,18 @@
 import logging
+from requests import session
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .tuya_connector import TuyaOpenAPI
+from .tuya_connector import (
+    TuyaOpenAPI,
+    TuyaOpenPulsar,
+    TuyaCloudPulsarTopic
+)
 from .const import (
     DOMAIN,
     PLATFORMS,
@@ -16,11 +22,17 @@ from .const import (
     CONF_CLIMATE_UPDATE_INTERVAL,
     CONF_SENSOR_UPDATE_INTERVAL,
     UPDATE_INTERVAL,
-    TUYA_ENDPOINTS
+    TUYA_API_ENDPOINTS,
+    TUYA_PULSAR_ENDPOINTS,
+    DEVICE_TYPE_CLIMATES,
+    DEVICE_TYPE_SENSORS,
+    DEVICE_TYPE_GENERICS
 )
 from .coordinator import TuyaClimateCoordinator, TuyaSensorCoordinator
 from .manager import TuyaIRManager
 from .models import HubConfigEntry, RuntimeData
+from .api import TuyaClimateAPI, TuyaSensorAPI
+from .bridge import TuyaPulsarBridge
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -28,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required("access_id"): cv.string,
         vol.Required("access_secret"): cv.string,
-        vol.Required("country"): vol.All(vol.Coerce(str), str.lower, vol.In(TUYA_ENDPOINTS.keys())),
+        vol.Required("country"): vol.All(vol.Coerce(str), str.lower, vol.In(TUYA_API_ENDPOINTS.keys())),
         vol.Optional("update_interval", default=UPDATE_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600))
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -70,41 +82,71 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         _LOGGER.debug("Legacy standalone entry '%s' detected. Skipping.", entry.title)
         return False
 
-    if not all(key in entry.options for key in ["climates", "generics", "sensors"]):
+    if not all(key in entry.options for key in [DEVICE_TYPE_CLIMATES, DEVICE_TYPE_GENERICS, DEVICE_TYPE_SENSORS]):
         await _async_migrate_old_entries(hass, entry)
-        
-    country = data.get(CONF_TUYA_COUNTRY, "")   
-    api_endpoint = TUYA_ENDPOINTS.get(country, "")
-    client = TuyaOpenAPI(api_endpoint, data[CONF_ACCESS_ID], data[CONF_ACCESS_SECRET])
-    
-    res = await client.connect()
-    if not res.get("success"):
-        _LOGGER.error("Tuya Hub Login Error: %s", res.get("msg"))
 
-        if client.session and not client.session.closed:
-            await client.session.close()
-
-        raise ConfigEntryAuthFailed(f"Tuya authentication failed: {res.get('msg')}")
-
+    country = data.get(CONF_TUYA_COUNTRY, "")
     climate_interval = data.get(CONF_CLIMATE_UPDATE_INTERVAL, UPDATE_INTERVAL)
     sensor_interval = data.get(CONF_SENSOR_UPDATE_INTERVAL, UPDATE_INTERVAL)
+    
+    session = async_get_clientsession(hass)
 
-    climate_coordinator = TuyaClimateCoordinator(hass, entry, client, climate_interval)
-    sensor_coordinator = TuyaSensorCoordinator(hass, entry, client, sensor_interval)
-
-    await climate_coordinator.async_config_entry_first_refresh()
-    await sensor_coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = RuntimeData(
-        client=client,
-        climate_coordinator=climate_coordinator,
-        sensor_coordinator=sensor_coordinator,
-        ir_manager=TuyaIRManager(hass, entry, client)
+    # Initialize API client
+    api_client = TuyaOpenAPI(
+        endpoint=TUYA_API_ENDPOINTS.get(country, ""), 
+        access_id=data[CONF_ACCESS_ID], 
+        access_secret=data[CONF_ACCESS_SECRET],
+        session=session  # <--- Assicurati che sia passato come argomento nominativo
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    _LOGGER.debug("[%s] Hub initialization completed", entry.title)
+    res = await api_client.connect()
+    if not res.get("success"):
+        _LOGGER.error("Tuya Hub Login Error: %s", res.get("msg"))
+        await api_client.close()
+        raise ConfigEntryAuthFailed(f"Tuya authentication failed: {res.get('msg')}")    
     
+    pulsar_client = TuyaOpenPulsar(
+        ws_endpoint=TUYA_PULSAR_ENDPOINTS.get(country, ""),
+        access_id=data[CONF_ACCESS_ID],
+        access_secret=data[CONF_ACCESS_SECRET],
+        topic=TuyaCloudPulsarTopic.PROD,
+        session=session
+    )
+
+    try:
+        # Initialize API
+        climate_api = TuyaClimateAPI(hass, client=api_client, log_prefix=f"[{entry.title}]")
+        sensor_api = TuyaSensorAPI(hass, client=api_client, log_prefix=f"[{entry.title}]")
+
+        # Initialize Pulsar bridge
+        pulsar_bridge = TuyaPulsarBridge(hass, pulsar_client)
+
+        # Initialize coordinators
+        climate_coordinator = TuyaClimateCoordinator(hass, entry, climate_api, pulsar_bridge, climate_interval)
+        sensor_coordinator = TuyaSensorCoordinator(hass, entry, sensor_api, pulsar_bridge, sensor_interval)
+
+        # Perform initial data fetch to populate coordinators before platform setup
+        await climate_coordinator.async_config_entry_first_refresh()
+        await sensor_coordinator.async_config_entry_first_refresh()
+
+        # Start Pulsar bridge after coordinators are ready to handle incoming messages
+        await pulsar_client.start()
+
+        entry.runtime_data = RuntimeData(
+            api_client=api_client,
+            pulsar_client=pulsar_client,
+            climate_coordinator=climate_coordinator,
+            sensor_coordinator=sensor_coordinator,
+            ir_manager=TuyaIRManager(hass, entry, api_client)
+        )
+
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception as ex:
+        _LOGGER.error("[%s] Error during Hub initialization, cleaning up sessions: %s", entry.title, ex)
+        await api_client.close()
+        await pulsar_client.stop()
+
+    _LOGGER.debug("[%s] Hub initialization completed", entry.title)
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
     return True
 
@@ -114,8 +156,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     
     if unload_ok:
-        if entry.runtime_data and entry.runtime_data.client and entry.runtime_data.client.session:
-            await entry.runtime_data.client.session.close()
+        if entry.runtime_data:
+            if entry.runtime_data.api_client:
+                await entry.runtime_data.api_client.close()
+            
+            if entry.runtime_data.pulsar_client:
+                await entry.runtime_data.pulsar_client.stop() 
 
         if entry.disabled_by is None:
             device_registry = dr.async_get(hass)

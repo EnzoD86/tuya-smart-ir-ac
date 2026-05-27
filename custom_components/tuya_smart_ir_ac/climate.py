@@ -117,7 +117,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaClimateEn
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle state changes notified by the Hub coordinator."""
-        super()._handle_coordinator_update()
+        self.async_write_ha_state()
         
     @callback
     def _handle_sensor_state_change(self, event) -> None:
@@ -136,7 +136,6 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaClimateEn
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode for the climate."""
         await self.async_execute_set_hvac_mode(hvac_mode=hvac_mode)
-        self.async_write_ha_state()
         
     async def async_set_temperature(self, **kwargs) -> None:
         """Set target temperature for the climate."""
@@ -148,9 +147,6 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaClimateEn
         elif hvac_mode is not None:
             await self.async_execute_set_hvac_mode(hvac_mode)
 
-        self.async_write_ha_state()
-
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode for the climate."""
         await self.async_execute_set_fan_mode(fan_mode)
-        self.async_write_ha_state()

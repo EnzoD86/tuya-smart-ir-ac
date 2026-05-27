@@ -102,7 +102,7 @@ class TuyaClimateTemperatureSensor(SensorEntity, TuyaClimateEntity):
     @callback
     def _handle_sensor_state_change(self, event) -> None:
         """Trigger an internal state update when a monitored external sensor changes value."""
-        if event.data.get("new_state") is not None: 
+        if event.data.get("new_state") is not None:
             self.async_write_ha_state()
 
 
@@ -155,6 +155,11 @@ class TuyaSensorTemperatureSensor(SensorEntity, CoordinatorEntity, TuyaSensorEnt
             return data.temp_current
         return None
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle state changes notified by the Hub coordinator."""
+        self.async_write_ha_state()
+
 
 class TuyaSensorHumiditySensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity):
     """Humidity sensor entity updated via standalone Temperature/Humidity coordinator."""
@@ -175,6 +180,11 @@ class TuyaSensorHumiditySensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity
         if self.coordinator.data and (data := self.coordinator.data.get(self._device_id)):
             return data.humidity_value
         return None
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle state changes notified by the Hub coordinator."""
+        self.async_write_ha_state()
 
 
 class TuyaSensorBatterySensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity):
@@ -197,3 +207,8 @@ class TuyaSensorBatterySensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity)
         if self.coordinator.data and (data := self.coordinator.data.get(self._device_id)):
             return data.battery_state
         return None
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle state changes notified by the Hub coordinator."""
+        self.async_write_ha_state()

@@ -118,7 +118,7 @@ class TuyaTemperatureSetPointNumber(NumberEntity, CoordinatorEntity, TuyaClimate
         self._attr_has_entity_name = True
         self._attr_translation_key = f"{ENTITY_TEMPERATURE_SETPOINT}"
         self._attr_device_class = NumberDeviceClass.TEMPERATURE
-        self._attr_mode = NumberMode.SLIDER
+        self._attr_mode = NumberMode.BOX
         self._attr_native_min_value = self._min_temp
         self._attr_native_max_value = self._max_temp
         self._attr_native_step = self._temp_step
@@ -134,4 +134,3 @@ class TuyaTemperatureSetPointNumber(NumberEntity, CoordinatorEntity, TuyaClimate
     async def async_set_native_value(self, value: float) -> None:
         """Transmit new target temperature setpoint using central execution logic."""
         await self.async_execute_set_temperature(value)
-        self.async_write_ha_state()

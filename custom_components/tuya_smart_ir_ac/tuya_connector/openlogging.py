@@ -1,45 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-"""Tuya iot logging."""
-
 import logging
-from typing import Any, Dict
-import copy
+from typing import Any
 
-logger = logging.getLogger('tuya iot')
+logger = logging.getLogger("custom_components.tuya_connector")
 
-default_handler = logging.StreamHandler()
-default_handler.setFormatter(logging.Formatter(
-    "[%(asctime)s] [tuya-%(module)s] %(message)s"
-))
+# Use a set for O(1) lookup time instead of a list O(n)
+SENSITIVE_KEYS = {
+    "access_token", "client_id", "ip", "lat", "link_id",
+    "local_key", "lon", "password", "refresh_token", "uid"
+}
 
-logger.addHandler(default_handler)
-TUYA_LOGGER = logger
-
-FILTER_LIST = ["access_token", "client_id", "ip", "lat", "link_id",
-               "local_key", "lon", "password", "refresh_token", "uid"]
-
-STAR = "***"
+MASK_STRING = "***"
 
 
-def filter_logger(result_info: Dict[str, Any]):
-    """Filter log, hide sensitive info."""
-    if result_info is None:
-        return result_info
-    filter_info_original = copy.deepcopy(result_info)
-    if "result" in filter_info_original:
-        filter_info = filter_info_original["result"]
-    else:
-        filter_info = filter_info_original
-    if isinstance(filter_info, list):
-        for item in filter_info:
-            for filter_key in FILTER_LIST:
-                if filter_key in item:
-                    item[filter_key] = STAR
-
-    elif isinstance(filter_info, dict):
-        for filter_key in FILTER_LIST:
-            if filter_key in filter_info:
-                filter_info[filter_key] = STAR
-
-    return filter_info_original
+def filter_logger(data: Any) -> Any:
+    """
+    Recursively filter log data to hide sensitive information.
+    Builds a new sanitized data structure on the fly, avoiding slow deepcopy operations
+    and ensuring nested sensitive keys are caught at any depth level.
+    """
+    if isinstance(data, dict):
+        return {
+            key: MASK_STRING if key in SENSITIVE_KEYS else filter_logger(value)
+            for key, value in data.items()
+        }
+    
+    if isinstance(data, list):
+        return [filter_logger(item) for item in data]
+    
+    # Return base types (str, int, float, bool, None) as is
+    return data

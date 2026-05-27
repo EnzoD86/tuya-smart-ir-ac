@@ -158,10 +158,18 @@ TUYA_FAN_MODES = {
     "3": FAN_HIGH,
 }
 
-TUYA_ENDPOINTS = {
+TUYA_API_ENDPOINTS = {
     "eu": "https://openapi.tuyaeu.com",
     "us": "https://openapi.tuyaus.com",
     "in": "https://openapi.tuyain.com",
     "cn": "https://openapi.tuyacn.com",
     "sg": "https://openapi-sg.iotbing.com",
+}
+
+TUYA_PULSAR_ENDPOINTS = {
+    "eu": "wss://mqe.tuyaeu.com:8285/",
+    "us": "wss://mqe.tuyaus.com:8285/",
+    "in": "wss://mqe.tuyain.com:8285/",
+    "cn": "wss://mqe.tuyacn.com:8285/",
+    "sg": "wss://mqe-sg.iotbing.com:8285/",
 }

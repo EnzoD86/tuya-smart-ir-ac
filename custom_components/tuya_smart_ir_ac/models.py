@@ -1,20 +1,25 @@
-from dataclasses import asdict, dataclass, field
+from dataclasses import (
+    dataclass,
+    field,
+    replace,
+)
 from typing import Any, TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
-from .tuya_connector import TuyaOpenAPI
 
-if TYPE_CHECKING:
-    from .coordinator import TuyaClimateCoordinator, TuyaSensorCoordinator
-    from .manager import TuyaIRManager
-
+from .tuya_connector import TuyaOpenAPI, TuyaOpenPulsar
 from .helpers import (
     hass_battery_state,
     hass_fan_mode,
     hass_hvac_mode,
     hass_temp_unit,
     hass_temperature,
+    get_val
 )
+
+if TYPE_CHECKING:
+    from .coordinator import TuyaClimateCoordinator, TuyaSensorCoordinator
+    from .manager import TuyaIRManager
 
 # Custom type alias linking Home Assistant ConfigEntry to our RuntimeData container
 type HubConfigEntry = ConfigEntry[RuntimeData]
@@ -23,7 +28,8 @@ type HubConfigEntry = ConfigEntry[RuntimeData]
 @dataclass
 class RuntimeData:
     """Isolated, thread-safe runtime data context unique to each individual Hub ConfigEntry."""
-    client: TuyaOpenAPI
+    api_client: TuyaOpenAPI
+    pulsar_client: TuyaOpenPulsar
     climate_coordinator: TuyaClimateCoordinator | None = None
     sensor_coordinator: TuyaSensorCoordinator | None = None
     ir_manager: TuyaIRManager | None = None
@@ -73,6 +79,18 @@ class TuyaClimateData:
             if dev_id:
                 devices[dev_id] = cls.from_raw_data(data)
         return devices
+
+    def from_pulsar_data(self, status_list: list) -> TuyaClimateData:
+        """Update existing climate state from raw Pulsar status updates."""
+        updates = {item["code"]: item["value"] for item in status_list}
+        
+        return replace(
+            self,
+            power=get_val(updates.get("power"), self.power),
+            hvac_mode=get_val(hass_hvac_mode(updates.get("mode")), self.hvac_mode),
+            temperature=get_val(hass_temperature(updates.get("temp")), self.temperature),
+            fan_mode=get_val(hass_fan_mode(updates.get("wind")), self.fan_mode)
+        )
 
 
 @dataclass
@@ -127,4 +145,16 @@ class TuyaSensorData:
             temp_current=hass_temperature(prop_map.get("temp_current"), convert=True),
             humidity_value=prop_map.get("humidity_value"),
             battery_state=hass_battery_state(prop_map.get("battery_state")),
+        )
+
+    def from_pulsar_data(self, status_list: list) -> TuyaSensorData:
+        """Update existing sensor state from raw Pulsar status updates."""
+        updates = {item["code"]: item["value"] for item in status_list}
+
+        return replace(
+            self,
+            temp_unit_convert=self.temp_unit_convert,
+            temp_current=get_val(hass_temperature(updates.get("temp_current"), convert=True), self.temp_current),
+            humidity_value=get_val(updates.get("humidity_value"), self.humidity_value),
+            battery_state=get_val(hass_battery_state(updates.get("battery_state")), self.battery_state)
         )
