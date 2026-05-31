@@ -246,6 +246,6 @@ class TuyaSensorCoordinator(DataUpdateCoordinator[dict[str, TuyaSensorData]]):
 
         current_item = self.data.get(device_id)
         if current_item and new_status.get("status"):
-            _LOGGER.debug("[%s] Update sensor %s from Pulsar: %s", device_id, current_item.name, str(new_status))
+            _LOGGER.debug("[%s] Update sensor from Pulsar: %s", device_id, str(new_status))
             self.data[device_id] = TuyaSensorData.from_pulsar_data(current_item, new_status["status"])
             self.async_update_listeners()
