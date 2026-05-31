@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 from __future__ import annotations
 
+import aiohttp
 import asyncio
 import hashlib
 import hmac
@@ -9,10 +10,11 @@ import json
 import time
 from typing import Any
 
-import aiohttp
-
-from .openlogging import filter_logger, logger
+from .openlogging import get_module_logger, filter_logger
 from .version import VERSION
+
+
+logger = get_module_logger("openapi")
 
 # Constants
 TUYA_ERROR_CODE_TOKEN_INVALID = 1010
@@ -166,6 +168,7 @@ class TuyaOpenAPI:
         """Close the underlying aiohttp client session cleanly if owned."""
         if self._owns_session and self._session and not self._session.closed:
             await self._session.close()
+            self._session = None
         else:
             logger.debug("Skipping session close because the session is managed externally.")
 

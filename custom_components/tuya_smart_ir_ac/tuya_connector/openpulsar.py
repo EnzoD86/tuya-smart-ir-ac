@@ -5,17 +5,18 @@ import aiohttp
 import base64
 import hashlib
 import json
-import logging
 from typing import Callable, Awaitable, Set, Tuple, Optional
-
 from Crypto.Cipher import AES
 
-from .openlogging import logger
+from .openlogging import get_module_logger
+
+logger = get_module_logger("openpulsar")
 
 # Constants
 WEB_SOCKET_QUERY_PARAMS = "?ackTimeoutMillis=3000&subscriptionType=Failover"
 PING_INTERVAL_SECONDS = 30
 MAX_RECONNECT_DELAY = 60  # Maximum seconds to wait before reconnecting
+
 
 class TuyaOpenPulsar:
     """Tuya Open Pulsar client natively integrated with asyncio and aiohttp."""
@@ -34,14 +35,18 @@ class TuyaOpenPulsar:
         self._access_secret = access_secret
         self._topic = topic
         
-        # Gestione sessione con logica di proprietà
+        # Session lifecycle management
         self._session = session
         self._owns_session = session is None
+
+        # Track the live connection state of the WebSocket
+        self._is_connected = False
         
         self._stop_event = asyncio.Event()
         self._listeners: Set[Callable[[str], Awaitable[None]]] = set()
         
         # Pre-calculate cryptographic assets
+        self._access_secret_bytes = access_secret.encode('utf-8')
         self._key_bytes = access_secret[8:24].encode('utf-8')
         self._pwd = self._gen_pwd()
         self._topic_url = (
@@ -49,6 +54,10 @@ class TuyaOpenPulsar:
             f"{self._access_id}/out/{self._topic}/"
             f"{self._access_id}-sub{WEB_SOCKET_QUERY_PARAMS}"
         )
+
+    def is_connected(self) -> bool:
+        """Return True if the Pulsar WebSocket client is currently connected."""
+        return self._is_connected
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """Lazy instantiation of the aiohttp session."""
@@ -59,39 +68,17 @@ class TuyaOpenPulsar:
 
     def _gen_pwd(self) -> str:
         """Generate Tuya authentication password token."""
-        secret_hash = hashlib.md5(self._access_secret.encode('utf-8')).hexdigest()
+        secret_hash = hashlib.md5(self._access_secret_bytes).hexdigest()
         mix_str = self._access_id + secret_hash
         return hashlib.md5(mix_str.encode('utf-8')).hexdigest()[8:24]
 
     def add_message_listener(self, listener: Callable[[str], Awaitable[None]]):
+        """Register a new async callback for incoming decrypted payloads."""
         self._listeners.add(listener)
 
     def remove_message_listener(self, listener: Callable[[str], Awaitable[None]]):
+        """Unregister an existing async callback."""
         self._listeners.discard(listener)
-
-    def _decrypt_payload(self, raw: str) -> Tuple[str, str]:
-        """Decrypt payload."""
-        raw_data = base64.b64decode(raw)
-        if len(raw_data) > 32:
-            try:
-                nonce = raw_data[:12]
-                ciphertext = raw_data[12:-16]
-                tag = raw_data[-16:]
-                cipher = AES.new(self._key_bytes, AES.MODE_GCM, nonce=nonce)
-                decrypted = cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8')
-                return decrypted, "AES-GCM"
-            except Exception:
-                pass
-
-        try:
-            cipher = AES.new(self._key_bytes, AES.MODE_ECB)
-            decrypted = cipher.decrypt(raw_data)
-            padding_len = decrypted[-1]
-            unpadded = decrypted[:-padding_len].decode('utf-8')
-            return unpadded, "AES-ECB"
-        except Exception as ecb_err:
-            logger.error("Decryption failed for both AES-GCM and AES-ECB modes.")
-            raise ecb_err
 
     async def start(self):
         """Start the asynchronous connection loop."""
@@ -105,9 +92,11 @@ class TuyaOpenPulsar:
         if self._owns_session and self._session and not self._session.closed:
             await self._session.close()
             self._session = None
+        else:
+            logger.debug("Skipping session close because the session is managed externally.")
 
     async def _connect_loop(self):
-        """Main reconnection loop."""
+        """Main reconnection loop running the WebSocket lifecycle."""
         reconnect_delay = 1
         headers = {
             "Connection": "Upgrade", 
@@ -117,7 +106,6 @@ class TuyaOpenPulsar:
 
         while not self._stop_event.is_set():
             try:
-                # Otteniamo la sessione (o la creiamo se necessario)
                 session = await self._get_session()
                 
                 async with session.ws_connect(
@@ -129,18 +117,28 @@ class TuyaOpenPulsar:
                     logger.info("Successfully connected to Tuya WebSocket.")
                     reconnect_delay = 1
                     
-                    async for msg in ws:
+                    async_msg: aiohttp.WSMessage
+                    async for async_msg in ws:
                         if self._stop_event.is_set():
                             break
-                        if msg.type == aiohttp.WSMsgType.TEXT:
-                            await self._process_message(ws, msg.data)
-                        elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
+                            
+                        if async_msg.type == aiohttp.WSMsgType.TEXT:
+                            if not self._is_connected:
+                                self._is_connected = True
+                                logger.info("Tuya Pulsar data stream successfully verified and active.")
+                                
+                            await self._process_message(ws, async_msg.data)
+                            
+                        elif async_msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
                             break
                             
             except aiohttp.ClientError as e:
                 logger.debug("WebSocket network error: %s", e)
             except Exception as e:
                 logger.exception("Unexpected error in Pulsar loop: %s", e)
+            finally:
+                # Connection lost or loop interrupted
+                self._is_connected = False                
                 
             if self._stop_event.is_set():
                 break
@@ -149,22 +147,58 @@ class TuyaOpenPulsar:
             reconnect_delay = min(reconnect_delay * 2, MAX_RECONNECT_DELAY)
 
     async def _process_message(self, ws: aiohttp.ClientWebSocketResponse, message: str):
-        """Process messages."""
+        """Process incoming messages deterministically based on metadata envelope."""
         try:
             message_json = json.loads(message)
+            
+            # Immediately send ACK response to prevent Pulsar queue congestion
+            ack_payload = json.dumps({"messageId": message_json["messageId"]})
+            await ws.send_str(ack_payload)
+            
+            # Parse outer envelope payload
             payload_bytes = base64.b64decode(message_json["payload"])
             data_map = json.loads(payload_bytes.decode('utf-8'))
             
-            decrypt_data, protocol_used = self._decrypt_payload(data_map['data'])
+            encrypt_version = data_map.get("encryptVersion", "v1")
+            pv = data_map.get("pv")
+            raw_data_str = data_map.get("data", "")
+            raw_encrypted_bytes = base64.b64decode(raw_data_str)
             
+            # Deterministic routing based on protocol metadata
+            if encrypt_version == "v2" and pv == "2.0":
+                #logger.debug("Processing message format: AES-GCM (encryptVersion: v2, pv: 2.0)")
+                decrypt_data = self._decrypt_gcm(raw_encrypted_bytes)
+            else:
+                #logger.debug("Processing message format: AES-ECB (encryptVersion: %s, pv: %s)", encrypt_version, pv)
+                decrypt_data = self._decrypt_ecb(raw_encrypted_bytes)
+            
+            # Fan-out decrypted data to registered integration listeners
             for listener in self._listeners:
                 try:
                     await listener(decrypt_data)
                 except Exception as e:
                     logger.error("Error executing async listener: %s", e)
             
-            ack_payload = json.dumps({"messageId": message_json["messageId"]})
-            await ws.send_str(ack_payload)
-            
         except Exception as e:
             logger.error("Error processing incoming message payload: %s", e)
+
+    def _verify_v2_sign(self, data: str, t: int, received_sign: str) -> bool:
+        """Verify the integrity of a v2 message envelope using official Tuya formula."""
+        target = f"{data}{self._access_secret}{t}".encode('utf-8')
+        calculated_sign = hashlib.md5(target).hexdigest()
+        return calculated_sign == received_sign
+
+    def _decrypt_gcm(self, raw_data: bytes) -> str:
+        """Decrypt payload using AES-GCM mode (pv 2.0)."""
+        nonce = raw_data[:12]
+        ciphertext = raw_data[12:-16]
+        tag = raw_data[-16:]
+        cipher = AES.new(self._key_bytes, AES.MODE_GCM, nonce=nonce)
+        return cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8')
+
+    def _decrypt_ecb(self, raw_data: bytes) -> str:
+        """Decrypt payload using AES-ECB mode (Legacy or downgraded pv)."""
+        cipher = AES.new(self._key_bytes, AES.MODE_ECB)
+        decrypted = cipher.decrypt(raw_data)
+        padding_len = decrypted[-1]
+        return decrypted[:-padding_len].decode('utf-8')

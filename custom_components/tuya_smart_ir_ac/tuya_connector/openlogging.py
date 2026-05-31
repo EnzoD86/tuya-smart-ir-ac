@@ -14,6 +14,9 @@ SENSITIVE_KEYS = {
 MASK_STRING = "***"
 
 
+def get_module_logger(module_name: str):
+    return logging.getLogger(f"custom_components.tuya_connector.{module_name}")
+
 def filter_logger(data: Any) -> Any:
     """
     Recursively filter log data to hide sensitive information.

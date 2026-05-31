@@ -24,7 +24,6 @@ PLATFORMS = [
 ]
 
 # Timing parameters (seconds)
-FIRST_UPDATE = 5
 UPDATE_INTERVAL = 300
 UPDATE_TIMEOUT = 15
 

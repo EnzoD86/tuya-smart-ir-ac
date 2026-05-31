@@ -1,11 +1,11 @@
+import asyncio
 import logging
-from requests import session
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import HomeAssistant
+from homeassistant.components import persistent_notification
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .tuya_connector import (
@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         endpoint=TUYA_API_ENDPOINTS.get(country, ""), 
         access_id=data[CONF_ACCESS_ID], 
         access_secret=data[CONF_ACCESS_SECRET],
-        session=session  # <--- Assicurati che sia passato come argomento nominativo
+        session=session
     )
 
     res = await api_client.connect()
@@ -130,10 +130,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         )
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        hass.async_create_task(async_check_pulsar_connection(hass, entry, pulsar_client))
     except Exception as ex:
         _LOGGER.error("[%s] Error during Hub initialization, cleaning up sessions: %s", entry.title, ex)
-        await api_client.close()
-        await pulsar_client.stop()
+
+        try:
+            await api_client.close()
+        except Exception as api_err:
+            _LOGGER.debug("[%s] Failed to close Tuya API client during abort: %s", entry.title, api_err)
+
+        try:
+            await pulsar_client.stop()
+        except Exception as pulsar_err:
+            _LOGGER.debug("[%s] Failed to stop Tuya Pulsar client during abort: %s", entry.title, pulsar_err)
+
+        raise
 
     _LOGGER.debug("[%s] Hub initialization completed", entry.title)
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
@@ -147,9 +158,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool
     if unload_ok:
         if entry.runtime_data:
             if entry.runtime_data.api_client:
+                _LOGGER.debug("[%s] Closing Tuya API client session during unload.", entry.title)
                 await entry.runtime_data.api_client.close()
             
             if entry.runtime_data.pulsar_client:
+                _LOGGER.debug("[%s] Stopping Tuya Pulsar client session during unload.", entry.title)
                 await entry.runtime_data.pulsar_client.stop() 
 
         if entry.disabled_by is None:
@@ -263,18 +276,36 @@ async def _async_migrate_old_entries(hass: HomeAssistant, hub_entry: HubConfigEn
         _LOGGER.info("Legacy individual device entry '%s' permanently purged.", old_entry.title)
         
     if migrated_something:
-        hass.async_create_task(
-            hass.services.async_call(
-                "persistent_notification",
-                "create",
-                {
-                    "title": "Tuya Smart IR AC: Migration Completed",
-                    "message": (
-                        "Your legacy devices have been successfully migrated under the new centralized Hub.\n\n"
-                        "**Action Required:** Please remove the old `tuya_smart_ir_ac:` YAML configuration from your "
-                        "`configuration.yaml` file and restart Home Assistant to complete the cleanup process."
-                    ),
-                    "notification_id": "tuya_smart_ir_migration_warning",
-                },
-            )
+        persistent_notification.async_create(
+            hass,
+            title="Tuya Smart IR AC: Migration Completed",
+            message=(
+                "Your legacy devices have been successfully migrated under the new centralized Hub.\n\n"
+                "**Action Required:** Please remove the old `tuya_smart_ir_ac:` YAML configuration from your "
+                "`configuration.yaml` file and restart Home Assistant to complete the cleanup process."
+            ),
+            notification_id="tuya_smart_ir_migration_warning",
         )
+
+async def async_check_pulsar_connection(hass: HomeAssistant, entry: HubConfigEntry, pulsar_client: TuyaOpenPulsar):
+    await asyncio.sleep(5)
+    if not pulsar_client.is_connected():
+        persistent_notification.async_create(
+            hass,
+            title=f"Tuya Smart IR AC [{entry.title}]: Tuya Pulsar Stream Inactive",
+            message=(
+                f"The **{entry.title}** established a network connection, but Home Assistant is receiving no data from Tuya Pulsar. "
+                "This is usually caused by one of the following misconfigurations on your **Tuya Developer Platform**:\n\n"
+                "1. **Pulsar Service Disabled:** The main Message Service switch is turned OFF or expired.\n"
+                "2. **Missing Message Rules:** The service is ON, but you haven't enabled the routing rules to forward your device events.\n\n"
+                "**How to fix:**\n"
+                "1. Log into the **Tuya IoT Platform**.\n"
+                "2. Navigate to **Cloud** -> **Development** -> Select your project -> **Message Service**.\n"
+                "3. Ensure the main service is **Enabled**.\n"
+                "4. Check the **Message Subscriptions / Rules** tab and verify that your project is explicitly bound to forward real-time events.\n\n"
+                "The integration will automatically start processing data as soon as the cloud stream becomes active."
+            ),
+            notification_id=f"tuya_pulsar_connection_status_{entry.title.lower().replace(' ', '_')}"
+        )
+
+    return True

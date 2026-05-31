@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -8,9 +8,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.climate import HVACMode
 
-from .const import DOMAIN, UPDATE_INTERVAL, UPDATE_TIMEOUT
+from .const import (
+    DOMAIN,
+    UPDATE_INTERVAL,
+    UPDATE_TIMEOUT,
+    CONF_DEVICE_ID,
+    DEVICE_TYPE_CLIMATES,
+    DEVICE_TYPE_SENSORS
+)
 from .helpers import tuya_temp, tuya_mode, tuya_wind
 from .api import TuyaClimateAPI, TuyaSensorAPI
+from .bridge import TuyaPulsarBridge
 from .models import TuyaClimateData, TuyaSensorData
 
 _LOGGER = logging.getLogger(__package__)
@@ -38,13 +46,8 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         self.entry = entry
         self._api = climate_api
         self._pulsar_bridge = pulsar_bridge
-
-    async def async_config_entry_first_refresh(self) -> None:
-        """Perform first refresh and register Pulsar handlers."""
-        await super().async_config_entry_first_refresh()
-
-        for dev_id in self.data.keys():
-            self._pulsar_bridge.register_handler(dev_id, self._async_update_from_pulsar)
+        self._register_pulsar_handlers()
+        self.data = {}
 
     def is_available(self, climate_id: str) -> bool:
         """Check if the climate device is available in the fetched data."""
@@ -102,23 +105,29 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
             
         await self._async_force_update_data(climate_id, power=True, hvac_mode=hvac_mode, temperature=temperature, fan_mode=fan_mode)
 
+    def _register_pulsar_handlers(self):
+        """Register handlers for climate devices."""
+        climates = self.entry.options.get(DEVICE_TYPE_CLIMATES, [])
+        for d in climates:
+            dev_id = d.get(CONF_DEVICE_ID)
+            if dev_id:
+                self._pulsar_bridge.register_handler(dev_id, self._async_update_from_pulsar)
+
     async def _async_update_data(self) -> dict[str, TuyaClimateData]:
         """Fetch data from Tuya API via periodic polling using batch endpoint."""
+        climate_ids = [device[CONF_DEVICE_ID] for device in self.entry.options.get(DEVICE_TYPE_CLIMATES, [])]
+        if not climate_ids:
+            return {}
+
         try:
+            _LOGGER.debug("Fetching climate data for devices: %s", climate_ids)
             async with asyncio.timeout(UPDATE_TIMEOUT):
-                climate_ids = [device["device_id"] for device in self.entry.options.get("climates", [])]
-                
-                if not climate_ids:
-                    return {}
-                    
                 result = await self._api.async_fetch_all_data(climate_ids)
-                
+
                 if not result.success:
                     raise UpdateFailed(f"Tuya cloud reported an error fetching climates: {result.error_info}")
-                    
+
                 return result.data
-        except UpdateFailed:
-            raise
         except TimeoutError as e:
             raise UpdateFailed(f"Timeout communicating with Tuya API for climates: {e}")
         except Exception as e:
@@ -126,11 +135,14 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 
     async def _async_force_update_data(self, climate_id, power=None, hvac_mode=None, temperature=None, fan_mode=None):
         """Optimistically update local state cache after an IR command execution."""
-        if self.data and (data := self.data.get(climate_id)):
-            data.power = power if power is not None else data.power
-            data.hvac_mode = hvac_mode if hvac_mode is not None else data.hvac_mode
-            data.temperature = temperature if temperature is not None else data.temperature
-            data.fan_mode = fan_mode if fan_mode is not None else data.fan_mode
+        if self.data and (current_data := self.data.get(climate_id)):
+            self.data[climate_id] = TuyaClimateData.from_optimistic_update(
+                current_data,
+                power=power,
+                hvac_mode=hvac_mode,
+                temperature=temperature,
+                fan_mode=fan_mode
+            )
             self.async_update_listeners()
 
     async def _async_update_from_pulsar(self, device_id: str, new_status: dict):
@@ -139,23 +151,21 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         status = new_status.get("status", [])
         if current_item and status:
             _LOGGER.debug("[%s] Update climate from Pulsar: %s", device_id, str(new_status))
-            updated_state = current_item.from_pulsar_data(status)
+            updated_state = TuyaClimateData.from_pulsar_data(current_item, status)
             self.data[device_id] = updated_state
             self.async_update_listeners()
 
 
 class TuyaSensorCoordinator(DataUpdateCoordinator[dict[str, TuyaSensorData]]):
-    """Coordinator for physical Hub sensors, based on ConfigEntry options."""
+    """Coordinator for physical Hub sensors, with unified Smart Polling logic."""
 
-    def __init__(
-        self, 
+    def __init__(self,
         hass: HomeAssistant, 
         entry: ConfigEntry, 
-        sensor_api: TuyaSensorAPI, 
+        sensor_api: TuyaSensorAPI,
         pulsar_bridge: TuyaPulsarBridge,
-        custom_update_interval=300
+        custom_update_interval=UPDATE_INTERVAL
     ):
-        """Initialize the sensor coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -166,47 +176,76 @@ class TuyaSensorCoordinator(DataUpdateCoordinator[dict[str, TuyaSensorData]]):
         self.entry = entry
         self._api = sensor_api
         self._pulsar_bridge = pulsar_bridge
+        self._pulsar_last_updates: dict[str, dict[str, datetime]] = {}
+        self.data = {}
+        self._register_pulsar_handlers()
 
-    async def async_config_entry_first_refresh(self) -> None:
-        """Perform first refresh and register Pulsar handlers."""
-        await super().async_config_entry_first_refresh()
+    def _register_pulsar_handlers(self):
+        """Register handlers for sensor devices."""
+        sensors = self.entry.options.get(DEVICE_TYPE_SENSORS, [])
+        for d in sensors:
+            dev_id = d.get(CONF_DEVICE_ID)
+            if dev_id:
+                self._pulsar_bridge.register_handler(dev_id, self._async_update_from_pulsar)
 
-        for dev_id in self.data.keys():
-            self._pulsar_bridge.register_handler(dev_id, self._async_update_from_pulsar)
+    def _update_dps_timestamp(self, device_id: str, codes: list[str]):
+        """Centralized logic to mark DPS codes as fresh."""
+        if device_id not in self._pulsar_last_updates:
+            self._pulsar_last_updates[device_id] = {}
 
-    def is_available(self, device_id: str) -> bool:
-        """Check if the sensor device is available in the fetched data."""
-        return self.data and self.data.get(device_id) is not None
-            
+        now = datetime.now(timezone.utc)
+        monitored_codes = TuyaSensorData.get_dps_codes()
+        for code in [c for c in codes if c in monitored_codes]:
+            self._pulsar_last_updates[device_id][code] = now
+
+    def _needs_api_refresh(self, device_id: str, threshold: timedelta) -> bool:
+        """Determine if API polling is needed."""
+        if device_id not in self._pulsar_last_updates:
+            _LOGGER.debug("[%s] No Pulsar updates recorded. API refresh needed.", device_id)
+            return True
+
+        now = datetime.now(timezone.utc)
+        for code, last_ts in self._pulsar_last_updates[device_id].items():
+            if (now - last_ts) > threshold:
+                _LOGGER.debug("[%s] DPs code '%s' is outdated. Triggering cloud update.", device_id, code)
+                return True
+        
+        _LOGGER.debug("[%s] All DPS codes are fresh. Skipping API refresh.", device_id)
+        return False
+
     async def _async_update_data(self) -> dict[str, TuyaSensorData]:
-        """Fetch data from Tuya API via periodic polling."""
+        """Fetch data from Tuya API and sync timestamps."""
+        sensor_ids = [d[CONF_DEVICE_ID] for d in self.entry.options.get(DEVICE_TYPE_SENSORS, [])]
+        threshold = self.update_interval - timedelta(seconds=5)
+        devices_to_fetch = [d for d in sensor_ids if self._needs_api_refresh(d, threshold)]
+        if not devices_to_fetch:
+            return self.data
+
         try:
+            _LOGGER.debug("Fetching sensor data for devices: %s", devices_to_fetch)
             async with asyncio.timeout(UPDATE_TIMEOUT):
-                device_ids = [device["device_id"] for device in self.entry.options.get("sensors", [])]
-                
-                if not device_ids:
-                    return {}
-                    
-                result = await self._api.async_fetch_all_data(device_ids)
-                
+                result = await self._api.async_fetch_all_data(devices_to_fetch)
                 if not result.success:
-                    raise UpdateFailed(f"Tuya cloud reported an error fetching sensors: {result.error_info}")
-                    
-                return result.data
-        except UpdateFailed:
-            raise
+                    raise UpdateFailed(f"Tuya error: {result.error_info}")
+                
+                for dev_id, _ in result.data.items():
+                    self._update_dps_timestamp(dev_id, TuyaSensorData.get_dps_codes())
+                
+                updated_data = self.data.copy()
+                updated_data.update(result.data)
+                return updated_data
         except TimeoutError as e:
             raise UpdateFailed(f"Timeout communicating with Tuya API for sensors: {e}")
         except Exception as e:
             raise UpdateFailed(f"Error communicating with Tuya API for sensors: {e}")
 
     async def _async_update_from_pulsar(self, device_id: str, new_status: dict):
-        """Process incoming Pulsar updates for physical sensors."""
+        """Process incoming Pulsar updates."""
+        codes = [item.get("code") for item in new_status.get("status", [])]
+        self._update_dps_timestamp(device_id, codes)
+
         current_item = self.data.get(device_id)
-        status = new_status.get("status", [])
-        if current_item and status:
-            _LOGGER.debug("[%s] Update sensor from Pulsar: %s", device_id, str(new_status))
-            updated_state = current_item.from_pulsar_data(status)
-            self.data[device_id] = updated_state
+        if current_item and new_status.get("status"):
+            _LOGGER.debug("[%s] Update sensor %s from Pulsar: %s", device_id, current_item.name, str(new_status))
+            self.data[device_id] = TuyaSensorData.from_pulsar_data(current_item, new_status["status"])
             self.async_update_listeners()
-            

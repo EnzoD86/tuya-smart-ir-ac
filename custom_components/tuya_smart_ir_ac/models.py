@@ -1,6 +1,7 @@
 from dataclasses import (
     dataclass,
     field,
+    fields,
     replace,
 )
 from typing import Any, TYPE_CHECKING
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 type HubConfigEntry = ConfigEntry[RuntimeData]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RuntimeData:
     """Isolated, thread-safe runtime data context unique to each individual Hub ConfigEntry."""
     api_client: TuyaOpenAPI
@@ -52,7 +53,7 @@ class TuyaAPIResult:
         return ""
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaClimateData:
     """Domain model representing the operational state of an Infrared Air Conditioner."""
     power: bool | None = None
@@ -80,20 +81,39 @@ class TuyaClimateData:
                 devices[dev_id] = cls.from_raw_data(data)
         return devices
 
-    def from_pulsar_data(self, status_list: list) -> TuyaClimateData:
+    @classmethod
+    def from_pulsar_data(cls, current_instance: TuyaClimateData, status_list: list) -> TuyaClimateData:
         """Update existing climate state from raw Pulsar status updates."""
         updates = {item["code"]: item["value"] for item in status_list}
-        
+
         return replace(
-            self,
-            power=get_val(updates.get("power"), self.power),
-            hvac_mode=get_val(hass_hvac_mode(updates.get("mode")), self.hvac_mode),
-            temperature=get_val(hass_temperature(updates.get("temp")), self.temperature),
-            fan_mode=get_val(hass_fan_mode(updates.get("wind")), self.fan_mode)
+            current_instance,
+            power=get_val(updates.get("power"), current_instance.power),
+            hvac_mode=get_val(hass_hvac_mode(updates.get("mode")), current_instance.hvac_mode),
+            temperature=get_val(hass_temperature(updates.get("temp")), current_instance.temperature),
+            fan_mode=get_val(hass_fan_mode(updates.get("wind")), current_instance.fan_mode)
+        )
+    
+    @classmethod
+    def from_optimistic_update(
+        cls,
+        current_instance: TuyaClimateData,
+        power: bool | None = None,
+        hvac_mode: str | None = None,
+        temperature: float | None = None,
+        fan_mode: str | None = None,
+    ) -> TuyaClimateData:
+        """Return a new immutable instance with optimistic updates applied."""
+        return replace(
+            current_instance,
+            power=power if power is not None else current_instance.power,
+            hvac_mode=hvac_mode if hvac_mode is not None else current_instance.hvac_mode,
+            temperature=temperature if temperature is not None else current_instance.temperature,
+            fan_mode=fan_mode if fan_mode is not None else current_instance.fan_mode,
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaGenericKeyData:
     """Data abstraction for a single customizable infrared command key layout."""
     key: str | None = None
@@ -110,7 +130,7 @@ class TuyaGenericKeyData:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaGenericData:
     """Configuration model wrapping full layout schema and command sets for generic IR peripherals."""
     category_id: str | None = None
@@ -126,7 +146,7 @@ class TuyaGenericData:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaSensorData:
     """Domain model tracking environmental telemetry data from standalone multi-sensors."""
     temp_unit_convert: str | None = None
@@ -147,14 +167,21 @@ class TuyaSensorData:
             battery_state=hass_battery_state(prop_map.get("battery_state")),
         )
 
-    def from_pulsar_data(self, status_list: list) -> TuyaSensorData:
+    @classmethod
+    def from_pulsar_data(cls, current_instance: TuyaSensorData, status_list: list) -> TuyaSensorData:
         """Update existing sensor state from raw Pulsar status updates."""
         updates = {item["code"]: item["value"] for item in status_list}
 
         return replace(
-            self,
-            temp_unit_convert=self.temp_unit_convert,
-            temp_current=get_val(hass_temperature(updates.get("temp_current"), convert=True), self.temp_current),
-            humidity_value=get_val(updates.get("humidity_value"), self.humidity_value),
-            battery_state=get_val(hass_battery_state(updates.get("battery_state")), self.battery_state)
+            current_instance,
+            temp_unit_convert=current_instance.temp_unit_convert,
+            temp_current=get_val(hass_temperature(updates.get("temp_current"), convert=True), current_instance.temp_current),
+            humidity_value=get_val(updates.get("humidity_value"), current_instance.humidity_value),
+            battery_state=get_val(hass_battery_state(updates.get("battery_state")), current_instance.battery_state)
         )
+    
+    @classmethod
+    def get_dps_codes(cls) -> list[str]:
+        """Returns the names of fields that have a value."""
+        static_fields = ['temp_unit_convert'] 
+        return [field.name for field in fields(cls) if field.name not in static_fields]
