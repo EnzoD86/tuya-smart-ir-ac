@@ -120,7 +120,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
             return {}
 
         try:
-            _LOGGER.debug("Fetching climate data for devices: %s", climate_ids)
+            _LOGGER.debug("Fetching climate data for devices: %s", str(climate_ids))
             async with asyncio.timeout(UPDATE_TIMEOUT):
                 result = await self._api.async_fetch_all_data(climate_ids)
 
@@ -222,7 +222,7 @@ class TuyaSensorCoordinator(DataUpdateCoordinator[dict[str, TuyaSensorData]]):
             return self.data
 
         try:
-            _LOGGER.debug("Fetching sensor data for devices: %s", devices_to_fetch)
+            _LOGGER.debug("Fetching sensor data for devices: %s", str(devices_to_fetch))
             async with asyncio.timeout(UPDATE_TIMEOUT):
                 result = await self._api.async_fetch_all_data(devices_to_fetch)
                 if not result.success:
