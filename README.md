@@ -1,86 +1,77 @@
 # Home Assistant Tuya Smart IR Air Conditioner Integration
+
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
 [![Stable](https://img.shields.io/github/v/release/EnzoD86/tuya-smart-ir-ac)](https://github.com/EnzoD86/tuya-smart-ir-ac/releases/latest)
 [![Donate](https://img.shields.io/badge/donate-BuyMeCoffee-yellow.svg)](https://www.buymeacoffee.com/enzod86)
 
-This is a custom integration that allows you to control and manage the following devices:
+This custom integration brings advanced local-like responsiveness to your Tuya-based Infrared (IR) devices in Home Assistant, combining high-speed cloud status push with robust fallback mechanisms.
 
-- infrared air conditioners;
-- generic infrared devices;
-- temperature/humidity sensors.
+With this integration, you can easily control and manage:
+- **Infrared Air Conditioners**
+- **Generic Infrared Devices**
+- **Temperature & Humidity Sensors**
 
-The purpose of this integration is to manage air conditioners, but other devices could also be integrated depending on needs.
+> 💡 **Note:** This repository is an evolved, fully optimized continuation of the original [DavidIlie's project](https://github.com/DavidIlie/tuya-smart-ir-ac). It features a complete architectural rewrite, shifting entirely away from legacy `configuration.yaml` setup to modern **UI Configuration (Config Flow)**, and introduces real-time updates via **Tuya Pulsar WebSocket stream** to avoid unnecessary API throttling.
 
-This integration has been tested on the following devices:
-
-<img width="400" height="200" alt="image" src="https://github.com/user-attachments/assets/0c1ed6ea-a2b7-43ca-a979-94ff6e3499dc" />
-
-<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/c811bdf9-c9cf-4df3-a1b8-fd4cc7152db9" />
-
-<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/e6d6a44f-41b3-4fff-be7f-390dd3a1d344" />
-
-
->  **This repository was cloned from [DavidIlie's project](https://github.com/DavidIlie/tuya-smart-ir-ac) because it had not been updated for some time.**
 
 ## Installation using HACS
-We recommend installing via Home Assistant Community Store (HACS) to always receive the latest integration updates.
-You can find it in the default HACS repo. Just search `Tuya Smart IR AC`.
+
+We recommend installing via the Home Assistant Community Store (HACS) to receive updates automatically.
+
+1. Open **HACS** in your Home Assistant instance.
+2. Go to **Integrations** and search for `Tuya Smart IR AC`.
+3. Click **Download** and restart Home Assistant.
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=EnzoD86&repository=tuya-smart-ir-ac&category=integration)
 
-## Retrieve correct information from Tuya IoT website
-Before you start setting up the integration, you will need some information that can be retrieved from the Tuya IoT platform.
-The steps to retrieve the information you need are the following:
-- connect to https://platform.tuya.com ;
-- from the left menu select Cloud -> Development;
-- create a project or select the existing one (making sure it is connected to SmartLife/Tuya app);
-- from the Overview tab retrieve the Access ID, Access Secret and Data Center data of the project (which will be used for the installation of the platform);
-- from the Service API tab, verify that the following APIs are active (verify by clicking on View details, the API status is In Service for each of them):
-  - IoT Core;
-  - IR Control Hub Open Service.
-- from the Devices tab you will see all your devices connected to SmartLife/Tuya app and you will have to search for the following devices:
-  - the HUB IR device (called InfraredID by the integration);
-  - the air conditioner connected to the HUB (called ClimateID or DeviceID by the integration).
+---
 
-The last point must be repeated for each air conditioner or generic device that must be configured.
+## Prerequisites: Retrieve Tuya IoT Credentials
 
-## Platform configuration
-Add the following sections in your configuration.yaml and restart HA (Tuya Access ID, Tuya Access Secret can be found on the [Tuya IoT Website](https://platform.tuya.com/)):
+Before configuring the integration via the UI, you need to collect your cloud credentials from the Tuya IoT Platform.
 
-| Name                 | Type      | Description                                                                         | Required | Default |
-| -------------------- | --------- | ----------------------------------------------------------------------------------- | -------- | ------- |
-| access_id            | `string`  | Tuya access ID.                                                                     | Yes      |         |
-| access_secret        | `string`  | Tuya access secret.                                                                 | Yes      |         |
-| country              | `string`  | Tuya country API: EU (Europe), US (America), IN (India), CN (China), SG (Singapore) | Yes      |         |
-| update_interval      | `integer` | Update interval (in seconds) from tuya server                                       | No       | 60      |
+1. Connect to the [Tuya IoT Development Platform](https://platform.tuya.com).
+2. From the left-hand menu, navigate to **Cloud** -> **Development**.
+3. Create a new Cloud Project (or select an existing one), ensuring that it is successfully linked to your SmartLife or Tuya mobile app account.
+4. From the project **Overview** tab, copy your **Access ID**, **Access Secret**, and identify your **Data Center** region (e.g., Europe, Western America).
+5. Go to the **Service API** tab, click **View Details**, and verify that the following APIs are authorized and marked as **In Service**:
+   - **IoT Core**
+   - **IR Control Hub Open Service**
+   - **Smart Home Device System Message Queue** *(Required for real-time Pulsar stream connection)*
 
-### Example
-```yaml
-tuya_smart_ir_ac:
-  access_id: "tuya_access_id_example"
-  access_secret: "tuya_access_secret_example"
-  country: "EU"
-```
+---
 
-## Integration configuration
-After the platform has been configured, you can add air conditioners using the Integrations configuration UI.
-Go to Settings / Devices & Services and press the Add Integration button, or click the shortcut button below (requires My Homeassistant configured).
+## Configuration
 
-[![Add Integration to your Home Assistant
-instance.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tuya_smart_ir_ac)
+This integration is configured **exclusively via the Home Assistant User Interface**. No changes to `configuration.yaml` are needed for setup.
 
-# Debug
-It is possible to activate debug mode by adding the following lines in your configuration.yaml file:
+### Initial Setup
+1. In Home Assistant, go to **Settings** -> **Devices & Services**.
+2. Click **Add Integration** in the bottom right corner.
+3. Search for **Tuya Smart IR AC** and follow the prompt.
+4. Enter your Tuya Cloud Project credentials (**Access ID**, **Access Secret**, and **Country region**).
+
+[![Add Integration to your Home Assistant instance.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tuya_smart_ir_ac)
+
+### Options and Tuning
+Once installed, you can click **Configure / Options** on the integration card anytime to:
+- Adjust independent update intervals for your Climate entities.
+- Adjust independent update intervals for your Temperature/Humidity Sensor entities.
+- Add, update, or remove mapped device IDs.
+
+---
+
+## Debugging
+
+If you encounter issues or want to inspect the real-time WebSocket connection traffic, you can enable detailed debug logging by adding the following block to your `configuration.yaml`:
 
 ```yaml
 logger:
-  # Begging of lines to add
+  default: info
   logs:
     custom_components.tuya_smart_ir_ac: debug
-  # End of lines to add
 ```
 Home Assistant needs to be restarted after this change.
-
 
 ## Contributions are welcome!
 If you have ideas to contribute to the project, open a pull request and we will evaluate together how to implement the improvement. Thanks!
