@@ -134,7 +134,7 @@
     },
     "error": {
       "cannot_change_access_id": "L'Access ID ne peut pas être modifié pour un hub existant.",
-      "cannot_connect": "Échec de la connexion aux serveurs Tuya. Veuillez vérifier votre réseau.",
+      "cannot_connect_to_tuya": "Échec de la connexion aux serveurs Tuya. Veuillez vérifier votre réseau.",
       "invalid_auth": "Échec de l'authentification : Access ID ou Access Secret incorrect."
     }
   },
@@ -297,9 +297,11 @@
     },
     "error": {
       "cannot_change_access_id": "L'Access ID ne peut pas être modifié pour un hub existant.",
+      "cannot_connect_to_tuya": "Échec de la connexion aux serveurs Tuya. Veuillez vérifier votre réseau.",
       "device_already_configured": "Cet appareil a déjà été configuré.",
       "device_already_configured_on_other_hub": "Cet appareil est déjà configuré sur un autre Hub.",
       "invalid_auth": "Échec de l'authentification : Access ID ou Access Secret incorrect.",
+      "invalid_sensor_type": "Le dispositif sélectionné n'est pas un capteur de température/humidité valide.",
       "tuya_api_error": "Erreur Cloud Tuya: {error_info}"
     },
     "abort": {

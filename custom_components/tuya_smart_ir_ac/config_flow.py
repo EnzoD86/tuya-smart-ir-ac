@@ -9,8 +9,6 @@ from homeassistant.components.sensor.const import SensorDeviceClass
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_registry
 from homeassistant.helpers.selector import (
     BooleanSelector,
     EntitySelector,
@@ -77,7 +75,6 @@ from .const import (
     UPDATE_INTERVAL,
 )
 from .models import (
-    TuyaGenericData,
     TuyaSensorData,
     TuyaAPIResult
 )
@@ -299,7 +296,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             errors["base"] = "device_already_configured"
                         else:
                             errors["base"] = "device_already_configured_on_other_hub"
-                        _LOGGER.warning("[%s] Aborting climate addition: device ID %s is already registered", name, climate_id)
+                        _LOGGER.debug("[%s] Aborting climate addition: device ID %s is already registered", name, climate_id)
                         break
                 if errors:
                     break
@@ -311,7 +308,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if not result.success:
                     errors["base"] = "tuya_api_error"
                     placeholders["error_info"] = result.error_info
-                    _LOGGER.error("[%s] Tuya API rejection validation failed for climate target %s: %s", name, climate_id, result.error_info)
+                    _LOGGER.debug("[%s] Tuya API rejection validation failed for climate target %s: %s", name, climate_id, result.error_info)
                 else:
                     current_options = dict(self.config_entry.options)
                     climates = list(current_options.get(DEVICE_TYPE_CLIMATES, []))
@@ -342,7 +339,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         index = next((i for i, c in enumerate(climates) if self._get_device_id_pair(c) == self._selected_device_id), None)
         
         if index is None:
-            _LOGGER.error("Requested modification failed: Device pairing signature %s not found", self._selected_device_id)
+            _LOGGER.debug("Requested modification failed: Device pairing signature %s not found", self._selected_device_id)
             return self.async_abort(reason="device_not_found")
 
         if user_input is not None:
@@ -419,7 +416,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             errors["base"] = "device_already_configured"
                         else:
                             errors["base"] = "device_already_configured_on_other_hub"
-                        _LOGGER.warning("[%s] Aborting generic addition: device ID %s is already registered", name, device_id)
+                        _LOGGER.debug("[%s] Aborting generic addition: device ID %s is already registered", name, device_id)
                         break
                 if errors:
                     break
@@ -431,7 +428,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if not result.success:
                     errors["base"] = "tuya_api_error"
                     placeholders["error_info"] = result.error_info
-                    _LOGGER.error("[%s] Tuya API rejection validation failed for generic target %s: %s", name, device_id, result.error_info)
+                    _LOGGER.debug("[%s] Tuya API rejection validation failed for generic target %s: %s", name, device_id, result.error_info)
                 else:
                     current_options = dict(self.config_entry.options)
                     generics = list(current_options.get(DEVICE_TYPE_GENERICS, []))
@@ -512,7 +509,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             errors["base"] = "device_already_configured"
                         else:
                             errors["base"] = "device_already_configured_on_other_hub"
-                        _LOGGER.warning("[%s] Aborting: Temperature/Humidity sensor ID %s is already registered", name, device_id)
+                        _LOGGER.debug("[%s] Aborting: Temperature/Humidity sensor ID %s is already registered", name, device_id)
                         break
                 if errors:
                     break
@@ -524,28 +521,31 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if not result.success:
                     errors["base"] = "tuya_api_error"
                     placeholders["error_info"] = result.error_info
-                    _LOGGER.error("[%s] Tuya API validation failed for environmental sensor %s: %s", name, device_id, result.error_info)
+                    _LOGGER.debug("[%s] Tuya API validation failed for environmental sensor %s: %s", name, device_id, result.error_info)
                 else:
                     sensor_data: TuyaSensorData = result.data
+
+                    if sensor_data.temp_current is None and sensor_data.humidity_value is None:
+                        errors["base"] = "invalid_sensor_type"
+                    else:
+                        if sensor_data.temp_unit_convert is not None:
+                            user_input[CONF_TEMP_UNIT] = sensor_data.temp_unit_convert
+                            
+                        user_input[CONF_SENSOR_TYPES] = []
+                        if sensor_data.temp_current is not None:
+                            user_input[CONF_SENSOR_TYPES].append(ENTITY_SENSOR_TEMPERATURE)
+                        if sensor_data.humidity_value is not None:
+                            user_input[CONF_SENSOR_TYPES].append(ENTITY_SENSOR_HUMIDITY)
+                        if sensor_data.battery_state is not None:
+                            user_input[CONF_SENSOR_TYPES].append(ENTITY_SENSOR_BATTERY)                    
                     
-                    if sensor_data.temp_unit_convert is not None:
-                        user_input[CONF_TEMP_UNIT] = sensor_data.temp_unit_convert
-                        
-                    user_input[CONF_SENSOR_TYPES] = []
-                    if sensor_data.temp_current is not None:
-                        user_input[CONF_SENSOR_TYPES].append(ENTITY_SENSOR_TEMPERATURE)
-                    if sensor_data.humidity_value is not None:
-                        user_input[CONF_SENSOR_TYPES].append(ENTITY_SENSOR_HUMIDITY)
-                    if sensor_data.battery_state is not None:
-                        user_input[CONF_SENSOR_TYPES].append(ENTITY_SENSOR_BATTERY)                    
-                
-                    current_options = dict(self.config_entry.options)
-                    sensors = list(current_options.get(DEVICE_TYPE_SENSORS, []))
-                    sensors.append(user_input)
-                    return self.async_create_entry(
-                        title="",
-                        data={**current_options, DEVICE_TYPE_SENSORS: sensors}
-                    )
+                        current_options = dict(self.config_entry.options)
+                        sensors = list(current_options.get(DEVICE_TYPE_SENSORS, []))
+                        sensors.append(user_input)
+                        return self.async_create_entry(
+                            title="",
+                            data={**current_options, DEVICE_TYPE_SENSORS: sensors}
+                        )
 
         return self.async_show_form(
             step_id="add_sensor",
@@ -791,22 +791,17 @@ async def async_validate_and_connect(data: dict[str, Any]) -> dict[str, str]:
     """Validate credentials against the Tuya OpenAPI backend."""
     errors: dict[str, str] = {}
     
-    # Estrazione dell'endpoint in base al paese selezionato
     api_endpoint = TUYA_API_ENDPOINTS.get(data.get(CONF_TUYA_COUNTRY))
-    if not api_endpoint:
-        errors[CONF_TUYA_COUNTRY] = "invalid_country"
-        return errors
-
     client = TuyaOpenAPI(api_endpoint, data[CONF_ACCESS_ID], data[CONF_ACCESS_SECRET])
     
     try:
         res = await client.connect()
         if not res.get("success"):
             errors["base"] = "invalid_auth"
-            _LOGGER.error("Tuya authentication failed: %s", res.get("msg"))
+            _LOGGER.debug("Tuya authentication failed: %s", res.get("msg"))
     except Exception as err:
-        errors["base"] = "cannot_connect"
-        _LOGGER.exception("Unexpected error connecting to Tuya API: %s", err)
+        errors["base"] = "cannot_connect_to_tuya"
+        _LOGGER.debug("Unexpected error connecting to Tuya API: %s", err)
     finally:
         await client.close()
             

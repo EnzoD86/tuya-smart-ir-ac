@@ -5,7 +5,13 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import State
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import BATTERY_LEVELS, TUYA_FAN_MODES, TUYA_HVAC_MODES, TUYA_TEMP_UNIT
+from .const import(
+    BATTERY_LEVELS,
+    TUYA_FAN_MODES,
+    TUYA_HVAC_MODES,
+    TUYA_TEMP_UNIT,
+    TUYA_CODE_MAPPING
+)
 
 
 def get_val(new_val, old_val):
@@ -100,3 +106,14 @@ def convert_temperature(value: float, from_unit: str, to_unit: str) -> float:
         return value
 
     return TemperatureConverter.convert(value, from_unit, to_unit)
+
+
+def normalize_tuya_payload(raw_list: list[dict[str, Any]], mapping: dict[str, str] = TUYA_CODE_MAPPING) -> dict[str, Any]:
+    """Normalize Tuya Data Point codes from API properties or Pulsar status lists."""
+    normalized_map = {}
+    for item in raw_list:
+        if "code" in item:
+            raw_code = item["code"]
+            normalized_code = mapping.get(raw_code, raw_code)
+            normalized_map[normalized_code] = item.get("value")
+    return normalized_map

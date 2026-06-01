@@ -172,3 +172,9 @@ TUYA_PULSAR_ENDPOINTS = {
     "cn": "wss://mqe.tuyacn.com:8285/",
     "sg": "wss://mqe-sg.iotbing.com:8285/",
 }
+
+# Global normalization mapping for non-standard Tuya Data Point codes
+TUYA_CODE_MAPPING = {
+    "va_temperature": "temp_current",
+    "va_humidity": "humidity_value",
+}

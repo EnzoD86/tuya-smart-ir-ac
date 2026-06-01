@@ -4,7 +4,7 @@ from dataclasses import (
     fields,
     replace,
 )
-from typing import Any, TYPE_CHECKING
+from typing import Any, ClassVar, TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -15,7 +15,8 @@ from .helpers import (
     hass_hvac_mode,
     hass_temp_unit,
     hass_temperature,
-    get_val
+    get_val,
+    normalize_tuya_payload
 )
 
 if TYPE_CHECKING:
@@ -154,11 +155,14 @@ class TuyaSensorData:
     humidity_value: int | None = None
     battery_state: str | None = None
 
+    _STATIC_FIELDS: ClassVar[set[str]] = {"temp_unit_convert"}
+    _DPS_CODES: ClassVar[list[str]] = []
+
     @classmethod
     def from_raw_data(cls, data: dict[str, Any]) -> TuyaSensorData:
         """Extract and sanitize variable length property payload arrays into a fixed type schema."""
-        properties = data.get("properties", [])
-        prop_map = {p.get("code"): p.get("value") for p in properties if "code" in p}
+        # Chiamata all'helper generico passato dal file esterno
+        prop_map = normalize_tuya_payload(data.get("properties", []))
 
         return cls(
             temp_unit_convert=hass_temp_unit(prop_map.get("temp_unit_convert")),
@@ -170,7 +174,7 @@ class TuyaSensorData:
     @classmethod
     def from_pulsar_data(cls, current_instance: TuyaSensorData, status_list: list) -> TuyaSensorData:
         """Update existing sensor state from raw Pulsar status updates."""
-        updates = {item["code"]: item["value"] for item in status_list}
+        updates = normalize_tuya_payload(status_list)
 
         return replace(
             current_instance,
@@ -182,6 +186,10 @@ class TuyaSensorData:
     
     @classmethod
     def get_dps_codes(cls) -> list[str]:
-        """Returns the names of fields that have a value."""
-        static_fields = ['temp_unit_convert'] 
-        return [field.name for field in fields(cls) if field.name not in static_fields]
+        """Returns the names of fields that have a value (Cached Optimization)."""
+        return cls._DPS_CODES
+
+TuyaSensorData._DPS_CODES = [
+    field.name for field in fields(TuyaSensorData) 
+    if field.name not in TuyaSensorData._STATIC_FIELDS
+]

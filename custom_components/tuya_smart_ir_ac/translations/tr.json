@@ -134,7 +134,7 @@
     },
     "error": {
       "cannot_change_access_id": "Mevcut bir hub için Access ID değiştirilemez.",
-      "cannot_connect": "Tuya sunucularına bağlanılamadı. Lütfen ağınızı kontrol edin.",
+      "cannot_connect_to_tuya": "Tuya sunucularına bağlanılamadı. Lütfen ağınızı kontrol edin.",
       "invalid_auth": "Kimlik doğrulama başarısız: Geçersiz Access ID veya Access Secret."
     }
   },
@@ -297,9 +297,11 @@
     },
     "error": {
       "cannot_change_access_id": "Mevcut bir hub için Access ID değiştirilemez.",
+      "cannot_connect_to_tuya": "Tuya sunucularına bağlanılamadı. Lütfen ağınızı kontrol edin.",
       "device_already_configured": "Bu cihaz zaten yapılandırılmış.",
       "device_already_configured_on_other_hub": "Bu cihaz zaten başka bir Hub üzerinde yapılandırılmış.",
       "invalid_auth": "Kimlik doğrulama başarısız: Geçersiz Access ID veya Access Secret.",
+      "invalid_sensor_type": "Seçilen cihaz geçerli bir sıcaklık/nem sensörü değildir.",
       "tuya_api_error": "Tuya Cloud Hatası: {error_info}"
     },
     "abort": {

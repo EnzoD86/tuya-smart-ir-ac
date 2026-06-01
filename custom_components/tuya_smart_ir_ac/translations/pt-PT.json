@@ -134,7 +134,7 @@
     },
     "error": {
       "cannot_change_access_id": "O Access ID não pode ser modificado para um hub existente.",
-      "cannot_connect": "Falha ao ligar aos servidores da Tuya. Por favor, verifique a sua rede.",
+      "cannot_connect_to_tuya": "Falha ao ligar aos servidores da Tuya. Por favor, verifique a sua rede.",
       "invalid_auth": "Falha na autenticação: Access ID ou Access Secret inválidos."
     }
   },
@@ -297,9 +297,11 @@
     },
     "error": {
       "cannot_change_access_id": "O Access ID não pode ser modificado para um hub existente.",
+      "cannot_connect_to_tuya": "Falha ao conectar aos servidores da Tuya. Por favor, verifique sua rede.",
       "device_already_configured": "Este dispositivo já foi configurado.",
       "device_already_configured_on_other_hub": "Este dispositivo já está configurado noutro Hub.",
       "invalid_auth": "Falha na autenticação: Access ID ou Access Secret inválidos.",
+      "invalid_sensor_type": "O dispositivo selecionado não é um sensor de temperatura/umidade válido.",
       "tuya_api_error": "Erro na Cloud Tuya: {error_info}"
     },
     "abort": {
