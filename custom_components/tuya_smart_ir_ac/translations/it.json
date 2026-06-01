@@ -1,6 +1,9 @@
 {
   "entity": {
     "number": {
+      "temperature": {
+        "name": "Temperatura"
+      },
       "temp_hvac_mode_auto": {
         "name": "Auto"
       },
@@ -12,6 +15,26 @@
       }
     },
     "select": {
+      "hvac_mode": {
+        "name": "Modalità HVAC",  
+        "state": {
+          "auto": "Automatico",
+          "cool": "Freddo",
+          "heat": "Caldo",
+          "dry": "Deumidificazione",
+          "fan_only": "Solo ventilatore",
+          "off": "Spento"
+        }
+      },
+      "fan_mode": {
+        "name": "Modalità ventilazione",
+        "state": {
+          "auto": "Automatico",
+          "low": "Basso",
+          "medium": "Medio",
+          "high": "Alto"
+        }
+      },
       "fan_hvac_mode": {
         "name": "Velocità ventola",
         "state": {
@@ -24,11 +47,20 @@
     }
   },
   "selector": {
+    "country": {
+      "options": {
+        "eu": "Europa",
+        "us": "America",
+        "in": "India",
+        "cn": "Cina",
+        "sg": "Singapore"
+      }
+    },
     "device_type": {
       "options": {
         "climate": "Climatizzatore d'aria",
         "generic": "Dispositivo generico",
-        "sensor": "Sensore temperatura/umidità (sperimentale)"
+        "sensor": "Sensore temperatura/umidità"
       }
     },
     "hvac_modes": {
@@ -47,6 +79,21 @@
         "low": "Basso",
         "medium": "Medio",
         "high": "Alto"
+      }
+    },
+    "hvac_presets": {
+      "options": {
+        "fan_hvac_mode": "Velocità ventola di default",
+        "temp_hvac_mode": "Temperature di default"
+      }
+    },
+    "optional_entities": {
+      "options": {
+        "current_temperature": "Sensore temperatura",
+        "current_humidity": "Sensore umidità",
+        "hvac_mode": "Controllo modalità HVAC",
+        "fan_mode": "Controllo ventilazione",
+        "temp_setpoint": "Controllo temperatura"
       }
     },
     "hvac_power_on": {
@@ -73,14 +120,70 @@
   },
   "config": {
     "step": {
-      "user": {
-        "title": "Configurazione dispositivo",
-         "data": {
-            "device_type": "Tipo dispositivo"
-         }
+      "hub_settings": {
+        "title": "Configurazione Hub",
+        "description": "Inserisci le credenziali API del tuo account Tuya Cloud.",
+        "data": {
+          "access_id": "Access ID Tuya",
+          "access_secret": "Access secret Tuya",
+          "country": "Data center Tuya",
+          "climate_update_interval": "Frequenza aggiornamento climatizzatore",
+          "sensor_update_interval": "Frequenza aggiornamento temperatura/umidità"
+        }
+      }
+    },
+    "error": {
+      "cannot_change_access_id": "L'Access ID non può essere modificato per un hub esistente.",
+      "cannot_connect_to_tuya": "Impossibile connettersi ai server Tuya. Verifica la rete.",
+      "invalid_auth": "Autenticazione fallita: Access ID o Access Secret errati."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configurazione Tuya Smart IR",
+        "menu_options": {
+          "device_management": "Gestione Dispositivi",
+          "hub_settings": "Impostazioni Hub"
+        }
       },
-      "climate": {
-        "title": "Configurazione climatizzatore d'aria",
+      "device_management": {
+        "title": "Gestione Dispositivi",
+        "menu_options": {
+          "climate_management": "Gestione Climatizzatori",
+          "generic_management": "Gestione Dispositivi Generici",
+          "sensor_management": "Gestione Sensori Temperatura/Umidità",
+          "back_to_init": "⬅️ Torna al menu principale"
+        }
+      },
+      "climate_management": {
+        "title": "Gestione Climatizzatori",
+        "menu_options": {
+          "add_climate": "Aggiungi un nuovo climatizzatore",
+          "edit_climate": "Modifica un climatizzatore esistente",
+          "remove_climate": "Rimuovi un climatizzatore esistente",
+          "back_to_devices": "⬅️ Torna alla gestione dispositivi"
+        }
+      },
+      "generic_management": {
+        "title": "Gestione Dispositivi Generici",
+        "menu_options": {
+          "add_generic": "Aggiungi un nuovo dispositivo generico",
+          "remove_generic": "Rimuovi un dispositivo generico esistente",
+          "back_to_devices": "⬅️ Torna alla gestione dispositivi"
+        }
+      },
+      "sensor_management": {
+        "title": "Gestione Sensori Temperatura/Umidità",
+        "menu_options": {
+          "add_sensor": "Aggiungi un nuovo sensore temperatura/umidità",
+          "remove_sensor": "Rimuovi un sensore temperatura/umidità esistente",
+          "back_to_devices": "⬅️ Torna alla gestione dispositivi"
+        }
+      },
+      "add_climate": {
+        "title": "Aggiungi Climatizzatore",
+        "description": "Inserisci i dati per associare un nuovo climatizzatore.",
         "data": {
           "infrared_id": "ID hub infrarossi",
           "device_id": "ID climatizzatore",
@@ -91,10 +194,9 @@
           "max_temp": "Temperatura massima",
           "temp_step": "Temperatura step",
           "hvac_modes": "Modalità HVAC supportate",
-          "fan_modes": "Modalità FAN supportate",
-          "temp_hvac_mode": "Temperature di default quando si imposta la modalità HVAC",
-          "fan_hvac_mode": "Velocità ventola di default quando si imposta la modalità HVAC",
-          "extra_sensors": "Espone i sensori configurati"
+          "fan_modes": "Modalità ventilazione supportate",
+          "hvac_presets": "Preset automatici HVAC",
+          "optional_entities": "Entità opzionali"
         },
         "sections": {
           "compatibility_options": {
@@ -109,34 +211,9 @@
           }
         }
       },
-      "generic": {
-        "title": "Configurazione dispositivo generico",
-        "data": {
-          "infrared_id": "ID hub infrarossi",
-          "device_id": "ID dispositivo",
-          "name": "Nome dispositivo"
-        }
-      },
-      "sensor": {
-        "title": "Configurazione sensore temperatura/umidità",
-        "data": {
-          "device_id": "ID dispositivo",
-          "name": "Nome dispositivo"
-        }
-      }
-    },
-    "error": {
-      "already_configured": "Questo dispositivo è già stato configurato.",
-      "connection": "Impossibile connettersi al dispositivo; controlla il log per maggiori informazioni."
-    },
-    "abort": {
-      "credentials": "Integrazione non configurata o credenziali errate."
-    }
-  },
-  "options": {
-    "step": {
-      "climate": {
-        "title": "Configurazione climatizzatore d'aria",
+      "edit_climate": {
+        "title": "Modifica Climatizzatore",
+        "description": "Aggiorna le opzioni del climatizzatore.",
         "data": {
           "temperature_sensor": "Sensore temperatura",
           "humidity_sensor": "Sensore umidità",
@@ -144,10 +221,9 @@
           "max_temp": "Temperatura massima",
           "temp_step": "Temperatura step",
           "hvac_modes": "Modalità HVAC supportate",
-          "fan_modes": "Modalità FAN supportate",
-          "temp_hvac_mode": "Temperature di default quando si imposta la modalità HVAC",
-          "fan_hvac_mode": "Velocità ventola di default quando si imposta la modalità HVAC",
-          "extra_sensors": "Espone i sensori configurati"
+          "fan_modes": "Modalità ventilazione supportate",
+          "hvac_presets": "Preset automatici HVAC",
+          "optional_entities": "Entità opzionali"
         },
         "sections": {
           "compatibility_options": {
@@ -161,10 +237,75 @@
             }
           }
         }
+      },
+      "remove_climate": {
+        "title": "Rimuovi Climatizzatore",
+        "description": "Seleziona il climatizzatore che desideri rimuovere dall'Hub.",
+        "data": {
+          "climate_id": "Climatizzatore"
+        }
+      },
+      "add_generic": {
+        "title": "Aggiungi Dispositivo Generico",
+        "description": "Inserisci i dati per associare un nuovo dispositivo generico.",
+        "data": {
+          "device_id": "ID dispositivo",
+          "infrared_id": "ID hub infrarossi",
+          "name": "Nome dispositivo"
+        }
+      },
+      "add_sensor": {
+        "title": "Aggiungi Sensore Temperatura/Umidità",
+        "description": "Inserisci i dati per associare un nuovo sensore temperatura/umidità.",
+        "data": {
+          "device_id": "ID dispositivo",
+          "name": "Nome dispositivo"
+        }
+      },
+      "hub_settings": {
+        "title": "Impostazioni Hub",
+        "description": "Modifica le credenziali di accesso e gli intervalli di aggiornamento dati.",
+        "data": {
+          "access_id": "Access ID Tuya",
+          "access_secret": "Access secret Tuya",
+          "country": "Data center Tuya",
+          "climate_update_interval": "Frequenza aggiornamento climatizzatore",
+          "sensor_update_interval": "Frequenza aggiornamento temperatura/umidità"
+        }
+      },
+      "select_climate": {
+        "title": "Seleziona Climatizzatore",
+        "description": "Scegli il climatizzatore che desideri gestire.",
+        "data": {
+          "climate_id": "Climatizzatore"
+        }
+      },
+      "select_generic": {
+        "title": "Seleziona Dispositivo Generico",
+        "description": "Scegli il dispositivo generico che desideri gestire.",
+        "data": {
+          "generic_id": "Dispositivo generico"
+        }
+      },
+      "select_sensor": {
+        "title": "Seleziona Sensore Temperatura/Umidità",
+        "description": "Scegli il sensore temperatura/umidità che desideri gestire.",
+        "data": {
+          "sensor_id": "Sensore temperatura/umidità"
+        }
       }
     },
+    "error": {
+      "cannot_change_access_id": "L'Access ID non può essere modificato per un hub esistente.",
+      "cannot_connect_to_tuya": "Impossibile connettersi ai server Tuya. Verifica la rete.",
+      "device_already_configured": "Questo dispositivo è già configurato.",
+      "device_already_configured_on_other_hub": "Questo dispositivo è già configurato su un altro Hub.",
+      "invalid_auth": "Autenticazione fallita: Access ID o Access Secret errati.",
+      "invalid_sensor_type": "Il dispositivo selezionato non è un sensore di temperatura/umidità valido.",
+      "tuya_api_error": "Errore Cloud Tuya: {error_info}"
+    },
     "abort": {
-      "not_configurable": "Dispositivo non configurabile!"
+      "device_not_found": "Nessun dispositivo trovato."
     }
   },
   "exceptions": {

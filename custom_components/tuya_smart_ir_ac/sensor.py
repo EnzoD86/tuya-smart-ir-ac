@@ -1,265 +1,214 @@
-from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+import logging
+from typing import Any
+
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
-    SensorDeviceClass
 )
 from homeassistant.const import (
-    EVENT_STATE_CHANGED,
     PERCENTAGE,
-    ATTR_ENTITY_ID,
-    UnitOfTemperature,
-    EntityCategory
+    EntityCategory,
 )
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 from .const import (
-    DOMAIN,
-    SENSOR_COORDINATOR,
-    DEVICE_TYPE_CLIMATE,
-    DEVICE_TYPE_SENSOR,
-    CONF_DEVICE_TYPE,
-    CONF_EXTRA_SENSORS,
-    CONF_TEMPERATURE_SENSOR,
     CONF_HUMIDITY_SENSOR,
+    CONF_OPTIONAL_ENTITIES,
     CONF_SENSOR_TYPES,
-    DEFAULT_EXTRA_SENSORS,
-    SENSOR_TEMPERATURE,
-    SENSOR_HUMIDITY,
-    SENSOR_BATTERY
+    CONF_TEMPERATURE_SENSOR,
+    DEVICE_TYPE_CLIMATES,
+    DEVICE_TYPE_SENSORS,
+    ENTITY_CURRENT_HUMIDITY,
+    ENTITY_CURRENT_TEMPERATURE,
+    ENTITY_SENSOR_BATTERY,
+    ENTITY_SENSOR_HUMIDITY,
+    ENTITY_SENSOR_TEMPERATURE,
 )
 from .entity import TuyaClimateEntity, TuyaSensorEntity
+from .models import HubConfigEntry, RuntimeData
+
+_LOGGER = logging.getLogger(__package__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    device_type = config_entry.data.get(CONF_DEVICE_TYPE, None)
-    if device_type == DEVICE_TYPE_CLIMATE:
-        extra_sensors = config_entry.data.get(CONF_EXTRA_SENSORS, DEFAULT_EXTRA_SENSORS)
-        if extra_sensors:
-            temperature_sensor = config_entry.data.get(CONF_TEMPERATURE_SENSOR, None)
-            if temperature_sensor:
-                async_add_entities([TuyaClimateTemperatureSensor(config_entry.data)])
-                
-            humidity_sensor = config_entry.data.get(CONF_HUMIDITY_SENSOR, None)
-            if humidity_sensor:
-                async_add_entities([TuyaClimateHumiditySensor(config_entry.data)])
-    elif device_type == DEVICE_TYPE_SENSOR:
-        coordinator = hass.data.get(DOMAIN).get(SENSOR_COORDINATOR)
-        sensor_types = config_entry.data.get(CONF_SENSOR_TYPES, [])
+async def async_setup_entry(
+    hass: HomeAssistant, 
+    config_entry: HubConfigEntry, 
+    async_add_entities
+) -> None:
+    """Set up Tuya environmental and virtual sensors from a config entry."""
+    active_entities = []
+    runtime_data = config_entry.runtime_data
 
-        if SENSOR_TEMPERATURE in sensor_types:
-            async_add_entities([TuyaSensorTemperatureSensor(config_entry.data, coordinator)])
+    climates_data = config_entry.options.get(DEVICE_TYPE_CLIMATES, [])
+    for data in climates_data:
+        optional_entities = data.get(CONF_OPTIONAL_ENTITIES, [])
+        if optional_entities:
+            if ENTITY_CURRENT_TEMPERATURE in optional_entities and data.get(CONF_TEMPERATURE_SENSOR):
+                active_entities.append(TuyaClimateTemperatureSensor(data, runtime_data))
 
-        if SENSOR_HUMIDITY in sensor_types:
-            async_add_entities([TuyaSensorHumiditySensor(config_entry.data, coordinator)])
+            if ENTITY_CURRENT_HUMIDITY in optional_entities and data.get(CONF_HUMIDITY_SENSOR):
+                active_entities.append(TuyaClimateHumiditySensor(data, runtime_data))
 
-        if SENSOR_BATTERY in sensor_types:
-            async_add_entities([TuyaSensorBatterySensor(config_entry.data, coordinator)])
+    sensors_data = config_entry.options.get(DEVICE_TYPE_SENSORS, [])
+    for data in sensors_data:
+        sensor_types = data.get(CONF_SENSOR_TYPES, [])
+
+        if ENTITY_SENSOR_TEMPERATURE in sensor_types:
+            active_entities.append(TuyaSensorTemperatureSensor(data, runtime_data))
+
+        if ENTITY_SENSOR_HUMIDITY in sensor_types:
+            active_entities.append(TuyaSensorHumiditySensor(data, runtime_data))
+
+        if ENTITY_SENSOR_BATTERY in sensor_types:
+            active_entities.append(TuyaSensorBatterySensor(data, runtime_data))
+
+    if active_entities:
+        _LOGGER.debug(
+            "[%s] Initialized %d sensor platform entities", 
+            config_entry.title, 
+            len(active_entities)
+        )
+        async_add_entities(active_entities)
 
 
 class TuyaClimateTemperatureSensor(SensorEntity, TuyaClimateEntity):
-    def __init__(self, config):
-        TuyaClimateEntity.__init__(self, config)
+    """Virtual temperature sensor tracking an external climate reference entity."""
+
+    def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
+        """Initialize the climate virtual temperature sensor."""
+        TuyaClimateEntity.__init__(self, config_data, runtime_data, ENTITY_CURRENT_TEMPERATURE)
+        
+        self._attr_has_entity_name = True
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
-    def has_entity_name(self):
-        return True
-
-    @property
-    def unique_id(self):
-        return self.temperature_sensor_unique_id()
-
-    @property
-    def device_info(self):
-        return self.tuya_device_info()
-
-    @property
-    def device_class(self):
-        return SensorDeviceClass.TEMPERATURE
-
-    @property
-    def state_class(self):
-        return SensorStateClass.MEASUREMENT
-
-    @property    
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement dynamically once hass is available."""
         return self.get_temperature_unit_of_measurement()
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
+        """Return the current temperature dynamic state value from the tracked entity."""
         return self.get_temperature_value()
 
-    async def async_added_to_hass(self):
-        self.hass.bus.async_listen(EVENT_STATE_CHANGED, self._async_handle_event)
+    async def async_added_to_hass(self) -> None:
+        """Register state tracker listener upon entity addition to Home Assistant."""
+        await super().async_added_to_hass()
+        self.async_track_sensor_states([self._temperature_sensor])
 
     @callback
-    async def _async_handle_event(self, event):
-        if event.data.get(ATTR_ENTITY_ID) == self._temperature_sensor:
+    def _handle_sensor_state_change(self, event) -> None:
+        """Trigger an internal state update when a monitored external sensor changes value."""
+        if event.data.get("new_state") is not None:
             self.async_write_ha_state()
 
 
 class TuyaClimateHumiditySensor(SensorEntity, TuyaClimateEntity):
-    def __init__(self, config):
-        TuyaClimateEntity.__init__(self, config)
+    """Virtual humidity sensor tracking an external climate reference entity."""
+
+    def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
+        """Initialize the climate virtual humidity sensor."""
+        TuyaClimateEntity.__init__(self, config_data, runtime_data, ENTITY_CURRENT_HUMIDITY)
+        
+        self._attr_has_entity_name = True
+        self._attr_device_class = SensorDeviceClass.HUMIDITY
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_native_unit_of_measurement = PERCENTAGE
 
     @property
-    def has_entity_name(self):
-        return True
-
-    @property
-    def unique_id(self):
-        return self.humidity_sensor_unique_id()
-
-    @property
-    def device_info(self):
-        return self.tuya_device_info()
-
-    @property
-    def device_class(self):
-        return SensorDeviceClass.HUMIDITY
-
-    @property
-    def state_class(self):
-        return SensorStateClass.MEASUREMENT
-
-    @property    
-    def native_unit_of_measurement(self):
-        return PERCENTAGE
-
-    @property
-    def native_value(self):
+    def native_value(self) -> float | None:
+        """Return the current humidity dynamic state value from the tracked entity."""
         return self.get_humidity_value()
 
-    async def async_added_to_hass(self):
-        self.hass.bus.async_listen(EVENT_STATE_CHANGED, self._async_handle_event)
+    async def async_added_to_hass(self) -> None:
+        """Register state tracker listener upon entity addition to Home Assistant."""
+        await super().async_added_to_hass()
+        self.async_track_sensor_states([self._humidity_sensor])
 
     @callback
-    async def _async_handle_event(self, event):
-        if event.data.get(ATTR_ENTITY_ID) == self._humidity_sensor:
+    def _handle_sensor_state_change(self, event) -> None:
+        """Trigger an internal state update when a monitored external sensor changes value."""
+        if event.data.get("new_state") is not None: 
             self.async_write_ha_state()
             
-            
+
 class TuyaSensorTemperatureSensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity):
-    def __init__(self, config, coordinator):
-        TuyaSensorEntity.__init__(self, config, SENSOR_TEMPERATURE)
-        super().__init__(coordinator, context=self._device_id)
+    """Temperature sensor entity updated via standalone Temperature/Humidity coordinator."""
+
+    def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
+        """Initialize the physical environmental temperature sensor."""
+        TuyaSensorEntity.__init__(self, config_data, runtime_data, ENTITY_SENSOR_TEMPERATURE)
+        super().__init__(runtime_data.sensor_coordinator)
+
+        self._attr_has_entity_name = True
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_native_unit_of_measurement = self._unit_of_measurement
 
     @property
-    def has_entity_name(self):
-        return True
-
-    @property
-    def unique_id(self):
-        return self.tuya_unique_id()
-
-    @property
-    def device_info(self):
-        return self.tuya_device_info()
-
-    @property
-    def device_class(self):
-        return SensorDeviceClass.TEMPERATURE
-        
-    @property
-    def available(self):
-        return self.coordinator.is_available(self._device_id)
-
-    @property
-    def state_class(self):
-        return SensorStateClass.MEASUREMENT
-
-    @property    
-    def native_unit_of_measurement(self):
-        return self._unit_of_measurement
+    def native_value(self) -> float | None:
+        """Fetch ambient temperature value directly from coordinator data cache."""
+        if self.coordinator.data and (data := self.coordinator.data.get(self._device_id)):
+            return data.temp_current
+        return None
 
     @callback
-    def _handle_coordinator_update(self):
-        data = self.coordinator.data.get(self._device_id)
-        if data:
-            self._attr_native_value = data.temp_current
-            self.async_write_ha_state()
+    def _handle_coordinator_update(self) -> None:
+        """Handle state changes notified by the Hub coordinator."""
+        self.async_write_ha_state()
 
 
 class TuyaSensorHumiditySensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity):
-    def __init__(self, config, coordinator):
-        TuyaSensorEntity.__init__(self, config, SENSOR_HUMIDITY)
-        super().__init__(coordinator, context=self._device_id)
+    """Humidity sensor entity updated via standalone Temperature/Humidity coordinator."""
+
+    def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
+        """Initialize the physical environmental humidity sensor."""
+        TuyaSensorEntity.__init__(self, config_data, runtime_data, ENTITY_SENSOR_HUMIDITY)
+        super().__init__(runtime_data.sensor_coordinator)
+
+        self._attr_has_entity_name = True
+        self._attr_device_class = SensorDeviceClass.HUMIDITY
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_native_unit_of_measurement = PERCENTAGE
 
     @property
-    def has_entity_name(self):
-        return True
-
-    @property
-    def unique_id(self):
-        return self.tuya_unique_id()
-
-    @property
-    def device_info(self):
-        return self.tuya_device_info()
-        
-    @property
-    def available(self):
-        return self.coordinator.is_available(self._device_id)
-
-    @property
-    def device_class(self):
-        return SensorDeviceClass.HUMIDITY
-
-    @property
-    def state_class(self):
-        return SensorStateClass.MEASUREMENT
-
-    @property    
-    def native_unit_of_measurement(self):
-        return PERCENTAGE
+    def native_value(self) -> float | None:
+        """Fetch ambient humidity value directly from coordinator data cache."""
+        if self.coordinator.data and (data := self.coordinator.data.get(self._device_id)):
+            return data.humidity_value
+        return None
 
     @callback
-    def _handle_coordinator_update(self):
-        data = self.coordinator.data.get(self._device_id)
-        if data:
-            self._attr_native_value = data.humidity_value
-            self.async_write_ha_state()
+    def _handle_coordinator_update(self) -> None:
+        """Handle state changes notified by the Hub coordinator."""
+        self.async_write_ha_state()
 
 
 class TuyaSensorBatterySensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity):
-    def __init__(self, config, coordinator):
-        TuyaSensorEntity.__init__(self, config, SENSOR_BATTERY)
-        super().__init__(coordinator, context=self._device_id)
+    """Battery diagnostic sensor entity updated via standalone Temperature/Humidity coordinator."""
+
+    def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
+        """Initialize the physical environmental battery diagnostic sensor."""
+        TuyaSensorEntity.__init__(self, config_data, runtime_data, ENTITY_SENSOR_BATTERY)
+        super().__init__(runtime_data.sensor_coordinator)
+
+        self._attr_has_entity_name = True
+        self._attr_device_class = SensorDeviceClass.BATTERY
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_native_unit_of_measurement = PERCENTAGE
 
     @property
-    def has_entity_name(self):
-        return True
-
-    @property
-    def unique_id(self):
-        return self.tuya_unique_id()
-
-    @property
-    def device_info(self):
-        return self.tuya_device_info()
-        
-    @property
-    def available(self):
-        return self.coordinator.is_available(self._device_id)
-
-    @property
-    def device_class(self):
-        return SensorDeviceClass.BATTERY
-    
-    @property
-    def state_class(self):
-        return SensorStateClass.MEASUREMENT
-    
-    @property
-    def entity_category(self):
-        return EntityCategory.DIAGNOSTIC
-
-    @property    
-    def native_unit_of_measurement(self):
-        return PERCENTAGE
+    def native_value(self) -> float | None:
+        """Fetch environmental sensor battery charge percentage directly from coordinator data cache."""
+        if self.coordinator.data and (data := self.coordinator.data.get(self._device_id)):
+            return data.battery_state
+        return None
 
     @callback
-    def _handle_coordinator_update(self):
-        data = self.coordinator.data.get(self._device_id)
-        if data:
-            self._attr_native_value = data.battery_state
-            self.async_write_ha_state()
+    def _handle_coordinator_update(self) -> None:
+        """Handle state changes notified by the Hub coordinator."""
+        self.async_write_ha_state()

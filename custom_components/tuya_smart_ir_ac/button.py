@@ -1,54 +1,107 @@
+import logging
+from typing import Any
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+
 from .const import (
     DOMAIN,
-    SERVICE,
     MANUFACTURER,
-    DEVICE_TYPE_GENERIC,
-    CONF_DEVICE_TYPE,
+    GENERIC_MODEL,
     CONF_INFRARED_ID,
-    CONF_DEVICE_ID
+    CONF_DEVICE_ID,
+    DEVICE_TYPE_GENERICS
 )
+from .models import HubConfigEntry
+
+_LOGGER = logging.getLogger(__package__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    device_type = config_entry.data.get(CONF_DEVICE_TYPE, None)
-    if device_type == DEVICE_TYPE_GENERIC:
-        service = hass.data.get(DOMAIN).get(SERVICE)
-        infrared_id = config_entry.data.get(CONF_INFRARED_ID)
-        device_id = config_entry.data.get(CONF_DEVICE_ID)
-        device_data = await service.async_fetch_data(infrared_id, device_id)
-        async_add_entities(
-            TuyaButton(hass, config_entry.data, service, device_data.category_id, key_data) for key_data in device_data.key_list
+async def async_setup_entry(
+    hass: HomeAssistant, 
+    config_entry: HubConfigEntry, 
+    async_add_entities
+) -> None:
+    """Set up generic IR buttons associated with the specific Hub config entry."""
+    active_entities = []
+    generics_data = config_entry.options.get(DEVICE_TYPE_GENERICS, [])
+    ir_manager = config_entry.runtime_data.ir_manager
+
+    for data in generics_data:
+        infrared_id = data.get(CONF_INFRARED_ID)
+        device_id = data.get(CONF_DEVICE_ID)
+        name = data.get(CONF_NAME)
+        
+        if not infrared_id or not device_id:
+            continue
+
+        device_data = await ir_manager.async_fetch_data(infrared_id, device_id)
+            
+        if device_data is None:
+            _LOGGER.warning("[%s] Skipping IR button setup due to fetch failure", name)
+            continue
+
+        for key_data in device_data.key_list:
+            active_entities.append(TuyaButton(
+                config_entry=config_entry,
+                ir_manager=ir_manager,
+                infrared_id=infrared_id,
+                device_id=device_id,
+                device_name=name,
+                category_id=device_data.category_id,
+                key_data=key_data
+            ))
+
+    if active_entities:
+        _LOGGER.debug(
+            "[%s] Initialized %d button platform entities", 
+            config_entry.title, 
+            len(active_entities)
         )
+        async_add_entities(active_entities)
 
 
 class TuyaButton(ButtonEntity):
-    def __init__(self, hass, config, service, category_id, key_data):
-        self._service = service
-        self._infrared_id = config.get(CONF_INFRARED_ID)
-        self._device_id = config.get(CONF_DEVICE_ID)
-        self._name = config.get(CONF_NAME)
+    """Representation of a single button on a generic IR remote control."""
+
+    def __init__(
+        self, 
+        config_entry: HubConfigEntry,
+        ir_manager, 
+        infrared_id: str, 
+        device_id: str, 
+        device_name: str,
+        category_id: str | None, 
+        key_data: Any
+    ) -> None:
+        """Initialize the IR button entity."""
+        self._ir_manager = ir_manager
+        self._infrared_id = infrared_id
+        self._device_id = device_id
+        self._device_name = device_name
         self._category_id = category_id
         self._key = key_data.key
         self._key_id = key_data.key_id
         self._key_name = key_data.key_name
 
-    @property
-    def name(self):
-        return f"{self._name} {self._key_name}"
+        self._attr_name = f"{device_name} {self._key_name}"
+        self._attr_unique_id = f"{infrared_id}_{device_id}_{self._key_id}"
 
-    @property
-    def unique_id(self):
-        return f"{self._infrared_id}_{self._device_id}_{self._key_id}"
+        self._attr_device_info = DeviceInfo(
+            name=device_name,
+            identifiers={(DOMAIN, f"{config_entry.entry_id}_{device_id}")},
+            manufacturer=MANUFACTURER,
+            model=GENERIC_MODEL,
+        )
 
-    @property
-    def device_info(self):
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self._name)},
-            "manufacturer": MANUFACTURER
-        }
-
-    async def async_press(self):
-        await self._service.async_send_command(self._infrared_id, self._device_id, self._category_id, self._key_id , self._key)
+    async def async_press(self) -> None:
+        """Handle the button press action to trigger the remote control execution."""
+        await self._ir_manager.async_send_command(
+            self._infrared_id, 
+            self._device_id, 
+            self._category_id, 
+            self._key_id, 
+            self._key
+        )

@@ -1,6 +1,9 @@
 {
   "entity": {
     "number": {
+      "temperature": {
+        "name": "Sıcaklık"
+      },
       "temp_hvac_mode_auto": {
         "name": "Otomatik"
       },
@@ -12,6 +15,26 @@
       }
     },
     "select": {
+      "hvac_mode": {
+        "name": "HVAC modu",
+        "state": {
+          "auto": "Otomatik",
+          "cool": "Soğutma",
+          "heat": "Isıtma",
+          "dry": "Nem Alma",
+          "fan_only": "Sadece fan",
+          "off": "Kapalı"
+        }
+      },
+      "fan_mode": {
+        "name": "Fan hızı",
+        "state": {
+          "auto": "Otomatik",
+          "low": "Düşük",
+          "medium": "Orta",
+          "high": "Yüksek"
+        }
+      },
       "fan_hvac_mode": {
         "name": "Fan hızı",
         "state": {
@@ -24,6 +47,15 @@
     }
   },
   "selector": {
+    "country": {
+      "options": {
+        "eu": "Avrupa",
+        "us": "Amerika",
+        "in": "Hindistan",
+        "cn": "Çin",
+        "sg": "Singapur"
+      }
+    },
     "device_type": {
       "options": {
         "climate": "Klima",
@@ -47,6 +79,21 @@
         "low": "Düşük",
         "medium": "Orta",
         "high": "Yüksek"
+      }
+    },
+    "hvac_presets": {
+      "options": {
+        "fan_hvac_mode": "Varsayılan fan hızı",
+        "temp_hvac_mode": "Varsayılan sıcaklık"
+      }
+    },
+    "optional_entities": {
+      "options": {
+        "current_temperature": "Sıcaklık sensörü",
+        "current_humidity": "Nem sensörü",
+        "hvac_mode": "HVAC kontrolü",
+        "fan_mode": "Fan kontrolü",
+        "temp_setpoint": "Sıcaklık kontrolü"
       }
     },
     "hvac_power_on": {
@@ -73,14 +120,70 @@
   },
   "config": {
     "step": {
-      "user": {
-        "title": "Cihaz konfigürasyonu",
+      "hub_settings": {
+        "title": "Hub Ayarları",
+        "description": "Tuya Cloud API kimlik bilgilerinizi girin.",
         "data": {
-          "device_type": "Cihaz türü"
+          "access_id": "Tuya Access ID",
+          "access_secret": "Tuya Access Secret",
+          "country": "Tuya ülke API'si",
+          "climate_update_interval": "Klima güncelleme aralığı",
+          "sensor_update_interval": "Sıcaklık/nem güncelleme aralığı"
+        }
+      }
+    },
+    "error": {
+      "cannot_change_access_id": "Mevcut bir hub için Access ID değiştirilemez.",
+      "cannot_connect_to_tuya": "Tuya sunucularına bağlanılamadı. Lütfen ağınızı kontrol edin.",
+      "invalid_auth": "Kimlik doğrulama başarısız: Geçersiz Access ID veya Access Secret."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tuya Smart IR Yapılandırması",
+        "menu_options": {
+          "device_management": "Cihaz Yönetimi",
+          "hub_settings": "Hub Ayarları"
         }
       },
-      "climate": {
-        "title": "Klima yapılandırması",
+      "device_management": {
+        "title": "Cihaz Yönetimi",
+        "menu_options": {
+          "climate_management": "Klima Yönetimi",
+          "generic_management": "Genel Cihaz Yönetimi",
+          "sensor_management": "Sıcaklık/Nem Sensörleri Yönetimi",
+          "back_to_init": "⬅️ Ana Menüye Geri Dön"
+        }
+      },
+      "climate_management": {
+        "title": "Klima Yönetimi",
+        "menu_options": {
+          "add_climate": "Yeni bir klima ekle",
+          "edit_climate": "Mevcut bir klimayı düzenle",
+          "remove_climate": "Mevcut bir klimayı kaldır",
+          "back_to_devices": "⬅️ Cihaz Yönetimine Geri Dön"
+        }
+      },
+      "generic_management": {
+        "title": "Genel Cihaz Yönetimi",
+        "menu_options": {
+          "add_generic": "Yeni bir genel cihaz ekle",
+          "remove_generic": "Mevcut bir genel cihazı kaldır",
+          "back_to_devices": "⬅️ Cihaz Yönetimine Geri Dön"
+        }
+      },
+      "sensor_management": {
+        "title": "Sıcaklık/Nem Sensörleri Yönetimi",
+        "menu_options": {
+          "add_sensor": "Yeni bir sıcaklık/nem sensörü ekle",
+          "remove_sensor": "Mevcut bir sıcaklık/nem sensörünü kaldır",
+          "back_to_devices": "⬅️ Cihaz Yönetimine Geri Dön"
+        }
+      },
+      "add_climate": {
+        "title": "Klima Ekle",
+        "description": "Yeni bir klimayı eşleştirmek için verileri girin.",
         "data": {
           "infrared_id": "Kızılötesi hub kimliği",
           "device_id": "Klima kimliği",
@@ -92,9 +195,8 @@
           "temp_step": "Sıcaklık adımı",
           "hvac_modes": "Desteklenen HVAC modları",
           "fan_modes": "Desteklenen FAN modları",
-          "temp_hvac_mode": "HVAC modu ayarlanırken varsayılan sıcaklıklar",
-          "fan_hvac_mode": "HVAC modu ayarlanırken varsayılan fan hızı",
-          "extra_sensors": "Yapılandırılmış sensörleri ortaya çıkarır"
+          "hvac_presets": "HVAC otomatik ön ayarları",
+          "optional_entities": "İsteğe bağlı varlıklar"
         },
         "sections": {
           "compatibility_options": {
@@ -109,34 +211,9 @@
           }
         }
       },
-      "generic": {
-        "title": "Genel cihaz konfigürasyonu",
-        "data": {
-          "infrared_id": "Kızılötesi hub kimliği",
-          "device_id": "Cihaz kimliği",
-          "name": "Cihaz adı"
-        }
-      },
-      "sensor": {
-        "title": "Sıcaklık/nem sensörü yapılandırması",
-        "data": {
-          "device_id": "Cihaz kimliği",
-          "name": "Cihaz adı"
-        }
-      }
-    },
-    "error": {
-      "already_configured": "Bu cihaz zaten yapılandırılmış.",
-      "connection": "Cihaza bağlanılamadı; daha fazla bilgi için günlüğü kontrol edin."
-    },
-    "abort": {
-      "credentials": "Entegrasyon yapılandırılmadı veya yanlış kimlik bilgileri."
-    }
-  },
-  "options": {
-    "step": {
-      "climate": {
-        "title": "Klima yapılandırması",
+      "edit_climate": {
+        "title": "Klimayı Düzenle",
+        "description": "Klimanın seçeneklerini güncelleyin.",
         "data": {
           "temperature_sensor": "Sıcaklık sensörü",
           "humidity_sensor": "Nem sensörü",
@@ -145,9 +222,8 @@
           "temp_step": "Sıcaklık adımı",
           "hvac_modes": "Desteklenen HVAC modları",
           "fan_modes": "Desteklenen FAN modları",
-          "temp_hvac_mode": "HVAC modu ayarlanırken varsayılan sıcaklıklar",
-          "fan_hvac_mode": "HVAC modu ayarlanırken varsayılan fan hızı",
-          "extra_sensors": "Yapılandırılmış sensörleri ortaya çıkarır"
+          "hvac_presets": "HVAC otomatik ön ayarları",
+          "optional_entities": "İsteğe bağlı varlıklar"
         },
         "sections": {
           "compatibility_options": {
@@ -161,10 +237,75 @@
             }
           }
         }
+      },
+      "remove_climate": {
+        "title": "Klimayı Kaldır",
+        "description": "Hub'dan kaldırmak istediğiniz klimayı seçin.",
+        "data": {
+          "climate_id": "Klima"
+        }
+      },
+      "add_generic": {
+        "title": "Genel Cihaz Ekle",
+        "description": "Yeni bir genel cihazı eşleştirmek için verileri girin.",
+        "data": {
+          "device_id": "Cihaz kimliği",
+          "infrared_id": "Kızılötesi hub kimliği",
+          "name": "Cihaz adı"
+        }
+      },
+      "add_sensor": {
+        "title": "Sıcaklık/Nem Sensörü Ekle",
+        "description": "Yeni bir sıcaklık/nem sensörünü eşleştirmek için verileri girin.",
+        "data": {
+          "device_id": "Cihaz kimliği",
+          "name": "Cihaz adı"
+        }
+      },
+      "hub_settings": {
+        "title": "Hub Ayarları",
+        "description": "Erişim kimlik bilgilerini ve veri güncelleme aralıklarını değiştirin.",
+        "data": {
+          "access_id": "Tuya Access ID",
+          "access_secret": "Tuya Access Secret",
+          "country": "Tuya ülke API'si",
+          "climate_update_interval": "Klima güncelleme aralığı",
+          "sensor_update_interval": "Sıcaklık/nem güncelleme aralığı"
+        }
+      },
+      "select_climate": {
+        "title": "Klima Seç",
+        "description": "Yönetmek istediğiniz klimayı seçin.",
+        "data": {
+          "climate_id": "Klima"
+        }
+      },
+      "select_generic": {
+        "title": "Genel Cihaz Seç",
+        "description": "Yönetmek istediğiniz genel cihazı seçin.",
+        "data": {
+          "generic_id": "Genel cihaz"
+        }
+      },
+      "select_sensor": {
+        "title": "Sıcaklık/Nem Sensörü Seç",
+        "description": "Yönetmek istediğiniz sıcaklık/nem sensörünü seçin.",
+        "data": {
+          "sensor_id": "Sıcaklık/Nem sensörü"
+        }
       }
     },
+    "error": {
+      "cannot_change_access_id": "Mevcut bir hub için Access ID değiştirilemez.",
+      "cannot_connect_to_tuya": "Tuya sunucularına bağlanılamadı. Lütfen ağınızı kontrol edin.",
+      "device_already_configured": "Bu cihaz zaten yapılandırılmış.",
+      "device_already_configured_on_other_hub": "Bu cihaz zaten başka bir Hub üzerinde yapılandırılmış.",
+      "invalid_auth": "Kimlik doğrulama başarısız: Geçersiz Access ID veya Access Secret.",
+      "invalid_sensor_type": "Seçilen cihaz geçerli bir sıcaklık/nem sensörü değildir.",
+      "tuya_api_error": "Tuya Cloud Hatası: {error_info}"
+    },
     "abort": {
-      "not_configurable": "Cihaz yapılandırılamıyor!"
+      "device_not_found": "Hiçbir cihaz bulunamadı."
     }
   },
   "exceptions": {

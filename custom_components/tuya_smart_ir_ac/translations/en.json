@@ -1,6 +1,9 @@
 {
   "entity": {
     "number": {
+      "temperature": {
+        "name": "Temperature"
+      },
       "temp_hvac_mode_auto": {
         "name": "Auto"
       },
@@ -12,6 +15,26 @@
       }
     },
     "select": {
+      "hvac_mode": {
+        "name": "HVAC mode",  
+        "state": {
+          "auto": "Auto",
+          "cool": "Cool",
+          "heat": "Heat",
+          "dry": "Dry",
+          "fan_only": "Fan only",
+          "off": "Off"
+        }
+      },
+      "fan_mode": {
+        "name": "Fan speed",
+        "state": {
+          "auto": "Auto",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
       "fan_hvac_mode": {
         "name": "Fan speed",
         "state": {
@@ -24,11 +47,20 @@
     }
   },
   "selector": {
+    "country": {
+      "options": {
+        "eu": "Europe",
+        "us": "America",
+        "in": "India",
+        "cn": "China",
+        "sg": "Singapore"
+      }
+    },
     "device_type": {
       "options": {
         "climate": "Air conditioner",
         "generic": "Generic device",
-        "sensor": "Temperature/humidity sensor (experimental)"
+        "sensor": "Temperature/humidity sensor"
       }
     },
     "hvac_modes": {
@@ -47,6 +79,21 @@
         "low": "Low",
         "medium": "Medium",
         "high": "High"
+      }
+    },
+    "hvac_presets": {
+      "options": {
+        "fan_hvac_mode": "Default fan speed",
+        "temp_hvac_mode": "Default temperature"
+      }
+    },
+    "optional_entities": {
+      "options": {
+        "current_temperature": "Temperature sensor",
+        "current_humidity": "Humidity sensor",
+        "hvac_mode": "HVAC control",
+        "fan_mode": "Fan control",
+        "temp_setpoint": "Temperature control"
       }
     },
     "hvac_power_on": {
@@ -73,14 +120,70 @@
   },
   "config": {
     "step": {
-      "user": {
-        "title": "Device configuration",
-         "data": {
-            "device_type": "Device type"
-         }
+      "hub_settings": {
+        "title": "Hub Settings",
+        "description": "Enter your Tuya Cloud API credentials.",
+        "data": {
+          "access_id": "Tuya access ID",
+          "access_secret": "Tuya access secret",
+          "country": "Tuya country API",
+          "climate_update_interval": "Air conditioner update interval",
+          "sensor_update_interval": "Temperature/humidity update interval"
+        }
+      }
+    },
+    "error": {
+      "cannot_change_access_id": "The Access ID cannot be modified for an existing hub.",
+      "cannot_connect_to_tuya": "Failed to connect to Tuya servers. Please check your network.",
+      "invalid_auth": "Authentication failed: Invalid Access ID or Access Secret."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tuya Smart IR Configuration",
+        "menu_options": {
+          "device_management": "Device Management",
+          "hub_settings": "Hub Settings"
+        }
       },
-      "climate": {
-        "title": "Air conditioner configuration",
+      "device_management": {
+        "title": "Device Management",
+        "menu_options": {
+          "climate_management": "Air Conditioner Management",
+          "generic_management": "Generic Devices Management",
+          "sensor_management": "Temperature/Humidity Sensors Management",
+          "back_to_init": "⬅️ Back to Main Menu"
+        }
+      },
+      "climate_management": {
+        "title": "Air Conditioner Management",
+        "menu_options": {
+          "add_climate": "Add a new air conditioner",
+          "edit_climate": "Edit an existing air conditioner",
+          "remove_climate": "Remove an existing air conditioner",
+          "back_to_devices": "⬅️ Back to Device Management"
+        }
+      },
+      "generic_management": {
+        "title": "Generic Devices Management",
+        "menu_options": {
+          "add_generic": "Add a new generic device",
+          "remove_generic": "Remove an existing generic device",
+          "back_to_devices": "⬅️ Back to Device Management"
+        }
+      },
+      "sensor_management": {
+        "title": "Temperature/Humidity Sensors Management",
+        "menu_options": {
+          "add_sensor": "Add a new temperature/humidity sensor",
+          "remove_sensor": "Remove an existing temperature/humidity sensor",
+          "back_to_devices": "⬅️ Back to Device Management"
+        }
+      },
+      "add_climate": {
+        "title": "Add Air Conditioner",
+        "description": "Enter the data to pair a new air conditioner.",
         "data": {
           "infrared_id": "Infrared hub ID",
           "device_id": "Air conditioner ID",
@@ -92,62 +195,8 @@
           "temp_step": "Step temperature",
           "hvac_modes": "Supported HVAC modes",
           "fan_modes": "Supported FAN modes",
-          "temp_hvac_mode": "Default temperatures when setting HVAC mode",
-          "fan_hvac_mode": "Default fan speed when setting HVAC mode",
-          "extra_sensors": "Exposes the configured sensors"
-        },
-        "sections": {
-          "compatibility_options": {
-            "name": "Compatibility options",
-            "data": {
-              "hvac_power_on": "Force power on when setting HVAC mode",
-              "temp_power_on": "Force power on when setting temperature",
-              "fan_power_on": "Force power on when setting fan speed",
-              "dry_min_temp": "Set minimum temperature in dry mode",
-              "dry_min_fan": "Set minimum fan speed in dry mode"
-            }
-          }
-        }
-      },
-      "generic": {
-        "title": "Generic device configuration",
-        "data": {
-          "infrared_id": "Infrared hub ID",
-          "device_id": "Device ID",
-          "name": "Device name"
-        }
-      },
-      "sensor": {
-        "title": "Temperature/humidity sensor configuration",
-        "data": {
-          "device_id": "Device ID",
-          "name": "Device name"
-        }
-      }
-    },
-    "error": {
-      "already_configured": "This device has already been configured.",
-      "connection": "Could not connect to device; check the log for more information."
-    },
-    "abort": {
-      "credentials": "Integration not configured or incorrect credentials."
-    }
-  },
-  "options": {
-    "step": {
-      "climate": {
-        "title": "Air conditioner configuration",
-        "data": {
-          "temperature_sensor": "Temperature sensor",
-          "humidity_sensor": "Humidity sensor",
-          "min_temp": "Minimum temperature",
-          "max_temp": "Maximum temperature",
-          "temp_step": "Step temperature",
-          "hvac_modes": "Supported HVAC modes",
-          "fan_modes": "Supported FAN modes",
-          "temp_hvac_mode": "Default temperatures when setting HVAC mode",
-          "fan_hvac_mode": "Default fan speed when setting HVAC mode",
-          "extra_sensors": "Exposes the configured sensors"
+          "hvac_presets": "HVAC automatic presets",
+          "optional_entities": "Optional entities"
         },
         "sections": {
           "compatibility_options": {
@@ -161,10 +210,102 @@
             }
           }
         }
+      },
+      "edit_climate": {
+        "title": "Edit Air Conditioner",
+        "description": "Update the options for the air conditioner.",
+        "data": {
+          "temperature_sensor": "Temperature sensor",
+          "humidity_sensor": "Humidity sensor",
+          "min_temp": "Minimum temperature",
+          "max_temp": "Maximum temperature",
+          "temp_step": "Step temperature",
+          "hvac_modes": "Supported HVAC modes",
+          "fan_modes": "Supported FAN modes",
+          "hvac_presets": "HVAC automatic presets",
+          "optional_entities": "Optional entities"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "Compatibility options",
+            "data": {
+              "hvac_power_on": "Force power on when setting hvac mode",
+              "temp_power_on": "Force power on when setting temperature",
+              "fan_power_on": "Force power on when setting fan speed",
+              "dry_min_temp": "Set minimum temperature in dry mode",
+              "dry_min_fan": "Set minimum fan speed in dry mode"
+            }
+          }
+        }
+      },
+      "remove_climate": {
+        "title": "Remove Air Conditioner",
+        "description": "Select the air conditioner you want to remove from the Hub.",
+        "data": {
+          "climate_id": "Air conditioner"
+        }
+      },
+      "add_generic": {
+        "title": "Add Generic Device",
+        "description": "Enter the data to pair a new generic device.",
+        "data": {
+          "device_id": "Device ID",
+          "infrared_id": "Infrared hub ID",
+          "name": "Device name"
+        }
+      },
+      "add_sensor": {
+        "title": "Add Temperature/Humidity Sensor",
+        "description": "Enter the data to pair a new temperature/humidity sensor.",
+        "data": {
+          "device_id": "Device ID",
+          "name": "Device name"
+        }
+      },
+      "hub_settings": {
+        "title": "Hub Settings",
+        "description": "Modify access credentials and data update intervals.",
+        "data": {
+          "access_id": "Tuya access ID",
+          "access_secret": "Tuya access secret",
+          "country": "Tuya country API",
+          "climate_update_interval": "Air conditioner update interval",
+          "sensor_update_interval": "Temperature/humidity update interval"
+        }
+      },
+      "select_climate": {
+        "title": "Select Air Conditioner",
+        "description": "Choose the air conditioner you want to manage.",
+        "data": {
+          "climate_id": "Air conditioner"
+        }
+      },
+      "select_generic": {
+        "title": "Select Generic Device",
+        "description": "Choose the generic device you want to manage.",
+        "data": {
+          "generic_id": "Generic device"
+        }
+      },
+      "select_sensor": {
+        "title": "Select Temperature/Humidity Sensor",
+        "description": "Choose the temperature/humidity sensor you want to manage.",
+        "data": {
+          "sensor_id": "Temperature/humidity sensor"
+        }
       }
     },
+    "error": {
+      "cannot_change_access_id": "The Access ID cannot be modified for an existing hub.",
+      "cannot_connect_to_tuya": "Failed to connect to Tuya servers. Please check your network.",
+      "device_already_configured": "This device is already configured.",
+      "device_already_configured_on_other_hub": "This device is already configured on other Hub.",
+      "invalid_auth": "Authentication failed: Invalid Access ID or Access Secret.",
+      "invalid_sensor_type": "The selected device is not a valid temperature/humidity sensor.",
+      "tuya_api_error": "Tuya Cloud Error: {error_info}"
+    },
     "abort": {
-      "not_configurable": "Device not configurable!"
+      "device_not_found": "No devices found."
     }
   },
   "exceptions": {

@@ -1,6 +1,9 @@
 {
   "entity": {
     "number": {
+      "temperature": {
+        "name": "Temperatuur"
+      },
       "temp_hvac_mode_auto": {
         "name": "Automatisch"
       },
@@ -12,6 +15,26 @@
       }
     },
     "select": {
+      "hvac_mode": {
+        "name": "HVAC-modus",
+        "state": {
+          "auto": "Automatisch",
+          "cool": "Koelen",
+          "heat": "Verwarmen",
+          "dry": "Ontvochtigen",
+          "fan_only": "Alleen ventilator",
+          "off": "Uitgeschakeld"
+        }
+      },
+      "fan_mode": {
+        "name": "Ventilatorsnelheid",
+        "state": {
+          "auto": "Automatisch",
+          "low": "Laag",
+          "medium": "Middel",
+          "high": "Hoog"
+        }
+      },
       "fan_hvac_mode": {
         "name": "Ventilatorsnelheid",
         "state": {
@@ -24,6 +47,15 @@
     }
   },
   "selector": {
+    "country": {
+      "options": {
+        "eu": "Europa",
+        "us": "Amerika",
+        "in": "India",
+        "cn": "China",
+        "sg": "Singapore"
+      }
+    },
     "device_type": {
       "options": {
         "climate": "Airconditioning",
@@ -47,6 +79,21 @@
         "low": "Laag",
         "medium": "Middel",
         "high": "Hoog"
+      }
+    },
+    "hvac_presets": {
+      "options": {
+        "fan_hvac_mode": "Standaard ventilatorsnelheid",
+        "temp_hvac_mode": "Standaardtemperatuur"
+      }
+    },
+    "optional_entities": {
+      "options": {
+        "current_temperature": "Temperatuursensor",
+        "current_humidity": "Vochtigheidssensor",
+        "hvac_mode": "HVAC-regeling",
+        "fan_mode": "Ventilatorregeling",
+        "temp_setpoint": "Temperatuurregeling"
       }
     },
     "hvac_power_on": {
@@ -73,14 +120,70 @@
   },
   "config": {
     "step": {
-      "user": {
-        "title": "Apparaatconfiguratie",
+      "hub_settings": {
+        "title": "Hub-instellingen",
+        "description": "Voer uw Tuya Cloud API-inloggegevens in.",
         "data": {
-          "device_type": "Type apparaat"
+          "access_id": "Tuya Access ID",
+          "access_secret": "Tuya Access Secret",
+          "country": "Tuya land API",
+          "climate_update_interval": "Airconditioning update-interval",
+          "sensor_update_interval": "Temperatuur-/vochtigheidssensor update-interval"
+        }
+      }
+    },
+    "error": {
+      "cannot_change_access_id": "De Access ID kan niet worden gewijzigd voor een bestaande hub.",
+      "cannot_connect_to_tuya": "Verbinding met Tuya-servers mislukt. Controleer uw netwerk.",
+      "invalid_auth": "Verificatie mislukt: Ongeldige Access ID of Access Secret."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tuya Smart IR Configuratie",
+        "menu_options": {
+          "device_management": "Apparaatbeheer",
+          "hub_settings": "Hub-instellingen"
         }
       },
-      "climate": {
-        "title": "Configuratie van airconditioning",
+      "device_management": {
+        "title": "Apparaatbeheer",
+        "menu_options": {
+          "climate_management": "Airconditioningbeheer",
+          "generic_management": "Generiek apparaatbeheer",
+          "sensor_management": "Temperatuur-/vochtigheidssensoren beheer",
+          "back_to_init": "⬅️ Terug naar hoofdmenu"
+        }
+      },
+      "climate_management": {
+        "title": "Airconditioningbeheer",
+        "menu_options": {
+          "add_climate": "Nieuwe airconditioning toevoegen",
+          "edit_climate": "Bestaande airconditioning bewerken",
+          "remove_climate": "Bestaande airconditioning verwijderen",
+          "back_to_devices": "⬅️ Terug naar apparaatbeheer"
+        }
+      },
+      "generic_management": {
+        "title": "Generiek apparaatbeheer",
+        "menu_options": {
+          "add_generic": "Nieuw generiek apparaat toevoegen",
+          "remove_generic": "Bestaand generiek apparaat verwijderen",
+          "back_to_devices": "⬅️ Terug naar apparaatbeheer"
+        }
+      },
+      "sensor_management": {
+        "title": "Temperatuur-/vochtigheidssensoren beheer",
+        "menu_options": {
+          "add_sensor": "Nieuwe temperatuur-/vochtigheidssensor toevoegen",
+          "remove_sensor": "Bestaande temperatuur-/vochtigheidssensor verwijderen",
+          "back_to_devices": "⬅️ Terug naar apparaatbeheer"
+        }
+      },
+      "add_climate": {
+        "title": "Airconditioning toevoegen",
+        "description": "Voer de gegevens in om een nieuwe airconditioning te koppelen.",
         "data": {
           "infrared_id": "Infrarood hub ID",
           "device_id": "Airconditioning ID",
@@ -92,9 +195,8 @@
           "temp_step": "Temperatuurstap",
           "hvac_modes": "Ondersteunde HVAC-modi",
           "fan_modes": "Ondersteunde ventilatormodi",
-          "temp_hvac_mode": "Standaardtemperaturen bij het instellen van de HVAC-modus",
-          "fan_hvac_mode": "Standaard ventilatorsnelheid bij het instellen van de HVAC-modus",
-          "extra_sensors": "Geconfigureerde sensoren weergeven"
+          "hvac_presets": "HVAC automatische voorinstellingen",
+          "optional_entities": "Optionele entiteiten"
         },
         "sections": {
           "compatibility_options": {
@@ -109,34 +211,9 @@
           }
         }
       },
-      "generic": {
-        "title": "Generieke apparaatconfiguratie",
-        "data": {
-          "infrared_id": "Infrarood hub ID",
-          "device_id": "Apparaat ID",
-          "name": "Naam van het apparaat"
-        }
-      },
-      "sensor": {
-        "title": "Temperatuur-/vochtigheidssensor configuratie",
-        "data": {
-          "device_id": "Apparaat ID",
-          "name": "Naam van het apparaat"
-        }
-      }
-    },
-    "error": {
-      "already_configured": "Dit apparaat is al geconfigureerd.",
-      "connection": "Kan geen verbinding maken met apparaat; zie logboek voor meer informatie."
-    },
-    "abort": {
-      "credentials": "Integratie niet geconfigureerd of ongeldige inloggegevens."
-    }
-  },
-  "options": {
-    "step": {
-      "climate": {
-        "title": "Configuratie van airconditioning",
+      "edit_climate": {
+        "title": "Airconditioning bewerken",
+        "description": "Werk de opties voor de airconditioning bij.",
         "data": {
           "temperature_sensor": "Temperatuursensor",
           "humidity_sensor": "Vochtigheidssensor",
@@ -145,9 +222,8 @@
           "temp_step": "Temperatuurstap",
           "hvac_modes": "Ondersteunde HVAC-modi",
           "fan_modes": "Ondersteunde ventilatormodi",
-          "temp_hvac_mode": "Standaardtemperaturen bij het instellen van de HVAC-modus",
-          "fan_hvac_mode": "Standaard ventilatorsnelheid bij het instellen van de HVAC-modus",
-          "extra_sensors": "Geconfigureerde sensoren weergeven"
+          "hvac_presets": "HVAC automatische voorinstellingen",
+          "optional_entities": "Optionele entiteiten"
         },
         "sections": {
           "compatibility_options": {
@@ -161,10 +237,75 @@
             }
           }
         }
+      },
+      "remove_climate": {
+        "title": "Airconditioning verwijderen",
+        "description": "Selecteer de airconditioning die u uit de Hub wilt verwijderen.",
+        "data": {
+          "climate_id": "Airconditioning"
+        }
+      },
+      "add_generic": {
+        "title": "Generiek apparaat toevoegen",
+        "description": "Voer de gegevens in om een nieuw generiek apparaat te koppelen.",
+        "data": {
+          "device_id": "Apparaat ID",
+          "infrared_id": "Infrarood hub ID",
+          "name": "Naam van het apparaat"
+        }
+      },
+      "add_sensor": {
+        "title": "Temperatuur-/vochtigheidssensor toevoegen",
+        "description": "Voer de gegevens in om een nieuwe temperatuur-/vochtigheidssensor te koppelen.",
+        "data": {
+          "device_id": "Apparaat ID",
+          "name": "Naam van het apparaat"
+        }
+      },
+      "hub_settings": {
+        "title": "Hub-instellingen",
+        "description": "Wijzig de toegangsgegevens en de intervallen voor het bijwerken van gegevens.",
+        "data": {
+          "access_id": "Tuya Access ID",
+          "access_secret": "Tuya Access Secret",
+          "country": "Tuya land API",
+          "climate_update_interval": "Airconditioning update-interval",
+          "sensor_update_interval": "Temperatuur-/vochtigheidssensor update-interval"
+        }
+      },
+      "select_climate": {
+        "title": "Airconditioning selecteren",
+        "description": "Kies de airconditioning die u wilt beheren.",
+        "data": {
+          "climate_id": "Airconditioning"
+        }
+      },
+      "select_generic": {
+        "title": "Generiek apparaat selecteren",
+        "description": "Kies het generieke apparaat dat u wilt beheren.",
+        "data": {
+          "generic_id": "Generiek apparaat"
+        }
+      },
+      "select_sensor": {
+        "title": "Temperatuur-/vochtigheidssensor selecteren",
+        "description": "Kies de temperatuur-/vochtigheidssensor die u wilt beheren.",
+        "data": {
+          "sensor_id": "Temperatuur-/vochtigheidssensor"
+        }
       }
     },
+    "error": {
+      "cannot_change_access_id": "Het Access ID kan niet worden gewijzigd voor een bestaande hub.",
+      "cannot_connect_to_tuya": "Verbinding met Tuya-servers mislukt. Controleer uw netwerk.",
+      "device_already_configured": "Dit apparaat is al geconfigureerd.",
+      "device_already_configured_on_other_hub": "Dit apparaat is al geconfigureerd op een andere Hub.",
+      "invalid_auth": "Verificatie mislukt: Ongeldige Access ID of Access Secret.",
+      "invalid_sensor_type": "Het geselecteerde apparaat is geen geldige temperatuur-/vochtigheidssensor.",
+      "tuya_api_error": "Tuya Cloud Fout: {error_info}"
+    },
     "abort": {
-      "not_configurable": "Apparaat niet configureerbaar!"
+      "device_not_found": "Geen apparaten gevonden."
     }
   },
   "exceptions": {
