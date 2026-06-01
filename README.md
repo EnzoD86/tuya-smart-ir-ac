@@ -28,8 +28,9 @@ We recommend installing via the Home Assistant Community Store (HACS) to receive
 
 ## Prerequisites: Retrieve Tuya IoT Credentials
 
-Before configuring the integration via the UI, you need to collect your cloud credentials from the Tuya IoT Platform.
+Before configuring the integration via the UI, you need to collect your cloud credentials from the Tuya IoT Platform and enable the real-time event service.
 
+### 1. Cloud Project Credentials
 1. Connect to the [Tuya IoT Development Platform](https://platform.tuya.com).
 2. From the left-hand menu, navigate to **Cloud** -> **Development**.
 3. Create a new Cloud Project (or select an existing one), ensuring that it is successfully linked to your SmartLife or Tuya mobile app account.
@@ -37,7 +38,17 @@ Before configuring the integration via the UI, you need to collect your cloud cr
 5. Go to the **Service API** tab, click **View Details**, and verify that the following APIs are authorized and marked as **In Service**:
    - **IoT Core**
    - **IR Control Hub Open Service**
-   - **Smart Home Device System Message Queue** *(Required for real-time Pulsar stream connection)*
+
+### 2. Enable Tuya Pulsar & Messaging Rules (Required for Real-Time Updates)
+By default, Tuya Cloud does not forward event messages to the WebSocket queue unless explicitly instructed. You **must** configure these settings, otherwise the real-time PUSH stream will remain completely silent.
+
+1. On the [Tuya IoT Platform](https://platform.tuya.com), look at the left main sidebar and navigate to **Cloud** -> **Message Service**.
+2. If prompted, select your newly created Cloud Project from the dropdown at the top.
+3. Locate the **Pulsar** status toggle on the screen and ensure it is **Enabled / Active**.
+4. Switch to the **Messaging Rules** tab right next to it.
+5. Click **Create Rule** (or click edit on your default rule) and ensure the main switch for the rule is turned **ON**.
+6. Under the **Message Type / Event Filtering** settings, make sure that at least the **`statusReport`** checkbox is selected. 
+7. Save the changes and verify that the rule status reads **Enabled**.
 
 ---
 
