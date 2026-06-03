@@ -34,6 +34,7 @@ from .const import (
     CONF_DEVICE_ID,
     CONF_DRY_MIN_FAN,
     CONF_DRY_MIN_TEMP,
+    CONF_ENABLE_PULSAR,
     CONF_FAN_MODES,
     CONF_FAN_POWER_ON,
     CONF_HUMIDITY_SENSOR,
@@ -53,6 +54,7 @@ from .const import (
     CONF_TUYA_COUNTRY,
     DEFAULT_DRY_MIN_FAN,
     DEFAULT_DRY_MIN_TEMP,
+    DEFAULT_ENABLE_PULSAR,
     DEFAULT_FAN_POWER_ON,
     DEFAULT_HVAC_POWER_ON,
     DEFAULT_MAX_TEMP,
@@ -643,7 +645,8 @@ def hub_data_schema() -> dict[vol.Marker, Any]:
             NumberSelectorConfig(
                 min=10, max=3600, step=1, mode=NumberSelectorMode.BOX
             )
-        )
+        ),
+        vol.Required(CONF_ENABLE_PULSAR, default=DEFAULT_ENABLE_PULSAR): BooleanSelector()
     }
     
 def device1_data() -> dict[vol.Marker, Any]:

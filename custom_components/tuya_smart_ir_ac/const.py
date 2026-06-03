@@ -46,6 +46,7 @@ ENTITY_SENSOR_BATTERY = "battery"
 CONF_ACCESS_ID = "access_id"
 CONF_ACCESS_SECRET = "access_secret"
 CONF_TUYA_COUNTRY = "country"
+CONF_ENABLE_PULSAR = "enable_pulsar"
 CONF_CLIMATE_UPDATE_INTERVAL = "climate_update_interval"
 CONF_SENSOR_UPDATE_INTERVAL = "sensor_update_interval"
 CONF_INFRARED_ID = "infrared_id"
@@ -86,6 +87,7 @@ DEFAULT_TEMP_POWER_ON = POWER_ON_NEVER
 DEFAULT_FAN_POWER_ON = POWER_ON_NEVER
 DEFAULT_DRY_MIN_TEMP = False
 DEFAULT_DRY_MIN_FAN = False
+DEFAULT_ENABLE_PULSAR = False
 
 # Frontend Selection/Validation Lists
 SUPPORTED_POWER_ON_MODES = [

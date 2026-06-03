@@ -122,11 +122,12 @@
     "step": {
       "hub_settings": {
         "title": "Configurazione Hub",
-        "description": "Inserisci le credenziali API del tuo account Tuya Cloud.",
+        "description": "Configura le credenziali di accesso e le opzioni dell'hub.",
         "data": {
           "access_id": "Access ID Tuya",
           "access_secret": "Access secret Tuya",
           "country": "Data center Tuya",
+          "enable_pulsar": "Abilita Tuya Pulsar Stream",
           "climate_update_interval": "Frequenza aggiornamento climatizzatore",
           "sensor_update_interval": "Frequenza aggiornamento temperatura/umidità"
         }
@@ -264,11 +265,12 @@
       },
       "hub_settings": {
         "title": "Impostazioni Hub",
-        "description": "Modifica le credenziali di accesso e gli intervalli di aggiornamento dati.",
+        "description": "Modifica le credenziali di accesso e le opzioni dell'hub.",
         "data": {
           "access_id": "Access ID Tuya",
           "access_secret": "Access secret Tuya",
           "country": "Data center Tuya",
+          "enable_pulsar": "Abilita Tuya Pulsar Stream",
           "climate_update_interval": "Frequenza aggiornamento climatizzatore",
           "sensor_update_interval": "Frequenza aggiornamento temperatura/umidità"
         }

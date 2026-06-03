@@ -18,12 +18,14 @@ from .const import (
     PLATFORMS,
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
+    CONF_ENABLE_PULSAR,
     CONF_TUYA_COUNTRY,
     CONF_CLIMATE_UPDATE_INTERVAL,
     CONF_SENSOR_UPDATE_INTERVAL,
     UPDATE_INTERVAL,
     TUYA_API_ENDPOINTS,
     TUYA_PULSAR_ENDPOINTS,
+    DEFAULT_ENABLE_PULSAR,
     DEVICE_TYPE_CLIMATES,
     DEVICE_TYPE_SENSORS,
     DEVICE_TYPE_GENERICS
@@ -77,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
     country = data.get(CONF_TUYA_COUNTRY, "")
     climate_interval = data.get(CONF_CLIMATE_UPDATE_INTERVAL, UPDATE_INTERVAL)
     sensor_interval = data.get(CONF_SENSOR_UPDATE_INTERVAL, UPDATE_INTERVAL)
+    enable_pulsar = data.get(CONF_ENABLE_PULSAR, DEFAULT_ENABLE_PULSAR)
     
     session = async_get_clientsession(hass)
 
@@ -94,21 +97,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         await api_client.close()
         raise ConfigEntryAuthFailed(f"Tuya authentication failed: {res.get('msg')}")    
     
-    pulsar_client = TuyaOpenPulsar(
-        ws_endpoint=TUYA_PULSAR_ENDPOINTS.get(country, ""),
-        access_id=data[CONF_ACCESS_ID],
-        access_secret=data[CONF_ACCESS_SECRET],
-        topic=TuyaCloudPulsarTopic.PROD,
-        session=session
-    )
+    pulsar_client = None
+    pulsar_bridge = None
+    
+    if enable_pulsar:
+        # Initialize Pulsar client
+        pulsar_client = TuyaOpenPulsar(
+            ws_endpoint=TUYA_PULSAR_ENDPOINTS.get(country, ""),
+            access_id=data[CONF_ACCESS_ID],
+            access_secret=data[CONF_ACCESS_SECRET],
+            topic=TuyaCloudPulsarTopic.PROD,
+            session=session
+        )
+
+        # Initialize Pulsar bridge
+        pulsar_bridge = TuyaPulsarBridge(hass, pulsar_client)
 
     try:
         # Initialize API
         climate_api = TuyaClimateAPI(hass, client=api_client, log_prefix=f"[{entry.title}]")
         sensor_api = TuyaSensorAPI(hass, client=api_client, log_prefix=f"[{entry.title}]")
-
-        # Initialize Pulsar bridge
-        pulsar_bridge = TuyaPulsarBridge(hass, pulsar_client)
 
         # Initialize coordinators
         climate_coordinator = TuyaClimateCoordinator(hass, entry, climate_api, pulsar_bridge, climate_interval)
@@ -119,8 +127,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         await sensor_coordinator.async_config_entry_first_refresh()
 
         # Start Pulsar bridge after coordinators are ready to handle incoming messages
-        await pulsar_client.start()
+        if enable_pulsar:
+            await pulsar_client.start()
+            hass.async_create_task(async_check_pulsar_connection(hass, entry, pulsar_client))
 
+        # Save Runtime Data
         entry.runtime_data = RuntimeData(
             api_client=api_client,
             pulsar_client=pulsar_client,
@@ -130,7 +141,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         )
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        hass.async_create_task(async_check_pulsar_connection(hass, entry, pulsar_client))
     except Exception as ex:
         _LOGGER.error("[%s] Error during Hub initialization, cleaning up sessions: %s", entry.title, ex)
 
@@ -139,10 +149,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         except Exception as api_err:
             _LOGGER.debug("[%s] Failed to close Tuya API client during abort: %s", entry.title, api_err)
 
-        try:
-            await pulsar_client.stop()
-        except Exception as pulsar_err:
-            _LOGGER.debug("[%s] Failed to stop Tuya Pulsar client during abort: %s", entry.title, pulsar_err)
+        if enable_pulsar:
+            try:
+                await pulsar_client.stop()
+            except Exception as pulsar_err:
+                _LOGGER.debug("[%s] Failed to stop Tuya Pulsar client during abort: %s", entry.title, pulsar_err)
 
         raise
 

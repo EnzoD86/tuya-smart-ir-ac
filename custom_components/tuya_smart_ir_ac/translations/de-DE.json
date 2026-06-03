@@ -122,11 +122,12 @@
     "step": {
       "hub_settings": {
         "title": "Hub-Einstellungen",
-        "description": "Geben Sie Ihre Tuya Cloud-API-Anmeldedaten ein.",
+        "description": "Konfigurieren Sie die Zugangsdaten und Hub-Optionen.",
         "data": {
           "access_id": "Tuya Access ID",
           "access_secret": "Tuya Access Secret",
           "country": "Tuya Länder-API",
+          "enable_pulsar": "Tuya Pulsar Stream aktivieren",
           "climate_update_interval": "Aktualisierungsintervall der Klimaanlage",
           "sensor_update_interval": "Aktualisierungsintervall des Temperatur-/Feuchtigkeitssensors"
         }
@@ -264,11 +265,12 @@
       },
       "hub_settings": {
         "title": "Hub-Einstellungen",
-        "description": "Zugangsdaten und Datenaktualisierungsintervalle ändern.",
+        "description": "Zugangsdaten und Hub-Optionen ändern.",
         "data": {
           "access_id": "Tuya Access ID",
           "access_secret": "Tuya Access Secret",
           "country": "Tuya Länder-API",
+          "enable_pulsar": "Tuya Pulsar Stream aktivieren",
           "climate_update_interval": "Aktualisierungsintervall der Klimaanlage",
           "sensor_update_interval": "Aktualisierungsintervall des Temperatur-/Feuchtigkeitssensors"
         }

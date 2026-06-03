@@ -122,11 +122,12 @@
     "step": {
       "hub_settings": {
         "title": "Hub Settings",
-        "description": "Enter your Tuya Cloud API credentials.",
+        "description": "Configure access credentials and hub options.",
         "data": {
           "access_id": "Tuya access ID",
           "access_secret": "Tuya access secret",
           "country": "Tuya country API",
+          "enable_pulsar": "Enable Tuya Pulsar Stream",
           "climate_update_interval": "Air conditioner update interval",
           "sensor_update_interval": "Temperature/humidity update interval"
         }
@@ -264,11 +265,12 @@
       },
       "hub_settings": {
         "title": "Hub Settings",
-        "description": "Modify access credentials and data update intervals.",
+        "description": "Modify access credentials and hub options.",
         "data": {
           "access_id": "Tuya access ID",
           "access_secret": "Tuya access secret",
           "country": "Tuya country API",
+          "enable_pulsar": "Enable Tuya Pulsar Stream",
           "climate_update_interval": "Air conditioner update interval",
           "sensor_update_interval": "Temperature/humidity update interval"
         }

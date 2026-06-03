@@ -122,11 +122,12 @@
     "step": {
       "hub_settings": {
         "title": "Paramètres du Hub",
-        "description": "Saisissez vos identifiants API Tuya Cloud.",
+        "description": "Configurer les informations d'identification d'accès et les options du hub..",
         "data": {
           "access_id": "ID d'accès Tuya",
           "access_secret": "Clé secrète d'accès Tuya",
           "country": "API pays Tuya",
+          "enable_pulsar": "Activer le flux Tuya Pulsar",
           "climate_update_interval": "Intervalle de mise à jour du climatiseur",
           "sensor_update_interval": "Intervalle de mise à jour du capteur de température/humidité"
         }
@@ -264,11 +265,12 @@
       },
       "hub_settings": {
         "title": "Paramètres du Hub",
-        "description": "Modifier les identifiants d'accès et les intervalles de mise à jour des données.",
+        "description": "Modifier les identifiants d'accès et les options du hub.",
         "data": {
           "access_id": "ID d'accès Tuya",
           "access_secret": "Clé secrète d'accès Tuya",
           "country": "API pays Tuya",
+          "enable_pulsar": "Activer le flux Tuya Pulsar",
           "climate_update_interval": "Intervalle de mise à jour du climatiseur",
           "sensor_update_interval": "Intervalle de mise à jour du capteur de température/humidité"
         }

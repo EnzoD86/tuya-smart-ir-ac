@@ -110,7 +110,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         climates = self.entry.options.get(DEVICE_TYPE_CLIMATES, [])
         for d in climates:
             dev_id = d.get(CONF_DEVICE_ID)
-            if dev_id:
+            if self._pulsar_bridge and dev_id:
                 self._pulsar_bridge.register_handler(dev_id, self._async_update_from_pulsar)
 
     async def _async_update_data(self) -> dict[str, TuyaClimateData]:
@@ -185,7 +185,7 @@ class TuyaSensorCoordinator(DataUpdateCoordinator[dict[str, TuyaSensorData]]):
         sensors = self.entry.options.get(DEVICE_TYPE_SENSORS, [])
         for d in sensors:
             dev_id = d.get(CONF_DEVICE_ID)
-            if dev_id:
+            if self._pulsar_bridge and dev_id:
                 self._pulsar_bridge.register_handler(dev_id, self._async_update_from_pulsar)
 
     def _update_dps_timestamp(self, device_id: str, codes: list[str]):

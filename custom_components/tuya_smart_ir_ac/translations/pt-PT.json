@@ -122,7 +122,7 @@
     "step": {
       "hub_settings": {
         "title": "Configurações do Hub",
-        "description": "Insira as suas credenciais da API Tuya Cloud.",
+        "description": "Configure as credenciais de acesso e as opções do hub.",
         "data": {
           "access_id": "ID de acesso Tuya",
           "access_secret": "Chave secreta de acesso Tuya",
@@ -264,7 +264,7 @@
       },
       "hub_settings": {
         "title": "Configurações do Hub",
-        "description": "Modificar credenciais de acesso e intervalos de atualização de dados.",
+        "description": "Modifique as credenciais de acesso e as opções do hub.",
         "data": {
           "access_id": "ID de acesso Tuya",
           "access_secret": "Chave secreta de acesso Tuya",

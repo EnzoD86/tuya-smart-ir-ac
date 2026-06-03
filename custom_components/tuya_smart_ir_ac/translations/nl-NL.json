@@ -122,11 +122,12 @@
     "step": {
       "hub_settings": {
         "title": "Hub-instellingen",
-        "description": "Voer uw Tuya Cloud API-inloggegevens in.",
+        "description": "Configureer de toegangsgegevens en hubopties.",
         "data": {
           "access_id": "Tuya Access ID",
           "access_secret": "Tuya Access Secret",
           "country": "Tuya land API",
+          "enable_pulsar": "Tuya Pulsar Stream activeren",
           "climate_update_interval": "Airconditioning update-interval",
           "sensor_update_interval": "Temperatuur-/vochtigheidssensor update-interval"
         }
@@ -264,11 +265,12 @@
       },
       "hub_settings": {
         "title": "Hub-instellingen",
-        "description": "Wijzig de toegangsgegevens en de intervallen voor het bijwerken van gegevens.",
+        "description": "Wijzig de toegangsgegevens en hubopties.",
         "data": {
           "access_id": "Tuya Access ID",
           "access_secret": "Tuya Access Secret",
           "country": "Tuya land API",
+          "enable_pulsar": "Tuya Pulsar Stream activeren",
           "climate_update_interval": "Airconditioning update-interval",
           "sensor_update_interval": "Temperatuur-/vochtigheidssensor update-interval"
         }

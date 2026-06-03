@@ -122,7 +122,7 @@
     "step": {
       "hub_settings": {
         "title": "Hub Ayarları",
-        "description": "Tuya Cloud API kimlik bilgilerinizi girin.",
+        "description": "Erişim kimlik bilgilerini ve merkez seçeneklerini yapılandırın.",
         "data": {
           "access_id": "Tuya Access ID",
           "access_secret": "Tuya Access Secret",
@@ -264,7 +264,7 @@
       },
       "hub_settings": {
         "title": "Hub Ayarları",
-        "description": "Erişim kimlik bilgilerini ve veri güncelleme aralıklarını değiştirin.",
+        "description": "Erişim kimlik bilgilerini ve merkez seçeneklerini değiştirin.",
         "data": {
           "access_id": "Tuya Access ID",
           "access_secret": "Tuya Access Secret",
