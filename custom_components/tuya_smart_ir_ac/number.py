@@ -84,7 +84,7 @@ class TuyaPresetTemperatureNumber(RestoreNumber, TuyaClimateEntity):
         self._attr_native_min_value = self._min_temp
         self._attr_native_max_value = self._max_temp
         self._attr_native_step = self._temp_step
-        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+        self._attr_native_unit_of_measurement = self._temperature_unit
 
     async def async_added_to_hass(self) -> None:
         """Handle entity data restoration and sync with central hvac_presets."""
@@ -122,7 +122,7 @@ class TuyaTemperatureSetPointNumber(NumberEntity, CoordinatorEntity, TuyaClimate
         self._attr_native_min_value = self._min_temp
         self._attr_native_max_value = self._max_temp
         self._attr_native_step = self._temp_step
-        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+        self._attr_native_unit_of_measurement = self._temperature_unit
 
     @property
     def native_value(self) -> float | None:

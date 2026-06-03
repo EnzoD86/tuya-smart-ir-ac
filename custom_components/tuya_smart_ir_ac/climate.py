@@ -53,7 +53,7 @@ class TuyaClimate(ClimateEntity, RestoreEntity, CoordinatorEntity, TuyaClimateEn
         super().__init__(runtime_data.climate_coordinator)
 
         self._attr_has_entity_name = True
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_temperature_unit = self._temperature_unit
         self._attr_icon = "mdi:air-conditioner"
         self._attr_min_temp = self._min_temp
         self._attr_max_temp = self._max_temp

@@ -47,11 +47,6 @@ from .const import (
     SUPPORTED_FAN_MODES,
     PRESET_TEMP_HVAC_MODE,
     PRESET_FAN_HVAC_MODE,
-    ENTITY_HVAC_MODE,
-    ENTITY_FAN_MODE,
-    ENTITY_TEMPERATURE_SETPOINT,
-    ENTITY_CURRENT_TEMPERATURE,
-    ENTITY_CURRENT_HUMIDITY,
     POWER_ON_NEVER,
     POWER_ON_ALWAYS,
     POWER_ON_ONLY_OFF,
@@ -99,6 +94,7 @@ class TuyaClimateEntity:
             manufacturer=MANUFACTURER,
             model=CLIMATE_MODEL,
         )
+        self._temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def available(self) -> bool:
@@ -230,7 +226,7 @@ class TuyaClimateEntity:
 
         if convert:
             unit = sensor_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            return convert_temperature(value, unit, self.get_temperature_unit_of_measurement())
+            return convert_temperature(value, unit, self._temperature_unit)
 
         return value
 
