@@ -42,13 +42,16 @@ Before configuring the integration via the UI, you need to collect your cloud cr
 ### 2. Enable Tuya Pulsar & Messaging Rules (Required for Real-Time Updates)
 By default, Tuya Cloud does not forward event messages to the WebSocket queue unless explicitly instructed. You **must** configure these settings, otherwise the real-time PUSH stream will remain completely silent.
 
-1. On the [Tuya IoT Platform](https://platform.tuya.com), look at the left main sidebar and navigate to **Cloud** -> **Message Service**.
-2. If prompted, select your newly created Cloud Project from the dropdown at the top.
-3. Locate the **Pulsar** status toggle on the screen and ensure it is **Enabled / Active**.
-4. Switch to the **Messaging Rules** tab right next to it.
-5. Click **Create Rule** (or click edit on your default rule) and ensure the main switch for the rule is turned **ON**.
-6. Under the **Message Type / Event Filtering** settings, make sure that at least the **`statusReport`** checkbox is selected. 
-7. Save the changes and verify that the rule status reads **Enabled**.
+1. Log into the **Tuya IoT Platform**, look at the left main sidebar and navigate to **Cloud** -> **Development** -> Select your project -> **Message Service** tab.
+2. Ensure that the main Message Service toggle switch at the top is turned **ON (Enabled)**.
+3. Switch to the **Production Environment** tab. *Note: Home Assistant completely ignores the Test Environment.*
+4. Under the **Messaging Rules / Subscriptions** section, ensure you have explicitly enabled the following message types (**BizCode**):
+   * `devicePropertyMessage` (Device Property Message) — Crucial for climate state and telemetry updates.
+   * `statusReport` (Status Report) — Crucial for real-time reporting.
+   * `deviceEventMessage` (Device Event Message)
+   * `deviceActionResponseMessage` (Device Action Response Message)
+
+> 💡 **Tip:** If these are already checked but the stream is still silent, try unchecking them, saving, and re-checking them to force Tuya to rebuild the routing rules.
 
 ---
 
