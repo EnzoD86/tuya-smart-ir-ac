@@ -1,6 +1,5 @@
 from typing import Any
 
-from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.const import (
@@ -257,13 +256,16 @@ class TuyaClimateEntity:
         """Set HVAC mode for the climate device via coordinator service."""
         if hvac_mode is HVACMode.OFF:
             await self.coordinator.async_turn_off(self._infrared_id, self._climate_id)
+            return
+
+        temperature = self.get_hvac_temperature(hvac_mode)
+        fan_mode = self.get_hvac_fan_mode(hvac_mode)
+
+        if self.get_hvac_power_on(self._current_hvac_mode):
+            await self.coordinator.async_turn_on_with_hvac_mode(
+                self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode
+            )
         else:
-            temperature = self.get_hvac_temperature(hvac_mode)
-            fan_mode = self.get_hvac_fan_mode(hvac_mode)
-
-            if self.get_hvac_power_on(self._current_hvac_mode):
-                await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
-
             await self.coordinator.async_set_hvac_mode(
                 self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode
             )
@@ -277,23 +279,33 @@ class TuyaClimateEntity:
                 fan_mode = self.get_hvac_fan_mode(hvac_mode)
 
                 if self.get_hvac_power_on(self._current_hvac_mode):
-                    await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
-                    
-                await self.coordinator.async_set_hvac_mode(
-                    self._infrared_id, self._climate_id, hvac_mode, value, fan_mode
-                )
+                    await self.coordinator.async_turn_on_with_hvac_mode(
+                        self._infrared_id, self._climate_id, hvac_mode, value, fan_mode
+                    )
+                else:
+                    await self.coordinator.async_set_hvac_mode(
+                        self._infrared_id, self._climate_id, hvac_mode, value, fan_mode
+                    )
         else:
             if self.get_temp_power_on(self._current_hvac_mode):
-                await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
-                
-            await self.coordinator.async_set_temperature(self._infrared_id, self._climate_id, value)
+                await self.coordinator.async_turn_on_with_temperature(
+                    self._infrared_id, self._climate_id, value
+                )
+            else:
+                await self.coordinator.async_set_temperature(
+                    self._infrared_id, self._climate_id, value
+                )
 
     async def async_execute_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode for the climate device via coordinator service."""
         if self.get_fan_power_on(self._current_hvac_mode):
-            await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
-
-        await self.coordinator.async_set_fan_mode(self._infrared_id, self._climate_id, fan_mode)
+            await self.coordinator.async_turn_on_with_fan_mode(
+                self._infrared_id, self._climate_id, fan_mode
+            )
+        else:
+            await self.coordinator.async_set_fan_mode(
+                self._infrared_id, self._climate_id, fan_mode
+            )
 
 
 class TuyaSensorEntity:
