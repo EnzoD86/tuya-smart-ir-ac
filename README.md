@@ -1,5 +1,9 @@
 # Tuya Smart IR AC Integration for Home Assistant
 
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
+[![Stable](https://img.shields.io/github/v/release/EnzoD86/tuya-smart-ir-ac)](https://github.com/EnzoD86/tuya-smart-ir-ac/releases/latest)
+[![Donate](https://img.shields.io/badge/donate-BuyMeCoffee-yellow.svg)](https://www.buymeacoffee.com/enzod86)
+
 This integration allows you to control Air Conditioners and generic infrared devices managed via a Tuya Smart IR Hub using the Tuya IoT Cloud Platform. It provides real-time status updates and local-like responsiveness via the Tuya Pulsar messaging service.
 
 With this integration, you can easily control and manage:
@@ -38,7 +42,7 @@ The easiest way to install this integration and receive automatic updates is thr
 
 Before configuring the integration in Home Assistant, you must set up a cloud project on the Tuya IoT Platform to retrieve your API credentials.
 
-### 1. Create a Cloud Project
+#### 1. Create a Cloud Project
 1. Log into the [Tuya IoT Development Platform](https://platform.tuya.com).
 2. From the left-hand sidebar, navigate to **Cloud** ➔ **Project Management**.
 3. Click **Create Cloud Project** (or select an existing one).
@@ -51,7 +55,7 @@ Before configuring the integration in Home Assistant, you must set up a cloud pr
 6. On the next screen (**Authorize API Services** wizard), ensure that **IoT Core** and **IR Control Hub Open Services** are checked.
 7. Click **Authorize**.
 
-### 2. Link your Smart Life App Account
+#### 2. Link your Smart Life App Account
 To see your physical devices in the cloud project, you need to link your mobile application account.
 1. On your project page, navigate to the **Devices** tab.
 2. Click **Link App Account** (do *not* use "Link My App").
@@ -60,13 +64,13 @@ To see your physical devices in the cloud project, you need to link your mobile 
 5. Confirm the authorization on your phone.
 6. Your account is now linked. You will see a list of your devices under the project. **Take note of your Device IDs here**, as you will need them during the Home Assistant setup.
 
-### 3. Retrieve Credentials
+#### 3. Retrieve Credentials
 1. Navigate back to the project **Overview** tab.
 2. Copy and save your **Access ID**, **Access Secret**, and your **Data Center** region (e.g., Europe, Western America).
 
 ---
 
-## Step 2: Enable Tuya Pulsar Service (For Real-Time Updates)
+### Step 2: Enable Tuya Pulsar Service (For Real-Time Updates)
 
 By default, the Tuya Cloud does not forward real-time event messages to the integration unless explicitly instructed. If you skip this step, your entity states in Home Assistant will not update immediately when changes happen outside of HA.
 
@@ -84,13 +88,13 @@ By default, the Tuya Cloud does not forward real-time event messages to the inte
 
 ---
 
-## Step 3: Home Assistant Configuration
+### Step 3: Home Assistant Configuration
 
 Configuration is done **exclusively via the Home Assistant User Interface**. No changes to `configuration.yaml` are required.
 
  Setup follows a two-part flow: First, you add the **Tuya Smart IR Hub**, and then you add individual **AC / Generic Devices** to that hub.
 
-### 1. Adding the Hub
+#### 1. Adding the Hub
 1. In Home Assistant, navigate to **Settings** ➔ **Devices & Services**.
 2. Click **Add Integration** in the bottom right corner.
 3. Search for **Tuya Smart IR AC** and select it.
@@ -103,7 +107,7 @@ Configuration is done **exclusively via the Home Assistant User Interface**. No 
 
 [![Add Integration to your Home Assistant instance.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tuya_smart_ir_ac)
 
-### 2. Adding Air Conditioners and Devices
+#### 2. Adding Air Conditioners and Devices
 Once the main hub is added, you can populate it with your configured IR sub-devices:
 
 1. Locate the **Tuya Smart IR Hub** in your **Devices & Services** dashboard.
@@ -117,5 +121,27 @@ Once the main hub is added, you can populate it with your configured IR sub-devi
 
 Your new climate entity is now ready for use! 
 
-### Modifying Existing Devices
+#### Modifying Existing Devices
 If you ever need to adjust names, IDs, or settings, simply re-run the configuration wizard by clicking **Configure** on the integration page and choosing the appropriate management sub-menu.
+
+---
+
+## Debugging
+
+If you encounter issues or want to inspect the real-time WebSocket connection traffic, you can enable detailed debug logging by adding the following block to your `configuration.yaml`:
+
+```yaml
+logger:
+  default: info
+  logs:
+    custom_components.tuya_smart_ir_ac: debug
+```
+Home Assistant needs to be restarted after this change.
+
+## Contributions are welcome!
+If you have ideas to contribute to the project, open a pull request and we will evaluate together how to implement the improvement. Thanks!
+
+## Support me
+I dedicate my free time to the development and support for this integration, if you appreciate my work and want to support me, you can buy me a coffee. Thanks!
+
+<a href="https://www.buymeacoffee.com/enzod86" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
