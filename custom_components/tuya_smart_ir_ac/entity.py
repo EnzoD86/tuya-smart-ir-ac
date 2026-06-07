@@ -4,6 +4,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.const import (
     UnitOfTemperature,
+    Platform,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
 )
@@ -34,6 +35,7 @@ from .const import (
     CONF_FAN_POWER_ON,
     CONF_DRY_MIN_TEMP,
     CONF_DRY_MIN_FAN,
+    CONF_CUSTOM_POWER_ON,
     DEFAULT_MIN_TEMP,
     DEFAULT_MAX_TEMP,
     DEFAULT_PRECISION,
@@ -87,6 +89,7 @@ class TuyaClimateEntity:
         self._fan_power_on = compatibility.get(CONF_FAN_POWER_ON, DEFAULT_FAN_POWER_ON)
         self._dry_min_temp = compatibility.get(CONF_DRY_MIN_TEMP, DEFAULT_DRY_MIN_TEMP)
         self._dry_min_fan = compatibility.get(CONF_DRY_MIN_FAN, DEFAULT_DRY_MIN_FAN)
+        self._custom_power_on = compatibility.get(CONF_CUSTOM_POWER_ON)
 
         base_id = f"{self._infrared_id}_{self._climate_id}"
         self._attr_unique_id = f"{base_id}_{sub_entity_type}" if sub_entity_type else base_id
@@ -258,6 +261,7 @@ class TuyaClimateEntity:
     async def async_handle_turn_on(self) -> None:
         """Turn on the climate device power via coordinator service."""
         await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
+        await self._async_trigger_custom_on_if_configured()
 
     async def async_handle_turn_off(self) -> None:
         """Turn off the climate device power via coordinator service."""
@@ -273,6 +277,7 @@ class TuyaClimateEntity:
         fan_mode = self.get_hvac_fan_mode(hvac_mode)
 
         if self.get_hvac_power_on(self._current_hvac_mode):
+            await self._async_trigger_custom_on_if_configured()
             await self.coordinator.async_turn_on_with_hvac_mode(
                 self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode
             )
@@ -290,6 +295,7 @@ class TuyaClimateEntity:
                 fan_mode = self.get_hvac_fan_mode(hvac_mode)
 
                 if self.get_hvac_power_on(self._current_hvac_mode):
+                    await self._async_trigger_custom_on_if_configured()
                     await self.coordinator.async_turn_on_with_hvac_mode(
                         self._infrared_id, self._climate_id, hvac_mode, value, fan_mode
                     )
@@ -299,6 +305,7 @@ class TuyaClimateEntity:
                     )
         else:
             if self.get_temp_power_on(self._current_hvac_mode):
+                await self._async_trigger_custom_on_if_configured()
                 await self.coordinator.async_turn_on_with_temperature(
                     self._infrared_id, self._climate_id, value
                 )
@@ -310,6 +317,7 @@ class TuyaClimateEntity:
     async def async_handle_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode for the climate device via coordinator service."""
         if self.get_fan_power_on(self._current_hvac_mode):
+            await self._async_trigger_custom_on_if_configured()
             await self.coordinator.async_turn_on_with_fan_mode(
                 self._infrared_id, self._climate_id, fan_mode
             )
@@ -317,6 +325,19 @@ class TuyaClimateEntity:
             await self.coordinator.async_set_fan_mode(
                 self._infrared_id, self._climate_id, fan_mode
             )
+
+    async def _async_trigger_custom_on_if_configured(self) -> None:
+        """Trigger the custom hardware alternative power-on button if configured."""
+        if not self._custom_power_on:
+            return
+
+        await self.hass.services.async_call(
+            domain=Platform.BUTTON,
+            service="press",
+            service_data={"entity_id": self._custom_power_on},
+            blocking=True
+        )
+
 
 class TuyaSensorEntity:
     """Base class for standalone environmental Temperature/Humidity sensor devices managed by this integration."""

@@ -206,7 +206,8 @@
               "temp_power_on": "Forçar ligar ao definir a temperatura",
               "fan_power_on": "Forçar ligar ao definir a velocidade da ventoinha",
               "dry_min_temp": "Definir temperatura mínima no modo desumidificar",
-              "dry_min_fan": "Definir velocidade mínima da ventoinha no modo desumidificar"
+              "dry_min_fan": "Definir velocidade mínima da ventoinha no modo desumidificar",
+              "custom_power_on": "Botão de ligar personalizado (Habilite APENAS se o ligar padrão falhar)"
             }
           }
         }
@@ -233,7 +234,8 @@
               "temp_power_on": "Forçar ligar ao definir a temperatura",
               "fan_power_on": "Forçar ligar ao definir a velocidade da ventoinha",
               "dry_min_temp": "Definir temperatura mínima no modo desumidificar",
-              "dry_min_fan": "Definir velocidade mínima da ventoinha no modo desumidificar"
+              "dry_min_fan": "Definir velocidade mínima da ventoinha no modo desumidificar",
+              "custom_power_on": "Botão de ligar personalizado (Habilite APENAS se o ligar padrão falhar)"
             }
           }
         }
