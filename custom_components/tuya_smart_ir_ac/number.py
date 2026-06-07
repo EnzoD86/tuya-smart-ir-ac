@@ -9,13 +9,9 @@ from homeassistant.components.number.const import (
     NumberDeviceClass,
     NumberMode
 )
-from homeassistant.const import (
-    EntityCategory,
-    UnitOfTemperature
-)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.components.climate import HVACMode
 
 from .const import (
     CONF_HVAC_PRESETS,
@@ -30,7 +26,10 @@ from .helpers import (
     clamp_to_boundaries
 )
 from .entity import TuyaClimateEntity
-from .models import HubConfigEntry, RuntimeData
+from .models import (
+    HubConfigEntry,
+    RuntimeData,
+)
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -88,7 +87,6 @@ class TuyaPresetTemperatureNumber(RestoreNumber, TuyaClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Handle entity data restoration and sync with central hvac_presets."""
-        await super().async_added_to_hass()
         last_number = await self.async_get_last_number_data()
         
         if valid_number_data(last_number):
@@ -127,10 +125,8 @@ class TuyaTemperatureSetPointNumber(NumberEntity, CoordinatorEntity, TuyaClimate
     @property
     def native_value(self) -> float | None:
         """Return target climate temperature setpoint value fetched from coordinator cache data."""
-        if self.coordinator.data and (data := self.coordinator.data.get(self._climate_id)):
-            return float(data.temperature) if data.temperature is not None else None
-        return None
+        return self._current_target_temperature
 
     async def async_set_native_value(self, value: float) -> None:
         """Transmit new target temperature setpoint using central execution logic."""
-        await self.async_execute_set_temperature(value)
+        await self.async_handle_set_temperature(value)

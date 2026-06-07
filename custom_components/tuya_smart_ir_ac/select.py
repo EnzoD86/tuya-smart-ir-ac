@@ -73,7 +73,6 @@ class TuyaPresetFanSelect(SelectEntity, RestoreEntity, TuyaClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Handle entity registry and restore previous state."""
-        await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
         
         if valid_sensor_state(last_state):
@@ -106,19 +105,12 @@ class TuyaHvacModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
 
     @property
     def current_option(self) -> str | None:
-        """Return the current HVAC mode option directly from the coordinator cache data."""
-        if self.coordinator.data and (data := self.coordinator.data.get(self._climate_id)):
-            if not data.power:
-                return HVACMode.OFF.value
-            
-            if data.hvac_mode:
-                return data.hvac_mode.value if isinstance(data.hvac_mode, HVACMode) else data.hvac_mode
-                
-        return HVACMode.OFF.value
+        """Return the current HVAC mode option directly from coordinator cache."""
+        return self._current_hvac_mode.value
 
     async def async_select_option(self, option: str) -> None:
         """Forward the selected option to the central execution logic."""
-        await self.async_execute_set_hvac_mode(HVACMode(option))
+        await self.async_handle_set_hvac_mode(HVACMode(option))
 
 
 class TuyaFanModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
@@ -137,10 +129,8 @@ class TuyaFanModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current fan mode option directly from the coordinator cache data."""
-        if self.coordinator.data and (data := self.coordinator.data.get(self._climate_id)):
-            return data.fan_mode
-        return None
+        return self._current_fan_mode
 
     async def async_select_option(self, option: str) -> None:
         """Forward the selected option to the central execution logic."""
-        await self.async_execute_set_fan_mode(option)
+        await self.async_handle_set_fan_mode(option)

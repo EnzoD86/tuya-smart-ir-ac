@@ -7,6 +7,7 @@ from dataclasses import (
 from typing import Any, ClassVar, TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.climate.const import HVACMode, FAN_AUTO
 
 from .tuya_connector import TuyaOpenAPI, TuyaOpenPulsar
 from .helpers import (
@@ -36,6 +37,15 @@ class RuntimeData:
     sensor_coordinator: TuyaSensorCoordinator | None = None
     ir_manager: TuyaIRManager | None = None
     hvac_presets: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class TuyaClimateFallbackData:
+    """Domain model mimicking TuyaClimateData for offline/startup fallbacks."""
+    power: bool = False
+    hvac_mode: HVACMode = HVACMode.OFF
+    temperature: float = 25.0
+    fan_mode: str = FAN_AUTO
 
 
 @dataclass(frozen=True)
