@@ -96,7 +96,6 @@ class TuyaClimateTemperatureSensor(SensorEntity, TuyaClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register state tracker listener upon entity addition to Home Assistant."""
-        await super().async_added_to_hass()
         self.async_track_sensor_states([self._temperature_sensor])
 
     @callback
@@ -125,7 +124,6 @@ class TuyaClimateHumiditySensor(SensorEntity, TuyaClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register state tracker listener upon entity addition to Home Assistant."""
-        await super().async_added_to_hass()
         self.async_track_sensor_states([self._humidity_sensor])
 
     @callback
@@ -151,9 +149,7 @@ class TuyaSensorTemperatureSensor(SensorEntity, CoordinatorEntity, TuyaSensorEnt
     @property
     def native_value(self) -> float | None:
         """Fetch ambient temperature value directly from coordinator data cache."""
-        if self.coordinator.data and (data := self.coordinator.data.get(self._device_id)):
-            return data.temp_current
-        return None
+        return self._current_temperature
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -177,9 +173,7 @@ class TuyaSensorHumiditySensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity
     @property
     def native_value(self) -> float | None:
         """Fetch ambient humidity value directly from coordinator data cache."""
-        if self.coordinator.data and (data := self.coordinator.data.get(self._device_id)):
-            return data.humidity_value
-        return None
+        return self._current_humidity
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -204,9 +198,7 @@ class TuyaSensorBatterySensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity)
     @property
     def native_value(self) -> float | None:
         """Fetch environmental sensor battery charge percentage directly from coordinator data cache."""
-        if self.coordinator.data and (data := self.coordinator.data.get(self._device_id)):
-            return data.battery_state
-        return None
+        return self._battery_state
 
     @callback
     def _handle_coordinator_update(self) -> None:

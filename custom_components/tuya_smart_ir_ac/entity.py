@@ -52,7 +52,8 @@ from .const import (
 )
 from .models import (
     RuntimeData,
-    TuyaClimateFallbackData
+    TuyaClimateData,
+    TuyaSensorData
 )
 from .helpers import (
     valid_sensor_state,
@@ -96,7 +97,6 @@ class TuyaClimateEntity:
             model=CLIMATE_MODEL,
         )
         self._temperature_unit = UnitOfTemperature.CELSIUS
-        self._fallback_data = TuyaClimateFallbackData()
 
     @property
     def available(self) -> bool:
@@ -108,11 +108,11 @@ class TuyaClimateEntity:
     # =========================================================================
 
     @property
-    def _device_climate_data(self) -> Any | None:
+    def _device_climate_data(self) -> TuyaClimateData | None:
         """Centralized accessor to safely extract the current device's data from the coordinator cache."""
-        if self.coordinator.data:
-            return self.coordinator.data.get(self._climate_id)
-        return self._fallback_data
+        if self.coordinator and self.coordinator.data:
+            return self.coordinator.data.get(self._climate_id, TuyaClimateData())
+        return TuyaClimateData()
 
     @property
     def _last_hvac_mode(self) -> HVACMode:
@@ -342,3 +342,25 @@ class TuyaSensorEntity:
     def available(self) -> bool:
         """Check environmental sensor availability using the coordinator data cache mapping."""
         return self.coordinator.is_available(self._device_id)
+    
+    @property
+    def _device_sensor_data(self) -> TuyaSensorData | None:
+        """Centralized accessor to safely extract the current device's data from the coordinator cache."""
+        if self.coordinator.data:
+            return self.coordinator.data.get(self._device_id)
+        return TuyaSensorData()
+    
+    @property
+    def _current_temperature(self) -> float:
+        """Centralized accessor to safely fetch the current temperature."""
+        return self._device_sensor_data.temp_current
+    
+    @property
+    def _current_humidity(self) -> float:
+        """Centralized accessor to safely fetch the current humidity."""
+        return self._device_sensor_data.humidity_value
+    
+    @property
+    def _battery_state(self) -> float:
+        """Centralized accessor to safely fetch the battery state."""
+        return self._device_sensor_data.battery_state

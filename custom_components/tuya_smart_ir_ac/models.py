@@ -7,9 +7,22 @@ from dataclasses import (
 from typing import Any, ClassVar, TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.components.climate.const import HVACMode, FAN_AUTO
+from homeassistant.components.climate.const import HVACMode
 
-from .tuya_connector import TuyaOpenAPI, TuyaOpenPulsar
+from .const import (
+    DEFAULT_POWER,
+    DEFAULT_HVAC_MODE,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_FAN_MODE,
+    DEFAULT_TEMP_UNIT,
+    DEFAULT_CURRENT_TEMPERATURE,
+    DEFAULT_CURRENT_HUMIDITY,
+    DEFAULT_BATTERY_STATE,
+)
+from .tuya_connector import (
+    TuyaOpenAPI,
+    TuyaOpenPulsar,
+)
 from .helpers import (
     hass_battery_state,
     hass_fan_mode,
@@ -17,7 +30,7 @@ from .helpers import (
     hass_temp_unit,
     hass_temperature,
     get_val,
-    normalize_tuya_payload
+    normalize_tuya_payload,
 )
 
 if TYPE_CHECKING:
@@ -40,15 +53,6 @@ class RuntimeData:
 
 
 @dataclass(frozen=True)
-class TuyaClimateFallbackData:
-    """Domain model mimicking TuyaClimateData for offline/startup fallbacks."""
-    power: bool = False
-    hvac_mode: HVACMode = HVACMode.OFF
-    temperature: float = 25.0
-    fan_mode: str = FAN_AUTO
-
-
-@dataclass(frozen=True)
 class TuyaAPIResult:
     """Universal immutable container wrapping any raw or parsed response from the Tuya API layer."""
     success: bool
@@ -64,22 +68,29 @@ class TuyaAPIResult:
         return ""
 
 
+
 @dataclass(frozen=True)
 class TuyaClimateData:
     """Domain model representing the operational state of an Infrared Air Conditioner."""
-    power: bool | None = None
-    hvac_mode: str | None = None
-    temperature: float | None = None
-    fan_mode: str | None = None
+    power: bool = DEFAULT_POWER
+    hvac_mode: HVACMode = DEFAULT_HVAC_MODE
+    temperature: float = DEFAULT_TEMPERATURE
+    fan_mode: str = DEFAULT_FAN_MODE
 
     @classmethod
     def from_raw_data(cls, data: dict[str, Any]) -> TuyaClimateData:
         """Parse raw single device operational state from Tuya Cloud into domain model."""
+        raw_power = data.get("powerOpen")
+        raw_hvac_mode = hass_hvac_mode(data.get("mode"))
+        raw_temperature = hass_temperature(data.get("temp"))
+        raw_fan_mode = hass_fan_mode(data.get("fan"))
+
+        # Use get_val helper to cleanly apply global defaults when parsed values are missing or invalid
         return cls(
-            power=data.get("powerOpen"),
-            hvac_mode=hass_hvac_mode(data.get("mode")),
-            temperature=hass_temperature(data.get("temp")),
-            fan_mode=hass_fan_mode(data.get("fan")),
+            power=get_val(raw_power, DEFAULT_POWER),
+            hvac_mode=get_val(raw_hvac_mode, DEFAULT_HVAC_MODE),
+            temperature=get_val(raw_temperature, DEFAULT_TEMPERATURE),
+            fan_mode=get_val(raw_fan_mode, DEFAULT_FAN_MODE),
         )
 
     @classmethod
@@ -97,12 +108,17 @@ class TuyaClimateData:
         """Update existing climate state from raw Pulsar status updates."""
         updates = {item["code"]: item["value"] for item in status_list}
 
+        raw_power = updates.get("power")
+        raw_hvac_mode = hass_hvac_mode(updates.get("mode"))
+        raw_temperature = hass_temperature(updates.get("temp"))
+        raw_fan_mode = hass_fan_mode(updates.get("wind"))
+
         return replace(
             current_instance,
-            power=get_val(updates.get("power"), current_instance.power),
-            hvac_mode=get_val(hass_hvac_mode(updates.get("mode")), current_instance.hvac_mode),
-            temperature=get_val(hass_temperature(updates.get("temp")), current_instance.temperature),
-            fan_mode=get_val(hass_fan_mode(updates.get("wind")), current_instance.fan_mode)
+            power=get_val(raw_power, current_instance.power),
+            hvac_mode=get_val(raw_hvac_mode, current_instance.hvac_mode),
+            temperature=get_val(raw_temperature, current_instance.temperature),
+            fan_mode=get_val(raw_fan_mode, current_instance.fan_mode),
         )
     
     @classmethod
@@ -110,7 +126,7 @@ class TuyaClimateData:
         cls,
         current_instance: TuyaClimateData,
         power: bool | None = None,
-        hvac_mode: str | None = None,
+        hvac_mode: HVACMode | None = None,
         temperature: float | None = None,
         fan_mode: str | None = None,
     ) -> TuyaClimateData:
@@ -160,10 +176,10 @@ class TuyaGenericData:
 @dataclass(frozen=True)
 class TuyaSensorData:
     """Domain model tracking environmental telemetry data from standalone multi-sensors."""
-    temp_unit_convert: str | None = None
-    temp_current: float | None = None
-    humidity_value: int | None = None
-    battery_state: str | None = None
+    temp_unit_convert: str = DEFAULT_TEMP_UNIT
+    temp_current: float = DEFAULT_CURRENT_TEMPERATURE
+    humidity_value: int = DEFAULT_CURRENT_HUMIDITY
+    battery_state: str | int = DEFAULT_BATTERY_STATE
 
     _STATIC_FIELDS: ClassVar[set[str]] = {"temp_unit_convert"}
     _DPS_CODES: ClassVar[list[str]] = []
@@ -171,14 +187,18 @@ class TuyaSensorData:
     @classmethod
     def from_raw_data(cls, data: dict[str, Any]) -> TuyaSensorData:
         """Extract and sanitize variable length property payload arrays into a fixed type schema."""
-        # Chiamata all'helper generico passato dal file esterno
         prop_map = normalize_tuya_payload(data.get("properties", []))
 
+        raw_temp_unit_convert = hass_temp_unit(prop_map.get("temp_unit_convert"))
+        raw_temp_current = hass_temperature(prop_map.get("temp_current"), convert=True)
+        raw_humidity_value = prop_map.get("humidity_value")
+        raw_battery_state = hass_battery_state(prop_map.get("battery_state"))
+
         return cls(
-            temp_unit_convert=hass_temp_unit(prop_map.get("temp_unit_convert")),
-            temp_current=hass_temperature(prop_map.get("temp_current"), convert=True),
-            humidity_value=prop_map.get("humidity_value"),
-            battery_state=hass_battery_state(prop_map.get("battery_state")),
+            temp_unit_convert=get_val(raw_temp_unit_convert, DEFAULT_TEMP_UNIT),
+            temp_current=get_val(raw_temp_current, DEFAULT_CURRENT_TEMPERATURE),
+            humidity_value=get_val(raw_humidity_value, DEFAULT_CURRENT_HUMIDITY),
+            battery_state=get_val(raw_battery_state, DEFAULT_BATTERY_STATE),
         )
 
     @classmethod
@@ -186,14 +206,18 @@ class TuyaSensorData:
         """Update existing sensor state from raw Pulsar status updates."""
         updates = normalize_tuya_payload(status_list)
 
+        raw_temp_current = hass_temperature(updates.get("temp_current"), convert=True)
+        raw_humidity_value = updates.get("humidity_value")
+        raw_battery_state = hass_battery_state(updates.get("battery_state"))
+
         return replace(
             current_instance,
             temp_unit_convert=current_instance.temp_unit_convert,
-            temp_current=get_val(hass_temperature(updates.get("temp_current"), convert=True), current_instance.temp_current),
-            humidity_value=get_val(updates.get("humidity_value"), current_instance.humidity_value),
-            battery_state=get_val(hass_battery_state(updates.get("battery_state")), current_instance.battery_state)
+            temp_current=get_val(raw_temp_current, current_instance.temp_current),
+            humidity_value=get_val(raw_humidity_value, current_instance.humidity_value),
+            battery_state=get_val(raw_battery_state, current_instance.battery_state)
         )
-    
+
     @classmethod
     def get_dps_codes(cls) -> list[str]:
         """Returns the names of fields that have a value (Cached Optimization)."""
