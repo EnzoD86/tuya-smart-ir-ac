@@ -207,7 +207,8 @@
               "temp_power_on": "Forza l'accensione quando si imposta la temperatura",
               "fan_power_on": "Forza l'accensione quando si imposta la velocità della ventola",
               "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione",
-              "dry_min_fan": "Imposta ventola al minimo in modalità deumidificazione"
+              "dry_min_fan": "Imposta ventola al minimo in modalità deumidificazione",
+              "custom_power_on": "Pulsante di accensione personalizzato (SOLO se l'accensione standard non funziona)"
             }
           }
         }
@@ -234,7 +235,8 @@
               "temp_power_on": "Forza l'accensione quando si imposta la temperatura",
               "fan_power_on": "Forza l'accensione quando si imposta la velocità della ventola",
               "dry_min_temp": "Imposta temperatura minima in modalità deumidificazione",
-              "dry_min_fan": "Imposta ventola al minimo in modalità deumidificazione"
+              "dry_min_fan": "Imposta ventola al minimo in modalità deumidificazione",
+              "custom_power_on": "Pulsante di accensione personalizzato (SOLO se l'accensione standard non funziona)"
             }
           }
         }

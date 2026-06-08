@@ -31,6 +31,7 @@ from .const import (
     CONF_ACCESS_SECRET,
     CONF_CLIMATE_UPDATE_INTERVAL,
     CONF_COMPATIBILITY_OPTIONS,
+    CONF_CUSTOM_POWER_ON,
     CONF_DEVICE_ID,
     CONF_DRY_MIN_FAN,
     CONF_DRY_MIN_TEMP,
@@ -783,6 +784,12 @@ def climate_data() -> dict[vol.Marker, Any]:
                     vol.Optional(
                         CONF_DRY_MIN_FAN, default=DEFAULT_DRY_MIN_FAN
                     ): BooleanSelector(),
+                    vol.Optional(CONF_CUSTOM_POWER_ON): EntitySelector(
+                        EntitySelectorConfig(
+                            domain=Platform.BUTTON,
+                            multiple=False,
+                        )
+                    )
                 }
             ),
             {"collapsed": True},

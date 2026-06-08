@@ -66,6 +66,7 @@ CONF_TEMP_POWER_ON = "temp_power_on"
 CONF_FAN_POWER_ON = "fan_power_on"
 CONF_DRY_MIN_TEMP = "dry_min_temp"
 CONF_DRY_MIN_FAN = "dry_min_fan"
+CONF_CUSTOM_POWER_ON = "custom_power_on"
 CONF_SENSOR_TYPES = "sensor_types"
 CONF_TEMP_UNIT = "temp_unit"
 

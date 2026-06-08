@@ -207,7 +207,8 @@
               "temp_power_on": "Beim Einstellen der Temperatur einschalten erzwingen",
               "fan_power_on": "Beim Einstellen der Ventilatorgeschwindigkeit einschalten erzwingen",
               "dry_min_temp": "Mindesttemperatur im Entfeuchtungsmodus festlegen",
-              "dry_min_fan": "Minimale Ventilatorgeschwindigkeit im Entfeuchtungsmodus festlegen"
+              "dry_min_fan": "Minimale Ventilatorgeschwindigkeit im Entfeuchtungsmodus festlegen",
+              "custom_power_on": "Benutzerdefinierte Einschalttaste (NUR wenn das standardmäßige Einschalten fehlschlägt)"
             }
           }
         }
@@ -234,7 +235,8 @@
               "temp_power_on": "Beim Einstellen der Temperatur einschalten erzwingen",
               "fan_power_on": "Beim Einstellen der Ventilatorgeschwindigkeit einschalten erzwingen",
               "dry_min_temp": "Mindesttemperatur im Entfeuchtungsmodus festlegen",
-              "dry_min_fan": "Minimale Ventilatorgeschwindigkeit im Entfeuchtungsmodus festlegen"
+              "dry_min_fan": "Minimale Ventilatorgeschwindigkeit im Entfeuchtungsmodus festlegen",
+              "custom_power_on": "Benutzerdefinierte Einschalttaste (NUR wenn das standardmäßige Einschalten fehlschlägt)"
             }
           }
         }
