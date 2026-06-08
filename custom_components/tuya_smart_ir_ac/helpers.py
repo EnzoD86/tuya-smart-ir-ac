@@ -18,6 +18,7 @@ def get_val(new_val, old_val):
     """Return new value if valid, otherwise return the old one."""
     return old_val if new_val is None or new_val == "" else new_val
 
+
 def clamp_to_boundaries(value: float, min_boundary: float, max_boundary: float) -> float:
     """Clamp a given numeric value strictly within the specified minimum and maximum configuration boundaries."""
     return max(min_boundary, min(value, max_boundary))

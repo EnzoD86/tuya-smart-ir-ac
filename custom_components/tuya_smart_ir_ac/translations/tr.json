@@ -206,7 +206,8 @@
               "temp_power_on": "Sıcaklığı ayarlarken açmaya zorlayın",
               "fan_power_on": "Fan hızını ayarlarken gücü açmaya zorlayın",
               "dry_min_temp": "Nem alma modunda minimum sıcaklığı ayarla",
-              "dry_min_fan": "Nem alma modunda minimum fan hızını ayarla"
+              "dry_min_fan": "Nem alma modunda minimum fan hızını ayarla",
+              "custom_power_on": "Özel açma düğmesi (SADECE standart açma düğmesi başarısız olursa etkinleştirin)"
             }
           }
         }
@@ -233,7 +234,8 @@
               "temp_power_on": "Sıcaklığı ayarlarken açmaya zorlayın",
               "fan_power_on": "Fan hızını ayarlarken gücü açmaya zorlayın",
               "dry_min_temp": "Nem alma modunda minimum sıcaklığı ayarla",
-              "dry_min_fan": "Nem alma modunda minimum fan hızını ayarla"
+              "dry_min_fan": "Nem alma modunda minimum fan hızını ayarla",
+              "custom_power_on": "Özel açma düğmesi (SADECE standart açma düğmesi başarısız olursa etkinleştirin)"
             }
           }
         }

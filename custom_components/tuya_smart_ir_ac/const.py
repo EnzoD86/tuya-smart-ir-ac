@@ -66,6 +66,7 @@ CONF_TEMP_POWER_ON = "temp_power_on"
 CONF_FAN_POWER_ON = "fan_power_on"
 CONF_DRY_MIN_TEMP = "dry_min_temp"
 CONF_DRY_MIN_FAN = "dry_min_fan"
+CONF_CUSTOM_POWER_ON = "custom_power_on"
 CONF_SENSOR_TYPES = "sensor_types"
 CONF_TEMP_UNIT = "temp_unit"
 
@@ -88,6 +89,19 @@ DEFAULT_FAN_POWER_ON = POWER_ON_NEVER
 DEFAULT_DRY_MIN_TEMP = False
 DEFAULT_DRY_MIN_FAN = False
 DEFAULT_ENABLE_PULSAR = False
+
+# Climate default fallbacks
+DEFAULT_POWER = False
+DEFAULT_HVAC_MODE = HVACMode.OFF
+DEFAULT_TEMPERATURE = 25.0
+DEFAULT_FAN_MODE = FAN_AUTO
+
+# Sensor defaults fallbacks
+DEFAULT_TEMP_UNIT = "c"
+DEFAULT_CURRENT_TEMPERATURE = 0.0
+DEFAULT_CURRENT_HUMIDITY = 0
+DEFAULT_BATTERY_STATE = "middle"
+
 
 # Frontend Selection/Validation Lists
 SUPPORTED_POWER_ON_MODES = [

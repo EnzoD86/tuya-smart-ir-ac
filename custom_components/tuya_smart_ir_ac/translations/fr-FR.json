@@ -207,7 +207,8 @@
               "temp_power_on": "Forcer l'allumage lors du réglage de la température",
               "fan_power_on": "Forcer l'allumage lors du réglage de la vitesse du ventilateur",
               "dry_min_temp": "Définir la température minimale en mode déshumidification",
-              "dry_min_fan": "Définir la vitesse minimale du ventilateur en mode déshumidification"
+              "dry_min_fan": "Définir la vitesse minimale du ventilateur en mode déshumidification",
+              "custom_power_on": "Bouton de mise sous tension personnalisé (UNIQUEMENT si le bouton de mise sous tension standard ne fonctionne pas)"
             }
           }
         }
@@ -234,7 +235,8 @@
               "temp_power_on": "Forcer l'allumage lors du réglage de la température",
               "fan_power_on": "Forcer l'allumage lors du réglage de la vitesse du ventilateur",
               "dry_min_temp": "Définir la température minimale en mode déshumidification",
-              "dry_min_fan": "Définir la vitesse minimale du ventilateur en mode déshumidification"
+              "dry_min_fan": "Définir la vitesse minimale du ventilateur en mode déshumidification",
+              "custom_power_on": "Bouton de mise sous tension personnalisé (UNIQUEMENT si le bouton de mise sous tension standard ne fonctionne pas)"
             }
           }
         }

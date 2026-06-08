@@ -207,7 +207,8 @@
               "temp_power_on": "Forceren inschakelen bij instellen temperatuur",
               "fan_power_on": "Forceren inschakelen bij instellen ventilatorsnelheid",
               "dry_min_temp": "Minimale temperatuur instellen in ontvochtigingsmodus",
-              "dry_min_fan": "Minimale ventilatorsnelheid instellen in ontvochtigingsmodus"
+              "dry_min_fan": "Minimale ventilatorsnelheid instellen in ontvochtigingsmodus",
+              "custom_power_on": "Aangepaste aan-knop (ALLEEN inschakelen als standaard aan-knop faalt)"
             }
           }
         }
@@ -234,7 +235,8 @@
               "temp_power_on": "Forceren inschakelen bij instellen temperatuur",
               "fan_power_on": "Forceren inschakelen bij instellen ventilatorsnelheid",
               "dry_min_temp": "Minimale temperatuur instellen in ontvochtigingsmodus",
-              "dry_min_fan": "Minimale ventilatorsnelheid instellen in ontvochtigingsmodus"
+              "dry_min_fan": "Minimale ventilatorsnelheid instellen in ontvochtigingsmodus",
+              "custom_power_on": "Aangepaste aan-knop (ALLEEN inschakelen als standaard aan-knop faalt)"
             }
           }
         }
