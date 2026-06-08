@@ -260,8 +260,8 @@ class TuyaClimateEntity:
 
     async def async_handle_turn_on(self) -> None:
         """Turn on the climate device power via coordinator service."""
-        await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
         await self._async_trigger_custom_on_if_configured()
+        await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
 
     async def async_handle_turn_off(self) -> None:
         """Turn off the climate device power via coordinator service."""
