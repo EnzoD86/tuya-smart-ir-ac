@@ -5,6 +5,14 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     HVACMode,
 )
+from homeassistant.components.climate.const import (
+    PRESET_NONE,
+    PRESET_HOME,
+    PRESET_SLEEP,
+    PRESET_ECO,
+    PRESET_COMFORT,
+    PRESET_AWAY,
+)
 from homeassistant.const import Platform, UnitOfTemperature
 
 # Core Integration Setup
@@ -13,6 +21,7 @@ MANUFACTURER = "Tuya"
 CLIMATE_MODEL = "IR Air Conditioning"
 GENERIC_MODEL = "IR Remote Control"
 SENSOR_MODEL = "T & H Sensor"
+TEST_MODE = True
 
 # Platforms supported by this integration
 PLATFORMS = [
@@ -58,7 +67,9 @@ CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_STEP = "temp_step"
 CONF_HVAC_MODES = "hvac_modes"
 CONF_FAN_MODES = "fan_modes"
+CONF_PRESET_MODES = "preset_modes"
 CONF_HVAC_PRESETS = "hvac_presets"
+CONF_GLOBAL_PRESETS = "global_presets"
 CONF_OPTIONAL_ENTITIES = "optional_entities"
 CONF_COMPATIBILITY_OPTIONS = "compatibility_options"
 CONF_HVAC_POWER_ON = "hvac_power_on"
@@ -102,6 +113,28 @@ DEFAULT_CURRENT_TEMPERATURE = 0.0
 DEFAULT_CURRENT_HUMIDITY = 0
 DEFAULT_BATTERY_STATE = "middle"
 
+DEFAULT_GLOBAL_PRESETS = {
+    PRESET_HOME: {
+        HVACMode.COOL: {"temp": 26.0, "fan": FAN_AUTO},
+        HVACMode.HEAT: {"temp": 21.0, "fan": FAN_AUTO}
+    },
+    PRESET_SLEEP: {
+        HVACMode.COOL: {"temp": 27.0, "fan": FAN_LOW},
+        HVACMode.HEAT: {"temp": 20.0, "fan": FAN_LOW}
+    },
+    PRESET_ECO: {
+        HVACMode.COOL: {"temp": 27.0, "fan": FAN_MEDIUM},
+        HVACMode.HEAT: {"temp": 20.0, "fan": FAN_MEDIUM}
+    },
+    PRESET_COMFORT: {
+        HVACMode.COOL: {"temp": 25.0, "fan": FAN_MEDIUM},
+        HVACMode.HEAT: {"temp": 22.0, "fan": FAN_MEDIUM}
+    },
+    PRESET_AWAY: {
+        HVACMode.COOL: {"temp": 28.0, "fan": FAN_LOW},
+        HVACMode.HEAT: {"temp": 19.0, "fan": FAN_LOW}
+    }
+}
 
 # Frontend Selection/Validation Lists
 SUPPORTED_POWER_ON_MODES = [
@@ -126,6 +159,15 @@ SUPPORTED_FAN_MODES = [
     FAN_HIGH,
 ]
 
+SUPPORTED_PRESET_MODES = [
+    PRESET_NONE,
+    PRESET_HOME,
+    PRESET_SLEEP,
+    PRESET_ECO,
+    PRESET_COMFORT,    
+    PRESET_AWAY,
+]
+
 SUPPORTED_HVAC_PRESETS = [
     PRESET_TEMP_HVAC_MODE,
     PRESET_FAN_HVAC_MODE,
@@ -144,6 +186,19 @@ SUPPORTED_OPTIONAL_ENTITIES = [
     ENTITY_CURRENT_TEMPERATURE,
     ENTITY_CURRENT_HUMIDITY,
 ]
+
+# Translation keys
+TRANSLATION_KEY_HVAC_MODE = "hvac_mode"
+TRANSLATION_KEY_FAN_MODE = "fan_mode"
+TRANSLATION_KEY_TEMPERATURE = "temperature"
+TRANSLATION_KEY_HVAC_MODES = "hvac_modes"
+TRANSLATION_KEY_FAN_MODES = "fan_modes"
+TRANSLATION_KEY_PRESET_MODES = "presets_modes"
+TRANSLATION_KEY_COUNTRIES = "countries"
+TRANSLATION_KEY_HVAC_PRESETS = "hvac_presets"
+TRANSLATION_KEY_OPTIONAL_ENTITIES = "optional_entities"
+TRANSLATION_KEY_POWER_ON_MODES = "power_on_modes"
+
 
 # Tuya API Mappings
 BATTERY_LEVELS = {

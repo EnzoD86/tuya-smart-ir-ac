@@ -14,7 +14,9 @@ from .const import (
     CONF_OPTIONAL_ENTITIES,
     ENTITY_HVAC_MODE,
     ENTITY_FAN_MODE,
-    PRESET_FAN_HVAC_MODE
+    PRESET_FAN_HVAC_MODE,
+    TRANSLATION_KEY_HVAC_MODE,
+    TRANSLATION_KEY_FAN_MODE,
 )
 from .helpers import valid_sensor_state
 from .entity import TuyaClimateEntity
@@ -66,7 +68,7 @@ class TuyaPresetFanSelect(SelectEntity, RestoreEntity, TuyaClimateEntity):
         TuyaClimateEntity.__init__(self, config_data, runtime_data, PRESET_FAN_HVAC_MODE)
 
         self._attr_has_entity_name = True
-        self._attr_translation_key = f"{PRESET_FAN_HVAC_MODE}"
+        self._attr_translation_key = f"{TRANSLATION_KEY_FAN_MODE}"
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_icon = "mdi:fan"
         self._attr_options = self._fan_modes
@@ -99,7 +101,7 @@ class TuyaHvacModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
         super().__init__(runtime_data.climate_coordinator)
 
         self._attr_has_entity_name = True
-        self._attr_translation_key = f"{ENTITY_HVAC_MODE}"
+        self._attr_translation_key = f"{TRANSLATION_KEY_HVAC_MODE}"
         self._attr_icon = "mdi:hvac"
         self._attr_options = self._hvac_modes
 
@@ -122,7 +124,7 @@ class TuyaFanModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
         super().__init__(runtime_data.climate_coordinator)
 
         self._attr_has_entity_name = True
-        self._attr_translation_key = f"{ENTITY_FAN_MODE}"
+        self._attr_translation_key = f"{TRANSLATION_KEY_FAN_MODE}"
         self._attr_icon = "mdi:fan"
         self._attr_options = self._fan_modes
 

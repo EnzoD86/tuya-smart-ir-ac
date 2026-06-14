@@ -49,6 +49,7 @@ class RuntimeData:
     climate_coordinator: TuyaClimateCoordinator | None = None
     sensor_coordinator: TuyaSensorCoordinator | None = None
     ir_manager: TuyaIRManager | None = None
+    global_presets: dict[str, dict[str, Any]] = field(default_factory=dict)
     hvac_presets: dict[str, Any] = field(default_factory=dict)
 
 

@@ -11,6 +11,7 @@ from homeassistant.const import (
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_LOW,
+    PRESET_NONE,
     HVACMode,
 )
 from .const import (
@@ -28,6 +29,7 @@ from .const import (
     CONF_TEMP_UNIT,
     CONF_HVAC_MODES,
     CONF_FAN_MODES,
+    CONF_PRESET_MODES,
     CONF_HVAC_PRESETS,
     CONF_COMPATIBILITY_OPTIONS,
     CONF_HVAC_POWER_ON,
@@ -81,6 +83,7 @@ class TuyaClimateEntity:
         self._temp_step = config_data.get(CONF_TEMP_STEP, DEFAULT_PRECISION)
         self._hvac_modes = config_data.get(CONF_HVAC_MODES, SUPPORTED_HVAC_MODES)
         self._fan_modes = config_data.get(CONF_FAN_MODES, SUPPORTED_FAN_MODES)
+        self._preset_modes = config_data.get(CONF_PRESET_MODES, [])
         self._preset_temp_hvac_mode = PRESET_TEMP_HVAC_MODE in config_data.get(CONF_HVAC_PRESETS, [])
         self._preset_fan_hvac_mode = PRESET_FAN_HVAC_MODE in config_data.get(CONF_HVAC_PRESETS, [])
         compatibility = config_data.get(CONF_COMPATIBILITY_OPTIONS, {})
@@ -100,6 +103,8 @@ class TuyaClimateEntity:
             model=CLIMATE_MODEL,
         )
         self._temperature_unit = UnitOfTemperature.CELSIUS
+        self._current_preset_mode = PRESET_NONE
+
 
     @property
     def available(self) -> bool:
@@ -254,6 +259,23 @@ class TuyaClimateEntity:
 
         return convert_to_float(sensor_state.state)
 
+    def update_preset_mode_from_state(self) -> None:
+        """Calculate and update the active preset matching real-time device configurations."""
+        data = self._device_climate_data
+        if not data or data.temperature is None or not data.fan_mode:
+            return
+        
+        for preset_name, mode_configs in self._runtime_data.global_presets.items():
+            if self._last_hvac_mode not in mode_configs:
+                continue
+
+            if mode_config := mode_configs.get(self._last_hvac_mode):
+                if mode_config.get("temp") == self._current_target_temperature and mode_config.get("fan") == self._current_fan_mode:
+                    self._current_preset_mode = preset_name
+                    return
+
+        self._current_preset_mode = PRESET_NONE
+
     # =========================================================================
     # CENTRALIZED SERVICE CALL HANDLERS
     # =========================================================================
@@ -325,6 +347,41 @@ class TuyaClimateEntity:
             await self.coordinator.async_set_fan_mode(
                 self._infrared_id, self._climate_id, fan_mode
             )
+
+    async def async_handle_set_preset_mode(self, preset_mode: str) -> None:
+        """Set preset mode for the climate device."""
+        self._current_preset_mode = preset_mode
+        if preset_mode == PRESET_NONE:
+            return
+
+        if (preset_config := self._runtime_data.global_presets.get(preset_mode)) is not None:
+            target_mode = self._last_hvac_mode
+
+            if target_mode not in preset_config:
+                #_LOGGER.warning(f"Preset '{preset_mode}' is not compatible with current HVAC mode '{target_mode}'. No action will be taken.")
+                return
+
+            mode_config = preset_config.get(target_mode)
+            target_temp = mode_config.get("temp")
+            target_fan = mode_config.get("fan")
+
+            if self.get_hvac_power_on(self._current_hvac_mode):
+                await self._async_trigger_custom_on_if_configured()
+                await self.coordinator.async_turn_on_with_hvac_mode(
+                    self._infrared_id, 
+                    self._climate_id, 
+                    target_mode,
+                    target_temp, 
+                    target_fan
+                )
+            else:
+                await self.coordinator.async_set_hvac_mode(
+                    self._infrared_id, 
+                    self._climate_id, 
+                    target_mode,
+                    target_temp, 
+                    target_fan
+                )
 
     async def _async_trigger_custom_on_if_configured(self) -> None:
         """Trigger the custom hardware alternative power-on button if configured."""
