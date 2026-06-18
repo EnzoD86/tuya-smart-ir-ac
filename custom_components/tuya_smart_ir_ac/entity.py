@@ -103,8 +103,6 @@ class TuyaClimateEntity:
             model=CLIMATE_MODEL,
         )
         self._temperature_unit = UnitOfTemperature.CELSIUS
-        self._current_preset_mode = PRESET_NONE
-
 
     @property
     def available(self) -> bool:
@@ -259,22 +257,17 @@ class TuyaClimateEntity:
 
         return convert_to_float(sensor_state.state)
 
-    def update_preset_mode_from_state(self) -> None:
-        """Calculate and update the active preset matching real-time device configurations."""
-        data = self._device_climate_data
-        if not data or data.temperature is None or not data.fan_mode:
-            return
-        
+    def get_preset_mode(self) -> str:
+        """Calculate and update the active preset matching real-time device configurations."""        
         for preset_name, mode_configs in self._runtime_data.global_presets.items():
             if self._last_hvac_mode not in mode_configs:
                 continue
 
             if mode_config := mode_configs.get(self._last_hvac_mode):
                 if mode_config.get("temp") == self._current_target_temperature and mode_config.get("fan") == self._current_fan_mode:
-                    self._current_preset_mode = preset_name
-                    return
+                    return preset_name
 
-        self._current_preset_mode = PRESET_NONE
+        return PRESET_NONE
 
     # =========================================================================
     # CENTRALIZED SERVICE CALL HANDLERS
@@ -350,7 +343,6 @@ class TuyaClimateEntity:
 
     async def async_handle_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode for the climate device."""
-        self._current_preset_mode = preset_mode
         if preset_mode == PRESET_NONE:
             return
 

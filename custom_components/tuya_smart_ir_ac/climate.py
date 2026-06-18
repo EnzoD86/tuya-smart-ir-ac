@@ -123,7 +123,7 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        return self._current_preset_mode
+        return self.get_preset_mode()
 
     async def async_added_to_hass(self) -> None:
         """Restore previous entity state and track source sensors."""
@@ -133,7 +133,6 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle state changes notified by the Hub coordinator."""
-        self.update_preset_mode_from_state()
         self.async_write_ha_state()
 
     @callback
