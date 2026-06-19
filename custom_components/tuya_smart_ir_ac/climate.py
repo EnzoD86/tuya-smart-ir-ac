@@ -105,20 +105,7 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
     @property
     def preset_modes(self) -> list[str] | None:
         """Return the list of available preset modes based on current HVAC mode."""
-        global_presets = self._runtime_data.global_presets
-
-        if not global_presets or not self._preset_modes:
-            return None
-
-        current_mode = self._last_hvac_mode
-        available_presets = [PRESET_NONE]
-
-        for preset_name in self._preset_modes:
-            hvac_configs = global_presets.get(preset_name)
-            if hvac_configs and current_mode in hvac_configs:
-                available_presets.append(preset_name)
-
-        return available_presets
+        return self.get_preset_modes()
 
     @property
     def preset_mode(self) -> str | None:
@@ -129,10 +116,12 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
         """Restore previous entity state and track source sensors."""
         await super().async_added_to_hass()
         self.async_track_sensor_states([self._temperature_sensor, self._humidity_sensor])
+        self.update_preset_history()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle state changes notified by the Hub coordinator."""
+        self.update_preset_history()
         self.async_write_ha_state()
 
     @callback

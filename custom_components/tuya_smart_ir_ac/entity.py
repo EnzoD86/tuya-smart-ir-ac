@@ -103,6 +103,7 @@ class TuyaClimateEntity:
             model=CLIMATE_MODEL,
         )
         self._temperature_unit = UnitOfTemperature.CELSIUS
+        self._last_valid_preset_hvac_mode = None
 
     @property
     def available(self) -> bool:
@@ -121,7 +122,7 @@ class TuyaClimateEntity:
         return TuyaClimateData()
 
     @property
-    def _last_hvac_mode(self) -> HVACMode:
+    def _real_hvac_mode(self) -> HVACMode:
         """Centralized accessor to fetch the current active HVAC mode from the coordinator state."""
         data = self._device_climate_data
         return data.hvac_mode
@@ -168,6 +169,12 @@ class TuyaClimateEntity:
             self.async_on_remove(
                 async_track_state_change_event(self.hass, valid_sensors, self._handle_sensor_state_change)
             )
+
+    def update_preset_history(self) -> None:
+        """Update the history of the last valid HVAC mode supporting presets."""
+        mode = self._real_hvac_mode
+        if mode in (HVACMode.COOL, HVACMode.HEAT):
+            self._last_valid_preset_hvac_mode = mode
 
     # =========================================================================
     # BUSINESS LOGIC HELPER METHODS
@@ -257,13 +264,36 @@ class TuyaClimateEntity:
 
         return convert_to_float(sensor_state.state)
 
+    def get_preset_modes(self) -> str:
+        """Return the list of available preset modes based on current HVAC mode."""    
+        global_presets = self._runtime_data.global_presets
+
+        if not global_presets or not self._preset_modes:
+            return None
+
+        current_mode = self._real_hvac_mode
+        if self._last_valid_preset_hvac_mode and self.hvac_mode is HVACMode.OFF:
+            current_mode = self._last_valid_preset_hvac_mode
+
+        available_presets = [PRESET_NONE]
+
+        for preset_name in self._preset_modes:
+            hvac_configs = global_presets.get(preset_name)
+            if hvac_configs and current_mode in hvac_configs:
+                available_presets.append(preset_name)
+
+        return available_presets
+    
     def get_preset_mode(self) -> str:
-        """Calculate and update the active preset matching real-time device configurations."""        
+        """Return the active preset matching real-time device configurations."""        
+        if self._current_hvac_mode is HVACMode.OFF:
+            return PRESET_NONE
+
         for preset_name, mode_configs in self._runtime_data.global_presets.items():
-            if self._last_hvac_mode not in mode_configs:
+            if self._real_hvac_mode not in mode_configs:
                 continue
 
-            if mode_config := mode_configs.get(self._last_hvac_mode):
+            if mode_config := mode_configs.get(self._real_hvac_mode):
                 if mode_config.get("temp") == self._current_target_temperature and mode_config.get("fan") == self._current_fan_mode:
                     return preset_name
 
@@ -343,14 +373,17 @@ class TuyaClimateEntity:
 
     async def async_handle_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode for the climate device."""
+        
         if preset_mode == PRESET_NONE:
             return
 
         if (preset_config := self._runtime_data.global_presets.get(preset_mode)) is not None:
-            target_mode = self._last_hvac_mode
+            target_mode = self._real_hvac_mode
+
+            if self._last_valid_preset_hvac_mode and self._current_hvac_mode is HVACMode.OFF:
+                target_mode = self._last_valid_preset_hvac_mode
 
             if target_mode not in preset_config:
-                #_LOGGER.warning(f"Preset '{preset_mode}' is not compatible with current HVAC mode '{target_mode}'. No action will be taken.")
                 return
 
             mode_config = preset_config.get(target_mode)
