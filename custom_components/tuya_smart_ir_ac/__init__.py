@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import voluptuous as vol
+from datetime import timedelta
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import HomeAssistant
 from homeassistant.components import persistent_notification
@@ -22,14 +23,17 @@ from .const import (
     CONF_TUYA_COUNTRY,
     CONF_CLIMATE_UPDATE_INTERVAL,
     CONF_SENSOR_UPDATE_INTERVAL,
+    CONF_GLOBAL_PRESETS,
     UPDATE_INTERVAL,
     TUYA_API_ENDPOINTS,
     TUYA_PULSAR_ENDPOINTS,
     DEFAULT_ENABLE_PULSAR,
+    DEFAULT_GLOBAL_PRESETS,
     DEVICE_TYPE_CLIMATES,
     DEVICE_TYPE_SENSORS,
     DEVICE_TYPE_GENERICS
 )
+from .helpers import merge_presets_with_defaults
 from .coordinator import TuyaClimateCoordinator, TuyaSensorCoordinator
 from .manager import TuyaIRManager
 from .models import HubConfigEntry, RuntimeData
@@ -132,12 +136,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
             hass.async_create_task(async_check_pulsar_connection(hass, entry, pulsar_client))
 
         # Save Runtime Data
+        runtime_presets = merge_presets_with_defaults(
+            saved_presets=entry.options.get(CONF_GLOBAL_PRESETS, {}),
+            defaults=DEFAULT_GLOBAL_PRESETS
+        )
+
         entry.runtime_data = RuntimeData(
             api_client=api_client,
             pulsar_client=pulsar_client,
             climate_coordinator=climate_coordinator,
             sensor_coordinator=sensor_coordinator,
-            ir_manager=TuyaIRManager(hass, entry, api_client)
+            ir_manager=TuyaIRManager(hass, entry, api_client),
+            global_presets=runtime_presets
         )
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -145,15 +155,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         _LOGGER.error("[%s] Error during Hub initialization, cleaning up sessions: %s", entry.title, ex)
 
         try:
-            await api_client.close()
+            if api_client:
+                await api_client.close()
         except Exception as api_err:
             _LOGGER.debug("[%s] Failed to close Tuya API client during abort: %s", entry.title, api_err)
 
-        if enable_pulsar:
-            try:
+        try:
+            if pulsar_client:
                 await pulsar_client.stop()
-            except Exception as pulsar_err:
-                _LOGGER.debug("[%s] Failed to stop Tuya Pulsar client during abort: %s", entry.title, pulsar_err)
+        except Exception as pulsar_err:
+            _LOGGER.debug("[%s] Failed to stop Tuya Pulsar client during abort: %s", entry.title, pulsar_err)
 
         raise
 
@@ -162,33 +173,74 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
     return True
 
 
+async def async_update_entry(hass: HomeAssistant, entry: HubConfigEntry) -> None:
+    """Handles updating options without destroying API sessions."""
+    _LOGGER.debug("[%s] Updating entry in progress...", entry.title)
+    
+    current_data = entry.runtime_data
+
+    new_secret = entry.data.get(CONF_ACCESS_SECRET, "")
+    expected_secret_bytes = new_secret.encode("utf-8")
+
+    new_country = entry.data.get(CONF_TUYA_COUNTRY, "")
+    expected_endpoint = TUYA_API_ENDPOINTS.get(new_country, "")
+
+    expected_climate_interval = timedelta(seconds=entry.data.get(CONF_CLIMATE_UPDATE_INTERVAL, UPDATE_INTERVAL))
+    expected_sensor_interval = timedelta(seconds=entry.data.get(CONF_SENSOR_UPDATE_INTERVAL, UPDATE_INTERVAL))
+
+    expected_enable_pulsar = entry.data.get(CONF_ENABLE_PULSAR, DEFAULT_ENABLE_PULSAR)
+
+    hub_changed = (
+        expected_secret_bytes != current_data.api_client.access_secret_bytes or
+        expected_endpoint != current_data.api_client.endpoint or
+        expected_climate_interval != current_data.climate_coordinator.update_interval or
+        expected_sensor_interval != current_data.sensor_coordinator.update_interval or
+        expected_enable_pulsar != (current_data.pulsar_client is not None)
+    )
+    
+    if hub_changed:
+        _LOGGER.debug("[%s] Tuya Hub modification detected. Force a full reboot.", entry.title)
+        await hass.config_entries.async_reload(entry.entry_id)
+        return
+
+    if entry.disabled_by is None:
+        device_registry = dr.async_get(hass)
+        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        for device_entry in devices:
+            device_registry.async_remove_device(device_entry.id)
+
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    runtime_presets = merge_presets_with_defaults(
+        saved_presets=entry.options.get(CONF_GLOBAL_PRESETS, {}),
+        defaults=DEFAULT_GLOBAL_PRESETS
+    )
+
+    entry.runtime_data = RuntimeData(
+        api_client=current_data.api_client,       
+        pulsar_client=current_data.pulsar_client, 
+        climate_coordinator=current_data.climate_coordinator,
+        sensor_coordinator=current_data.sensor_coordinator,
+        ir_manager=current_data.ir_manager,
+        global_presets=runtime_presets
+    )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
 async def async_unload_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
     """Unload a config entry and clean up active cloud sessions."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    
-    if unload_ok:
-        if entry.runtime_data:
-            if entry.runtime_data.api_client:
-                _LOGGER.debug("[%s] Closing Tuya API client session during unload.", entry.title)
-                await entry.runtime_data.api_client.close()
-            
-            if entry.runtime_data.pulsar_client:
-                _LOGGER.debug("[%s] Stopping Tuya Pulsar client session during unload.", entry.title)
-                await entry.runtime_data.pulsar_client.stop() 
 
-        if entry.disabled_by is None:
-            device_registry = dr.async_get(hass)
-            devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-            for device_entry in devices:
-                device_registry.async_remove_device(device_entry.id)
+    if unload_ok and entry.runtime_data:
+        if entry.runtime_data.api_client:
+            _LOGGER.debug("[%s] Closing Tuya API client session during unload.", entry.title)
+            await entry.runtime_data.api_client.close()
+
+        if entry.runtime_data.pulsar_client:
+            _LOGGER.debug("[%s] Stopping Tuya Pulsar client session during unload.", entry.title)
+            await entry.runtime_data.pulsar_client.stop() 
 
     return unload_ok
-
-
-async def async_update_entry(hass: HomeAssistant, entry: HubConfigEntry) -> None:
-    """Handle options update by reloading the entry integration flow."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
 
 async def _async_migrate_old_entries(hass: HomeAssistant, hub_entry: HubConfigEntry) -> None:
     """Migrate legacy independent device config entries into centralized Hub options dictionary."""

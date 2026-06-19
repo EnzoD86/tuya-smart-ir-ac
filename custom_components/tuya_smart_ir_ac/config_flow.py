@@ -9,6 +9,14 @@ from homeassistant.components.sensor.const import SensorDeviceClass
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.components.climate.const import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    HVACMode,
+    PRESET_NONE,
+)
 from homeassistant.helpers.selector import (
     BooleanSelector,
     EntitySelector,
@@ -38,12 +46,14 @@ from .const import (
     CONF_ENABLE_PULSAR,
     CONF_FAN_MODES,
     CONF_FAN_POWER_ON,
+    CONF_GLOBAL_PRESETS,
     CONF_HUMIDITY_SENSOR,
     CONF_HVAC_MODES,
     CONF_HVAC_POWER_ON,
     CONF_HVAC_PRESETS,
     CONF_INFRARED_ID,
     CONF_OPTIONAL_ENTITIES,
+    CONF_PRESET_MODES,
     CONF_SENSOR_TYPES,
     CONF_SENSOR_UPDATE_INTERVAL,
     CONF_TEMPERATURE_SENSOR,
@@ -53,14 +63,17 @@ from .const import (
     CONF_TEMP_STEP,
     CONF_TEMP_UNIT,
     CONF_TUYA_COUNTRY,
+    DEFAULT_FAN_MODE,
     DEFAULT_DRY_MIN_FAN,
     DEFAULT_DRY_MIN_TEMP,
     DEFAULT_ENABLE_PULSAR,
     DEFAULT_FAN_POWER_ON,
+    DEFAULT_GLOBAL_PRESETS,
     DEFAULT_HVAC_POWER_ON,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     DEFAULT_PRECISION,
+    DEFAULT_TEMPERATURE,
     DEFAULT_TEMP_POWER_ON,
     DEVICE_TYPE_CLIMATES,
     DEVICE_TYPE_GENERICS,
@@ -74,6 +87,14 @@ from .const import (
     SUPPORTED_HVAC_PRESETS,
     SUPPORTED_OPTIONAL_ENTITIES,
     SUPPORTED_POWER_ON_MODES,
+    SUPPORTED_PRESET_MODES,
+    TRANSLATION_KEY_COUNTRIES,
+    TRANSLATION_KEY_FAN_MODES,
+    TRANSLATION_KEY_HVAC_MODES,
+    TRANSLATION_KEY_HVAC_PRESETS,
+    TRANSLATION_KEY_OPTIONAL_ENTITIES,
+    TRANSLATION_KEY_POWER_ON_MODES,
+    TRANSLATION_KEY_PRESET_MODES,
     TUYA_API_ENDPOINTS,
     UPDATE_INTERVAL,
 )
@@ -81,6 +102,7 @@ from .models import (
     TuyaSensorData,
     TuyaAPIResult
 )
+from .helpers import merge_presets_with_defaults
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -188,57 +210,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self._next_action = None
         return self.async_show_menu(
             step_id="init",
-            menu_options=["device_management", "hub_settings"]
+            menu_options=["device_management", "presets_management",  "hub_settings"]
         )
-
-    async def async_step_device_management(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Display sub-menu filtering specific device category platforms."""
-        return self.async_show_menu(
-            step_id="device_management",
-            menu_options=["climate_management", "generic_management", "sensor_management", "back_to_init"]
-        )
-        
-    async def async_step_back_to_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Route the user backward to the core root entry menu."""
-        return await self.async_step_init()
-
-    async def async_step_climate_management(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Display management sub-menu for dynamic HVAC air conditioners."""
-        return self.async_show_menu(
-            step_id="climate_management",
-            menu_options=["add_climate", "edit_climate", "remove_climate", "back_to_devices"]
-        )
-        
-    async def async_step_generic_management(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Display management sub-menu for IR generic remotes."""
-        return self.async_show_menu(
-            step_id="generic_management",
-            menu_options=["add_generic", "remove_generic", "back_to_devices"]
-        )
-        
-    async def async_step_sensor_management(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Display management sub-menu for TH environmental hardware sensors."""
-        return self.async_show_menu(
-            step_id="sensor_management",
-            menu_options=["add_sensor", "remove_sensor", "back_to_devices"]
-        )
-
-    async def async_step_back_to_devices(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Route the user backward to the device category selection menu."""
-        return await self.async_step_device_management()
-
+    
     async def async_step_hub_settings(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -276,6 +250,38 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="hub_settings",
             data_schema=schema,
             errors=errors
+        )
+
+    async def async_step_device_management(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Display sub-menu filtering specific device category platforms."""
+        return self.async_show_menu(
+            step_id="device_management",
+            menu_options=["climate_management", "generic_management", "sensor_management", "back_to_init"]
+        )
+    
+    async def async_step_back_to_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Route the user backward to the core root entry menu."""
+        return await self.async_step_init()
+
+    async def async_step_back_to_devices(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Route the user backward to the device category selection menu."""
+        return await self.async_step_device_management()
+
+    # Climate device management flows
+
+    async def async_step_climate_management(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Display management sub-menu for dynamic HVAC air conditioners."""
+        return self.async_show_menu(
+            step_id="climate_management",
+            menu_options=["add_climate", "edit_climate", "remove_climate", "back_to_devices"]
         )
 
     async def async_step_add_climate(
@@ -355,7 +361,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
 
         schema = self.add_suggested_values_to_schema(
-            vol.Schema(climate_data()), climates[index]
+            vol.Schema(climate_data()), prepare_suggested_values(climates[index])
         )
 
         return self.async_show_form(
@@ -400,6 +406,130 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema({vol.Required("climate_id"): vol.In(options)})
         )
     
+    # Climate preset management flows
+    
+    async def async_step_presets_management(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Global preset selection preset and mode."""
+        if user_input is not None:
+            return await self.async_step_preset_configure(user_input)
+
+        available_presets = list(DEFAULT_GLOBAL_PRESETS.keys())
+        available_hvac_modes = list({
+            mode 
+            for preset_configs in DEFAULT_GLOBAL_PRESETS.values() 
+            for mode in preset_configs.keys()
+        })
+
+        return self.async_show_form(
+            step_id="presets_management",
+            last_step=False,
+            data_schema=vol.Schema({
+                vol.Required("preset"): SelectSelector(
+                    SelectSelectorConfig(
+                        options=available_presets,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key=TRANSLATION_KEY_PRESET_MODES
+                    )
+                ),
+                vol.Required("hvac_mode"): SelectSelector(
+                    SelectSelectorConfig(
+                        options=available_hvac_modes,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key=TRANSLATION_KEY_HVAC_MODES
+                    )
+                ),
+            })
+        )
+
+    async def async_step_preset_configure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Global preset setup and save."""
+        
+        preset_data = dict(self.config_entry.options.get(CONF_GLOBAL_PRESETS, {}))
+
+        if user_input is not None and "temp" in user_input:
+            preset = user_input["preset"]
+            mode = user_input["hvac_mode"]
+            
+            if preset not in preset_data:
+                preset_data[preset] = {}
+            
+            preset_data[preset][mode] = {
+                "temp": user_input["temp"],
+                "fan": user_input["fan"]
+            }
+            
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, 
+                options={**self.config_entry.options, CONF_GLOBAL_PRESETS: preset_data}
+            )
+            
+            if self.config_entry.runtime_data:
+                updated_presets = merge_presets_with_defaults(
+                    saved_presets=preset_data,
+                    defaults=DEFAULT_GLOBAL_PRESETS
+                )
+                self.config_entry.runtime_data.global_presets.clear()
+                self.config_entry.runtime_data.global_presets.update(updated_presets)
+                
+            return await self.async_step_init()
+
+        preset = user_input.get("preset") if user_input else ""
+        mode = user_input.get("hvac_mode") if user_input else ""
+        
+        default_conf = DEFAULT_GLOBAL_PRESETS.get(preset, {}).get(mode, {})
+        current_conf = preset_data.get(preset, {}).get(mode, default_conf)
+
+        return self.async_show_form(
+            step_id="preset_configure",
+            data_schema=vol.Schema({
+                vol.Required("preset", default=preset): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[preset], 
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key=TRANSLATION_KEY_PRESET_MODES
+                    )
+                ),
+                vol.Required("hvac_mode", default=mode): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[mode],
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key=TRANSLATION_KEY_HVAC_MODES
+                    )
+                ),
+                vol.Required("temp", default=current_conf.get("temp", DEFAULT_TEMPERATURE)): NumberSelector(
+                    NumberSelectorConfig(
+                        min=DEFAULT_MIN_TEMP,
+                        max=DEFAULT_MAX_TEMP,
+                        step=1,
+                        mode=NumberSelectorMode.SLIDER
+                    )
+                ),
+                vol.Required("fan", default=current_conf.get("fan", DEFAULT_FAN_MODE)): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key=TRANSLATION_KEY_FAN_MODES
+                    )
+                ),
+            })
+        )
+
+
+    # Generic device management flows
+
+    async def async_step_generic_management(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Display management sub-menu for IR generic remotes."""
+        return self.async_show_menu(
+            step_id="generic_management",
+            menu_options=["add_generic", "remove_generic", "back_to_devices"]
+        )
+
     async def async_step_add_generic(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -492,6 +622,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="select_generic",
             data_schema=vol.Schema({vol.Required("generic_id"): vol.In(options)})
+        )
+
+    # Temperature/Humidy sensor management flows
+
+    async def async_step_sensor_management(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Display management sub-menu for TH environmental hardware sensors."""
+        return self.async_show_menu(
+            step_id="sensor_management",
+            menu_options=["add_sensor", "remove_sensor", "back_to_devices"]
         )
 
     async def async_step_add_sensor(
@@ -627,14 +768,14 @@ def hub_data_schema() -> dict[vol.Marker, Any]:
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
         vol.Required(CONF_ACCESS_SECRET): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.TEXT)
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         vol.Required(CONF_TUYA_COUNTRY): SelectSelector(
             SelectSelectorConfig(
                 options=list(TUYA_API_ENDPOINTS.keys()),
                 multiple=False,
                 mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_TUYA_COUNTRY
+                translation_key=TRANSLATION_KEY_COUNTRIES
             )
         ),
         vol.Required(CONF_CLIMATE_UPDATE_INTERVAL, default=UPDATE_INTERVAL): NumberSelector(
@@ -713,12 +854,12 @@ def climate_data() -> dict[vol.Marker, Any]:
                 min=0.1, max=1, step=0.1, mode=NumberSelectorMode.BOX
             )
         ),
-        vol.Required(CONF_HVAC_MODES, default=SUPPORTED_HVAC_MODES): SelectSelector(
+        vol.Required(CONF_HVAC_MODES, default=[m for m in SUPPORTED_HVAC_MODES if m != HVACMode.OFF]): SelectSelector(
             SelectSelectorConfig(
-                options=SUPPORTED_HVAC_MODES,
+                options=[mode for mode in SUPPORTED_HVAC_MODES if mode != HVACMode.OFF],
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_HVAC_MODES,
+                translation_key=TRANSLATION_KEY_HVAC_MODES,
             )
         ),
         vol.Required(CONF_FAN_MODES, default=SUPPORTED_FAN_MODES): SelectSelector(
@@ -726,7 +867,15 @@ def climate_data() -> dict[vol.Marker, Any]:
                 options=SUPPORTED_FAN_MODES,
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_FAN_MODES,
+                translation_key=TRANSLATION_KEY_FAN_MODES,
+            )
+        ),
+        vol.Required(CONF_PRESET_MODES, default=[]): SelectSelector(
+            SelectSelectorConfig(
+                options=[mode for mode in SUPPORTED_PRESET_MODES if mode != PRESET_NONE],
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=TRANSLATION_KEY_PRESET_MODES,
             )
         ),
         vol.Optional(CONF_HVAC_PRESETS, default=[]): SelectSelector(
@@ -734,7 +883,7 @@ def climate_data() -> dict[vol.Marker, Any]:
                 options=SUPPORTED_HVAC_PRESETS,
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_HVAC_PRESETS,
+                translation_key=TRANSLATION_KEY_HVAC_PRESETS,
             )
         ),
         vol.Optional(CONF_OPTIONAL_ENTITIES, default=[]): SelectSelector(
@@ -742,7 +891,7 @@ def climate_data() -> dict[vol.Marker, Any]:
                 options=SUPPORTED_OPTIONAL_ENTITIES,
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_OPTIONAL_ENTITIES,
+                translation_key=TRANSLATION_KEY_OPTIONAL_ENTITIES,
             )
         ),
         vol.Required(CONF_COMPATIBILITY_OPTIONS): data_entry_flow.section(
@@ -755,7 +904,7 @@ def climate_data() -> dict[vol.Marker, Any]:
                             options=SUPPORTED_POWER_ON_MODES,
                             multiple=False,
                             mode=SelectSelectorMode.LIST,
-                            translation_key=CONF_HVAC_POWER_ON,
+                            translation_key=TRANSLATION_KEY_POWER_ON_MODES,
                         )
                     ),
                     vol.Optional(
@@ -765,7 +914,7 @@ def climate_data() -> dict[vol.Marker, Any]:
                             options=SUPPORTED_POWER_ON_MODES,
                             multiple=False,
                             mode=SelectSelectorMode.LIST,
-                            translation_key=CONF_TEMP_POWER_ON,
+                            translation_key=TRANSLATION_KEY_POWER_ON_MODES,
                         )
                     ),
                     vol.Optional(
@@ -775,7 +924,7 @@ def climate_data() -> dict[vol.Marker, Any]:
                             options=SUPPORTED_POWER_ON_MODES,
                             multiple=False,
                             mode=SelectSelectorMode.LIST,
-                            translation_key=CONF_FAN_POWER_ON,
+                            translation_key=TRANSLATION_KEY_POWER_ON_MODES,
                         )
                     ),
                     vol.Optional(
@@ -796,25 +945,32 @@ def climate_data() -> dict[vol.Marker, Any]:
         ),
     }
 
-
 async def async_validate_and_connect(data: dict[str, Any]) -> dict[str, str]:
-    """Validate credentials against the Tuya OpenAPI backend."""
     errors: dict[str, str] = {}
-    
+
     api_endpoint = TUYA_API_ENDPOINTS.get(data.get(CONF_TUYA_COUNTRY))
     client = TuyaOpenAPI(api_endpoint, data[CONF_ACCESS_ID], data[CONF_ACCESS_SECRET])
-    
+
     try:
         res = await client.connect()
         if not res.get("success"):
-            errors["base"] = "invalid_auth"
-            _LOGGER.debug("Tuya authentication failed: %s", res.get("msg"))
+           errors["base"] = "invalid_auth"
+           _LOGGER.debug("Tuya authentication failed: %s", res.get("msg"))
+        else:
+            uid = res.get("result", {}).get("uid")
+            user_info = await client.get(f"/v1.0/users/{uid}/infos")
+            
+            if user_info.get("code") == 28841107:
+                errors["base"] = "invalid_data_center"
+                _LOGGER.debug("Tuya authentication failed: %s", user_info.get("msg"))
+
     except Exception as err:
         errors["base"] = "cannot_connect_to_tuya"
         _LOGGER.debug("Unexpected error connecting to Tuya API: %s", err)
+
     finally:
         await client.close()
-            
+
     return errors
 
 async def async_get_climate_device(
@@ -838,12 +994,41 @@ async def async_get_sensor_device(
     return await TuyaSensorAPI(hass, client).async_fetch_data(device_id)
 
 
+def prepare_suggested_values(climate_data: dict[str, Any]) -> dict[str, Any]:
+    """Strip mandatory system modes (OFF/NONE) from stored data before showing the UI form."""
+    suggested_data = dict(climate_data)
+    if CONF_HVAC_MODES in suggested_data and suggested_data[CONF_HVAC_MODES]:
+        suggested_data[CONF_HVAC_MODES] = [
+            m for m in suggested_data[CONF_HVAC_MODES] if m != HVACMode.OFF
+        ]
+
+    if CONF_PRESET_MODES in suggested_data and suggested_data[CONF_PRESET_MODES]:
+        suggested_data[CONF_PRESET_MODES] = [
+            p for p in suggested_data[CONF_PRESET_MODES] if p != PRESET_NONE
+        ]
+
+    return suggested_data
+
+
 def overwrite_invalid_user_input(user_input: dict[str, Any]) -> None:
     """Enforce fallback lists matching integration defaults on empty arrays."""
     hvac_modes = user_input.get(CONF_HVAC_MODES)
-    if hvac_modes is not None and len(hvac_modes) == 0:
-        user_input[CONF_HVAC_MODES] = SUPPORTED_HVAC_MODES
+    if hvac_modes is not None:
+        if len(hvac_modes) == 0:
+            user_input[CONF_HVAC_MODES] = SUPPORTED_HVAC_MODES
+        elif HVACMode.OFF not in hvac_modes:
+            updated_hvac = list(hvac_modes)
+            updated_hvac.insert(0, HVACMode.OFF)
+            user_input[CONF_HVAC_MODES] = updated_hvac
 
     fan_modes = user_input.get(CONF_FAN_MODES)
     if fan_modes is not None and len(fan_modes) == 0:
         user_input[CONF_FAN_MODES] = SUPPORTED_FAN_MODES
+
+    preset_modes = user_input.get(CONF_PRESET_MODES)
+    if preset_modes is not None:
+        if len(preset_modes) > 0 and PRESET_NONE not in preset_modes:
+            updated_presets = list(preset_modes)
+            updated_presets.insert(0, PRESET_NONE)
+            user_input[CONF_PRESET_MODES] = updated_presets
+

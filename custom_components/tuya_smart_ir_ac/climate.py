@@ -5,6 +5,7 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ClimateEntityFeature,
     HVACMode,
+    PRESET_NONE
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -59,12 +60,22 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
         self._attr_target_temperature_step = self._temp_step
         self._attr_hvac_modes = self._hvac_modes
         self._attr_fan_modes = self._fan_modes
-        self._attr_supported_features = (
+        self._attr_preset_modes = self._preset_modes
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features dynamically."""
+        features = (
             ClimateEntityFeature.TURN_OFF 
             | ClimateEntityFeature.TURN_ON 
             | ClimateEntityFeature.TARGET_TEMPERATURE 
             | ClimateEntityFeature.FAN_MODE
         )
+        
+        if self._preset_modes:
+            features |= ClimateEntityFeature.PRESET_MODE
+            
+        return features
 
     @property
     def current_temperature(self) -> float | None:
@@ -91,14 +102,26 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
         """Return the fan setting."""
         return self._current_fan_mode
 
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return the list of available preset modes based on current HVAC mode."""
+        return self.get_preset_modes()
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        return self.get_preset_mode()
+
     async def async_added_to_hass(self) -> None:
         """Restore previous entity state and track source sensors."""
         await super().async_added_to_hass()
         self.async_track_sensor_states([self._temperature_sensor, self._humidity_sensor])
+        self.update_preset_history()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle state changes notified by the Hub coordinator."""
+        self.update_preset_history()
         self.async_write_ha_state()
 
     @callback
@@ -132,3 +155,8 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode for the climate."""
         await self.async_handle_set_fan_mode(fan_mode)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set preset mode for the climate."""
+        await self.async_handle_set_preset_mode(preset_mode)
+        self.async_write_ha_state()

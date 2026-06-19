@@ -1,22 +1,19 @@
 {
   "entity": {
     "number": {
-      "temperature": {
-        "name": "Temperature"
-      },
-      "temp_hvac_mode_auto": {
+      "hvac_mode_auto": {
         "name": "Auto"
       },
-      "temp_hvac_mode_cool": {
+      "hvac_mode_cool": {
         "name": "Cool"
       },
-      "temp_hvac_mode_heat": {
+      "hvac_mode_heat": {
         "name": "Heat"
       }
     },
     "select": {
       "hvac_mode": {
-        "name": "HVAC mode",  
+        "name": "HVAC mode",
         "state": {
           "auto": "Auto",
           "cool": "Cool",
@@ -34,20 +31,11 @@
           "medium": "Medium",
           "high": "High"
         }
-      },
-      "fan_hvac_mode": {
-        "name": "Fan speed",
-        "state": {
-          "auto": "Auto",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
-        }
       }
     }
   },
   "selector": {
-    "country": {
+    "countries": {
       "options": {
         "eu": "Europe",
         "us": "America",
@@ -81,6 +69,15 @@
         "high": "High"
       }
     },
+    "presets_modes": {
+      "options": {
+        "home": "Home",
+        "sleep": "Sleep",
+        "eco": "Eco",
+        "comfort": "Comfort",
+        "away": "Away"
+      }
+    },
     "hvac_presets": {
       "options": {
         "fan_hvac_mode": "Default fan speed",
@@ -96,21 +93,7 @@
         "temp_setpoint": "Temperature control"
       }
     },
-    "hvac_power_on": {
-      "options": {
-        "never": "Never",
-        "always": "Always",
-        "only_off": "Only if turned off (not recommended)"
-      }
-    },
-    "temp_power_on": {
-      "options": {
-        "never": "Never",
-        "always": "Always",
-        "only_off": "Only if turned off (not recommended)"
-      }
-    },
-    "fan_power_on": {
+    "power_on_modes": {
       "options": {
         "never": "Never",
         "always": "Always",
@@ -136,7 +119,8 @@
     "error": {
       "cannot_change_access_id": "The Access ID cannot be modified for an existing hub.",
       "cannot_connect_to_tuya": "Failed to connect to Tuya servers. Please check your network.",
-      "invalid_auth": "Authentication failed: Invalid Access ID or Access Secret."
+      "invalid_auth": "Authentication failed: Invalid Access ID or Access Secret.",
+      "invalid_data_center": "Authentication failed: Invalid data center."
     }
   },
   "options": {
@@ -145,6 +129,7 @@
         "title": "Tuya Smart IR Configuration",
         "menu_options": {
           "device_management": "Device Management",
+          "presets_management": "Global Presets Management",
           "hub_settings": "Hub Settings"
         }
       },
@@ -155,6 +140,24 @@
           "generic_management": "Generic Devices Management",
           "sensor_management": "Temperature/Humidity Sensors Management",
           "back_to_init": "⬅️ Back to Main Menu"
+        }
+      },
+      "presets_management": {
+        "title": "Global Presets Management",
+        "description": "Select a preset and a mode to configure.",
+        "data": {
+          "preset": "Preset",
+          "hvac_mode": "Mode"
+        }
+      },
+      "preset_configure": {
+        "title": "Preset Configuration",
+        "description": "Configure temperature and fan mode for this preset.",
+        "data": {
+          "preset": "Selected Preset",
+          "hvac_mode": "Selected Mode",
+          "temp": "Target Temperature",
+          "fan": "Fan Speed"
         }
       },
       "climate_management": {
@@ -196,6 +199,7 @@
           "temp_step": "Step temperature",
           "hvac_modes": "Supported HVAC modes",
           "fan_modes": "Supported FAN modes",
+          "preset_modes": "Supported preset modes",
           "hvac_presets": "HVAC automatic presets",
           "optional_entities": "Optional entities"
         },
@@ -224,6 +228,7 @@
           "temp_step": "Step temperature",
           "hvac_modes": "Supported HVAC modes",
           "fan_modes": "Supported FAN modes",
+          "preset_modes": "Supported preset modes",
           "hvac_presets": "HVAC automatic presets",
           "optional_entities": "Optional entities"
         },
@@ -305,6 +310,7 @@
       "device_already_configured": "This device is already configured.",
       "device_already_configured_on_other_hub": "This device is already configured on other Hub.",
       "invalid_auth": "Authentication failed: Invalid Access ID or Access Secret.",
+      "invalid_data_center": "Authentication failed: Invalid data center.",
       "invalid_sensor_type": "The selected device is not a valid temperature/humidity sensor.",
       "tuya_api_error": "Tuya Cloud Error: {error_info}"
     },

@@ -20,6 +20,7 @@ from .const import (
     SUPPORTED_TEMP_HVAC_MODES,
     PRESET_TEMP_HVAC_MODE,
     ENTITY_TEMPERATURE_SETPOINT,
+    TRANSLATION_KEY_HVAC_MODE
 )
 from .helpers import (
     valid_number_data,
@@ -76,7 +77,7 @@ class TuyaPresetTemperatureNumber(RestoreNumber, TuyaClimateEntity):
         self._temp_hvac_mode = temp_hvac_mode
 
         self._attr_has_entity_name = True
-        self._attr_translation_key = f"{PRESET_TEMP_HVAC_MODE}_{temp_hvac_mode}"
+        self. _attr_translation_key= f"{TRANSLATION_KEY_HVAC_MODE}_{temp_hvac_mode}"
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_class = NumberDeviceClass.TEMPERATURE
         self._attr_mode = NumberMode.SLIDER
@@ -114,7 +115,6 @@ class TuyaTemperatureSetPointNumber(NumberEntity, CoordinatorEntity, TuyaClimate
         super().__init__(runtime_data.climate_coordinator)
 
         self._attr_has_entity_name = True
-        self._attr_translation_key = f"{ENTITY_TEMPERATURE_SETPOINT}"
         self._attr_device_class = NumberDeviceClass.TEMPERATURE
         self._attr_mode = NumberMode.BOX
         self._attr_native_min_value = self._min_temp

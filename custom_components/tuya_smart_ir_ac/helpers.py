@@ -1,5 +1,6 @@
+import copy
 import math
-from typing import Any
+from typing import Any, Dict
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import State
@@ -118,3 +119,20 @@ def normalize_tuya_payload(raw_list: list[dict[str, Any]], mapping: dict[str, st
             normalized_code = mapping.get(raw_code, raw_code)
             normalized_map[normalized_code] = item.get("value")
     return normalized_map
+
+
+def merge_presets_with_defaults(
+    saved_presets: Dict[str, Any], 
+    defaults: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Merge saved presets with defaults."""
+    final_presets = copy.deepcopy(defaults)
+
+    for preset, modes in saved_presets.items():
+        if preset not in final_presets:
+            final_presets[preset] = {}
+        
+        if isinstance(modes, dict):
+            final_presets[preset].update(modes)
+        
+    return final_presets

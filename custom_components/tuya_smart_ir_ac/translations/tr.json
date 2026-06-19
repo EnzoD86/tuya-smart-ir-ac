@@ -1,16 +1,13 @@
 {
   "entity": {
     "number": {
-      "temperature": {
-        "name": "Sıcaklık"
-      },
-      "temp_hvac_mode_auto": {
+      "hvac_mode_auto": {
         "name": "Otomatik"
       },
-      "temp_hvac_mode_cool": {
+      "hvac_mode_cool": {
         "name": "Soğutma"
       },
-      "temp_hvac_mode_heat": {
+      "hvac_mode_heat": {
         "name": "Isıtma"
       }
     },
@@ -34,20 +31,11 @@
           "medium": "Orta",
           "high": "Yüksek"
         }
-      },
-      "fan_hvac_mode": {
-        "name": "Fan hızı",
-        "state": {
-          "auto": "Otomatik",
-          "low": "Düşük",
-          "medium": "Orta",
-          "high": "Yüksek"
-        }
       }
     }
   },
   "selector": {
-    "country": {
+    "countries": {
       "options": {
         "eu": "Avrupa",
         "us": "Amerika",
@@ -81,6 +69,15 @@
         "high": "Yüksek"
       }
     },
+    "presets_modes": {
+      "options": {
+        "home": "Ev",
+        "sleep": "Uyku",
+        "eco": "Eko",
+        "comfort": "Konfor",
+        "away": "Dışarıda"
+      }
+    },
     "hvac_presets": {
       "options": {
         "fan_hvac_mode": "Varsayılan fan hızı",
@@ -96,21 +93,7 @@
         "temp_setpoint": "Sıcaklık kontrolü"
       }
     },
-    "hvac_power_on": {
-      "options": {
-        "never": "Asla",
-        "always": "Her zaman",
-        "only_off": "Yalnızca kapalıysa (önerilmez)"
-      }
-    },
-    "temp_power_on": {
-      "options": {
-        "never": "Asla",
-        "always": "Her zaman",
-        "only_off": "Yalnızca kapalıysa (önerilmez)"
-      }
-    },
-    "fan_power_on": {
+    "power_on_modes": {
       "options": {
         "never": "Asla",
         "always": "Her zaman",
@@ -127,6 +110,7 @@
           "access_id": "Tuya Access ID",
           "access_secret": "Tuya Access Secret",
           "country": "Tuya ülke API'si",
+          "enable_pulsar": "Tuya Pulsar Akışını Etkinleştir",
           "climate_update_interval": "Klima güncelleme aralığı",
           "sensor_update_interval": "Sıcaklık/nem güncelleme aralığı"
         }
@@ -135,7 +119,8 @@
     "error": {
       "cannot_change_access_id": "Mevcut bir hub için Access ID değiştirilemez.",
       "cannot_connect_to_tuya": "Tuya sunucularına bağlanılamadı. Lütfen ağınızı kontrol edin.",
-      "invalid_auth": "Kimlik doğrulama başarısız: Geçersiz Access ID veya Access Secret."
+      "invalid_auth": "Kimlik doğrulama başarısız: Geçersiz Access ID veya Access Secret.",
+      "invalid_data_center": "Kimlik doğrulama başarısız: Geçersiz veri merkez."
     }
   },
   "options": {
@@ -144,6 +129,7 @@
         "title": "Tuya Smart IR Yapılandırması",
         "menu_options": {
           "device_management": "Cihaz Yönetimi",
+          "presets_management": "Global Presets Management",
           "hub_settings": "Hub Ayarları"
         }
       },
@@ -154,6 +140,24 @@
           "generic_management": "Genel Cihaz Yönetimi",
           "sensor_management": "Sıcaklık/Nem Sensörleri Yönetimi",
           "back_to_init": "⬅️ Ana Menüye Geri Dön"
+        }
+      },
+      "presets_management": {
+        "title": "Global Presets Management",
+        "description": "Select a preset and a mode to configure.",
+        "data": {
+          "preset": "Preset",
+          "hvac_mode": "Mode"
+        }
+      },
+      "preset_configure": {
+        "title": "Preset Configuration",
+        "description": "Configure temperature and fan mode for this preset.",
+        "data": {
+          "preset": "Selected Preset",
+          "hvac_mode": "Selected Mode",
+          "temp": "Target Temperature",
+          "fan": "Fan Speed"
         }
       },
       "climate_management": {
@@ -195,6 +199,7 @@
           "temp_step": "Sıcaklık adımı",
           "hvac_modes": "Desteklenen HVAC modları",
           "fan_modes": "Desteklenen FAN modları",
+          "preset_modes": "Desteklenen ön ayar modları",
           "hvac_presets": "HVAC otomatik ön ayarları",
           "optional_entities": "İsteğe bağlı varlıklar"
         },
@@ -223,6 +228,7 @@
           "temp_step": "Sıcaklık adımı",
           "hvac_modes": "Desteklenen HVAC modları",
           "fan_modes": "Desteklenen FAN modları",
+          "preset_modes": "Desteklenen ön ayar modları",
           "hvac_presets": "HVAC otomatik ön ayarları",
           "optional_entities": "İsteğe bağlı varlıklar"
         },
@@ -271,6 +277,7 @@
           "access_id": "Tuya Access ID",
           "access_secret": "Tuya Access Secret",
           "country": "Tuya ülke API'si",
+          "enable_pulsar": "Tuya Pulsar Akışını Etkinleştir",
           "climate_update_interval": "Klima güncelleme aralığı",
           "sensor_update_interval": "Sıcaklık/nem güncelleme aralığı"
         }
@@ -303,6 +310,7 @@
       "device_already_configured": "Bu cihaz zaten yapılandırılmış.",
       "device_already_configured_on_other_hub": "Bu cihaz zaten başka bir Hub üzerinde yapılandırılmış.",
       "invalid_auth": "Kimlik doğrulama başarısız: Geçersiz Access ID veya Access Secret.",
+      "invalid_data_center": "Kimlik doğrulama başarısız: Geçersiz veri merkez.",
       "invalid_sensor_type": "Seçilen cihaz geçerli bir sıcaklık/nem sensörü değildir.",
       "tuya_api_error": "Tuya Cloud Hatası: {error_info}"
     },

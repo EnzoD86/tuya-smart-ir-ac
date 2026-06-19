@@ -114,7 +114,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         await self._async_force_update_data(climate_id, power=True, fan_mode=fan_mode)
 
     # =========================================================================
-    # PRIVATE LOW-LEVEL COMMAND HELPERS (DRY ENFORCEMENT)
+    # PRIVATE LOW-LEVEL COMMAND HELPERS
     # =========================================================================
 
     async def _send_power_command(self, infrared_id: str, climate_id: str, state: str) -> None:
