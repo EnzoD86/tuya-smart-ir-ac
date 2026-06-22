@@ -451,9 +451,9 @@ class TuyaClimateEntity:
             return
 
         domain = self._custom_power_on.split(".", 1)[0]
-        if domain == Platform.SCENE:
+        if domain == "scene":
             service = "turn_on"
-        elif domain == Platform.BUTTON:
+        elif domain == "button":
             service = "press"
         else:
             service = "turn_on"
