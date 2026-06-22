@@ -1,12 +1,12 @@
 {
    "domain": "tuya_smart_ir_ac",
    "name": "Tuya Smart IR AC",
-   "codeowners": ["@EnzoD86"],
+   "codeowners": ["@cornguo"],
    "config_flow": true,
-   "documentation": "https://github.com/EnzoD86/tuya-smart-ir-ac",
+   "documentation": "https://github.com/cornguo/tuya-smart-ir-ac",
    "integration_type": "hub",
    "iot_class": "cloud_polling",
-   "issue_tracker": "https://github.com/EnzoD86/tuya-smart-ir-ac/issues",
+   "issue_tracker": "https://github.com/cornguo/tuya-smart-ir-ac/issues",
    "requirements": [],
    "version": "2026.6.4"
 }
