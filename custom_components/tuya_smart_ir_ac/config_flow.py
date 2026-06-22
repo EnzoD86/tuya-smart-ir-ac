@@ -935,7 +935,7 @@ def climate_data() -> dict[vol.Marker, Any]:
                     ): BooleanSelector(),
                     vol.Optional(CONF_CUSTOM_POWER_ON): EntitySelector(
                         EntitySelectorConfig(
-                            domain=Platform.BUTTON,
+                            domain=[Platform.BUTTON, Platform.SCENE],
                             multiple=False,
                         )
                     )

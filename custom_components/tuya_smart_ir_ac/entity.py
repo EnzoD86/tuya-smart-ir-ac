@@ -409,13 +409,21 @@ class TuyaClimateEntity:
                 )
 
     async def _async_trigger_custom_on_if_configured(self) -> None:
-        """Trigger the custom hardware alternative power-on button if configured."""
+        """Trigger the custom hardware alternative power-on button or scene if configured."""
         if not self._custom_power_on:
             return
 
+        domain = self._custom_power_on.split(".", 1)[0]
+        if domain == Platform.SCENE:
+            service = "turn_on"
+        elif domain == Platform.BUTTON:
+            service = "press"
+        else:
+            service = "turn_on"
+
         await self.hass.services.async_call(
-            domain=Platform.BUTTON,
-            service="press",
+            domain=domain,
+            service=service,
             service_data={"entity_id": self._custom_power_on},
             blocking=True
         )
