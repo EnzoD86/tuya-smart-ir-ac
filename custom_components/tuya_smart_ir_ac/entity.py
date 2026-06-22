@@ -456,7 +456,8 @@ class TuyaClimateEntity:
         elif domain == "button":
             service = "press"
         else:
-            service = "turn_on"
+            _LOGGER.error("[%s] Unsupported custom power-on entity domain: %s", self._climate_id, domain)
+            return
 
         await self.hass.services.async_call(
             domain=domain,
