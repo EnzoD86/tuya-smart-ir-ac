@@ -13,6 +13,7 @@ from .const import (
     UPDATE_INTERVAL,
     UPDATE_TIMEOUT,
     CONF_DEVICE_ID,
+    CONF_INFRARED_ID,
     DEVICE_TYPE_CLIMATES,
     DEVICE_TYPE_SENSORS
 )
@@ -178,11 +179,40 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
                 if not result.success:
                     raise UpdateFailed(f"Tuya cloud reported an error fetching climates: {result.error_info}")
 
+                await self._async_merge_hub_ambient(result.data)
                 return result.data
         except TimeoutError as e:
             raise UpdateFailed(f"Timeout communicating with Tuya API for climates: {e}")
         except Exception as e:
             raise UpdateFailed(f"Error communicating with Tuya API for climates: {e}")
+
+    async def _async_merge_hub_ambient(self, data: dict[str, TuyaClimateData]) -> None:
+        """Enrich climate data with onboard ambient temperature/humidity read from each IR hub shadow.
+
+        The AC status endpoint is open-loop (it only echoes the last IR command). The onboard
+        temperature/humidity sensor lives on the parent infrared device, so it is fetched once per
+        unique hub and applied to every climate controlled by that hub. Best-effort: failures here
+        never break the climate update.
+        """
+        climates = self.entry.options.get(DEVICE_TYPE_CLIMATES, [])
+        hub_by_climate = {
+            c[CONF_DEVICE_ID]: c.get(CONF_INFRARED_ID)
+            for c in climates if c.get(CONF_DEVICE_ID)
+        }
+        unique_hubs = {hub_id for hub_id in hub_by_climate.values() if hub_id}
+
+        hub_properties: dict[str, list] = {}
+        for hub_id in unique_hubs:
+            result = await self._api.async_fetch_hub_properties(hub_id)
+            if result.success and result.data:
+                hub_properties[hub_id] = result.data.get("properties", [])
+            else:
+                _LOGGER.debug("[%s] Could not fetch hub ambient properties: %s", hub_id, result.error_info)
+
+        for climate_id, climate_data in data.items():
+            hub_id = hub_by_climate.get(climate_id)
+            if hub_id and (properties := hub_properties.get(hub_id)):
+                data[climate_id] = TuyaClimateData.merge_hub_ambient(climate_data, properties)
 
     async def _async_force_update_data(self, climate_id, power=None, hvac_mode=None, temperature=None, fan_mode=None):
         """Optimistically update local state cache after an IR command execution."""

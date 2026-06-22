@@ -77,6 +77,26 @@ class TuyaClimateData:
     hvac_mode: HVACMode = DEFAULT_HVAC_MODE
     temperature: float = DEFAULT_TEMPERATURE
     fan_mode: str = DEFAULT_FAN_MODE
+    current_temperature: float | None = None
+    current_humidity: int | None = None
+
+    @classmethod
+    def merge_hub_ambient(cls, current_instance: TuyaClimateData, properties: list[dict[str, Any]]) -> TuyaClimateData:
+        """Merge onboard ambient temperature/humidity read from the IR hub shadow into existing climate data.
+
+        Many Tuya IR hubs expose an onboard temperature/humidity sensor on the parent (infrared) device
+        shadow, while the air-conditioner status endpoint only returns the open-loop IR command state.
+        This lets current_temperature/current_humidity work without a linked external sensor.
+        """
+        prop_map = {p["code"]: p.get("value") for p in properties if "code" in p}
+        raw_temp = prop_map.get("temp_current", prop_map.get("va_temperature"))
+        raw_humidity = prop_map.get("humidity_current", prop_map.get("va_humidity"))
+
+        return replace(
+            current_instance,
+            current_temperature=get_val(hass_temperature(raw_temp, convert=True), current_instance.current_temperature),
+            current_humidity=get_val(raw_humidity, current_instance.current_humidity),
+        )
 
     @classmethod
     def from_raw_data(cls, data: dict[str, Any]) -> TuyaClimateData:

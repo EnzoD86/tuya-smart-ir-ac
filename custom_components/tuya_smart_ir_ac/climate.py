@@ -79,12 +79,16 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
 
     @property
     def current_temperature(self) -> float | None:
-        """Return the current temperature value from the linked tracking sensor."""
+        """Return ambient temperature from the device's onboard sensor, falling back to a linked external sensor."""
+        if (data := self._device_climate_data) and data.current_temperature is not None:
+            return data.current_temperature
         return self.get_temperature_value(convert=True)
-    
+
     @property
     def current_humidity(self) -> float | None:
-        """Return the current humidity value from the linked tracking sensor."""
+        """Return ambient humidity from the device's onboard sensor, falling back to a linked external sensor."""
+        if (data := self._device_climate_data) and data.current_humidity is not None:
+            return data.current_humidity
         return self.get_humidity_value()
 
     @property

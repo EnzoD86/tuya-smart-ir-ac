@@ -94,6 +94,11 @@ class TuyaClimateAPI(TuyaBaseAPI):
         url = f"/v2.0/infrareds/{infrared_id}/remotes/{climate_id}/ac/status"
         return await self._request("GET", url, factory=TuyaClimateData.from_raw_data)
 
+    async def async_fetch_hub_properties(self, infrared_id: str) -> TuyaAPIResult:
+        """Fetch the IR hub device shadow properties (onboard ambient temperature/humidity)."""
+        url = f"/v2.0/cloud/thing/{infrared_id}/shadow/properties"
+        return await self._request("GET", url)
+
     async def async_send_command(self, infrared_id: str, climate_id: str, code: str, value: Any) -> TuyaAPIResult:
         """Send a single discrete infrared command to the targeted air conditioner."""
         url = f"/v2.0/infrareds/{infrared_id}/air-conditioners/{climate_id}/command"
