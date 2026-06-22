@@ -90,19 +90,19 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         await self._send_power_command(infrared_id, climate_id, "0")
         await self._async_force_update_data(climate_id, power=False)
 
-    async def async_set_temperature(self, infrared_id: str, climate_id: str, temperature: float):
+    async def async_set_temperature(self, infrared_id: str, climate_id: str, temperature: float, skip_ensure_off: bool = False):
         """Send IR command to set target temperature and update local cache."""
-        await self._send_temperature_command(infrared_id, climate_id, temperature)
+        await self._send_temperature_command(infrared_id, climate_id, temperature, skip_ensure_off=skip_ensure_off)
         await self._async_force_update_data(climate_id, power=True, temperature=temperature)
 
-    async def async_set_fan_mode(self, infrared_id: str, climate_id: str, fan_mode: str):
+    async def async_set_fan_mode(self, infrared_id: str, climate_id: str, fan_mode: str, skip_ensure_off: bool = False):
         """Send IR command to set fan mode and update local cache."""
-        await self._send_fan_mode_command(infrared_id, climate_id, fan_mode)
+        await self._send_fan_mode_command(infrared_id, climate_id, fan_mode, skip_ensure_off=skip_ensure_off)
         await self._async_force_update_data(climate_id, power=True, fan_mode=fan_mode)
 
-    async def async_set_hvac_mode(self, infrared_id: str, climate_id: str, hvac_mode: HVACMode, temperature: float, fan_mode: str):
+    async def async_set_hvac_mode(self, infrared_id: str, climate_id: str, hvac_mode: HVACMode, temperature: float, fan_mode: str, skip_ensure_off: bool = False):
         """Send a combined multi-command IR packet (Mode, Temp, Fan) and update local cache."""
-        await self._send_combined_command(infrared_id, climate_id, hvac_mode, temperature, fan_mode)
+        await self._send_combined_command(infrared_id, climate_id, hvac_mode, temperature, fan_mode, skip_ensure_off=skip_ensure_off)
         await self._async_force_update_data(climate_id, power=True, hvac_mode=hvac_mode, temperature=temperature, fan_mode=fan_mode)
 
     # =========================================================================
