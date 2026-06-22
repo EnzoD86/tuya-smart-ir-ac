@@ -1,0 +1,343 @@
+{
+  "entity": {
+    "number": {
+      "hvac_mode_auto": {
+        "name": "自動"
+      },
+      "hvac_mode_cool": {
+        "name": "冷氣"
+      },
+      "hvac_mode_heat": {
+        "name": "暖氣"
+      }
+    },
+    "select": {
+      "hvac_mode": {
+        "name": "空調模式",
+        "state": {
+          "auto": "自動",
+          "cool": "冷氣",
+          "heat": "暖氣",
+          "dry": "除濕",
+          "fan_only": "送風",
+          "off": "關閉"
+        }
+      },
+      "fan_mode": {
+        "name": "風速",
+        "state": {
+          "auto": "自動",
+          "low": "低",
+          "medium": "中",
+          "high": "高"
+        }
+      }
+    }
+  },
+  "selector": {
+    "countries": {
+      "options": {
+        "eu": "歐洲",
+        "us": "美洲",
+        "in": "印度",
+        "cn": "中國",
+        "sg": "新加坡"
+      }
+    },
+    "device_type": {
+      "options": {
+        "climate": "冷氣機",
+        "generic": "通用設備",
+        "sensor": "溫濕度感測器"
+      }
+    },
+    "hvac_modes": {
+      "options": {
+        "auto": "自動",
+        "cool": "冷氣",
+        "heat": "暖氣",
+        "dry": "除濕",
+        "fan_only": "送風",
+        "off": "關閉"
+      }
+    },
+    "fan_modes": {
+      "options": {
+        "auto": "自動",
+        "low": "低",
+        "medium": "中",
+        "high": "高"
+      }
+    },
+    "presets_modes": {
+      "options": {
+        "home": "在家",
+        "sleep": "睡眠",
+        "eco": "節能",
+        "comfort": "舒適",
+        "away": "離家"
+      }
+    },
+    "hvac_presets": {
+      "options": {
+        "fan_hvac_mode": "預設風速",
+        "temp_hvac_mode": "預設溫度"
+      }
+    },
+    "optional_entities": {
+      "options": {
+        "current_temperature": "溫度感測器",
+        "current_humidity": "濕度感測器",
+        "hvac_mode": "空調控制",
+        "fan_mode": "風速控制",
+        "temp_setpoint": "溫度控制"
+      }
+    },
+    "power_on_modes": {
+      "options": {
+        "never": "從不",
+        "always": "總是",
+        "only_off": "僅在關閉時（不推薦）"
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "hub_settings": {
+        "title": "網關設定",
+        "description": "設定存取憑證與網關選項。",
+        "data": {
+          "access_id": "涂鴉 Access ID",
+          "access_secret": "涂鴉 Access Secret",
+          "country": "涂鴉國家 API",
+          "enable_pulsar": "啟用涂鴉 Pulsar 串流",
+          "climate_update_interval": "冷氣更新間隔",
+          "sensor_update_interval": "溫濕度更新間隔"
+        }
+      }
+    },
+    "error": {
+      "cannot_change_access_id": "無法修改現有網關的 Access ID。",
+      "cannot_connect_to_tuya": "連線涂鴉伺服器失敗。請檢查您的網路。",
+      "invalid_auth": "驗證失敗：無效的 Access ID 或 Access Secret。",
+      "invalid_data_center": "驗證失敗：無效的數據中心。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "涂鴉智慧紅外線設定",
+        "menu_options": {
+          "device_management": "設備管理",
+          "presets_management": "全域預設管理",
+          "hub_settings": "網關設定"
+        }
+      },
+      "device_management": {
+        "title": "設備管理",
+        "menu_options": {
+          "climate_management": "冷氣管理",
+          "generic_management": "通用設備管理",
+          "sensor_management": "溫濕度感測器管理",
+          "back_to_init": "⬅️ 返回主選單"
+        }
+      },
+      "presets_management": {
+        "title": "全域預設管理",
+        "description": "選擇要設定的預設與模式。",
+        "data": {
+          "preset": "預設",
+          "hvac_mode": "模式"
+        }
+      },
+      "preset_configure": {
+        "title": "預設設定",
+        "description": "設定此預設的溫度與風速模式。",
+        "data": {
+          "preset": "已選擇的預設",
+          "hvac_mode": "已選擇的模式",
+          "temp": "目標溫度",
+          "fan": "風速"
+        }
+      },
+      "climate_management": {
+        "title": "冷氣管理",
+        "menu_options": {
+          "add_climate": "新增冷氣",
+          "edit_climate": "編輯現有冷氣",
+          "remove_climate": "移除現有冷氣",
+          "back_to_devices": "⬅️ 返回設備管理"
+        }
+      },
+      "generic_management": {
+        "title": "通用設備管理",
+        "menu_options": {
+          "add_generic": "新增通用設備",
+          "remove_generic": "移除現有通用設備",
+          "back_to_devices": "⬅️ 返回設備管理"
+        }
+      },
+      "sensor_management": {
+        "title": "溫濕度感測器管理",
+        "menu_options": {
+          "add_sensor": "新增溫濕度感測器",
+          "remove_sensor": "移除現有溫濕度感測器",
+          "back_to_devices": "⬅️ 返回設備管理"
+        }
+      },
+      "add_climate": {
+        "title": "新增冷氣",
+        "description": "輸入資料以配對新冷氣。",
+        "data": {
+          "infrared_id": "紅外線網關 ID",
+          "device_id": "冷氣 ID",
+          "name": "冷氣名稱",
+          "temperature_sensor": "溫度感測器",
+          "humidity_sensor": "濕度感測器",
+          "min_temp": "最低溫度",
+          "max_temp": "最高溫度",
+          "temp_step": "溫度步進",
+          "hvac_modes": "支援的空調模式",
+          "fan_modes": "支援的風速模式",
+          "preset_modes": "支援的預設模式",
+          "hvac_presets": "空調自動預設",
+          "optional_entities": "選用實體"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "相容性選項",
+            "data": {
+              "hvac_power_on": "設定空調模式時強制開機",
+              "temp_power_on": "設定溫度時強制開機",
+              "fan_power_on": "設定風速時強制開機",
+              "dry_min_temp": "設定除濕模式的最低溫度",
+              "dry_min_fan": "設定除濕模式的最低風速",
+              "send_off_before_on": "開機前傳送關機指令",
+              "custom_power_on": "自訂開機按鍵或場景（僅在標準開機失敗時使用）"
+            }
+          }
+        }
+      },
+      "edit_climate": {
+        "title": "編輯冷氣",
+        "description": "更新冷氣的選項。",
+        "data": {
+          "temperature_sensor": "溫度感測器",
+          "humidity_sensor": "濕度感測器",
+          "min_temp": "最低溫度",
+          "max_temp": "最高溫度",
+          "temp_step": "溫度步進",
+          "hvac_modes": "支援的空調模式",
+          "fan_modes": "支援的風速模式",
+          "preset_modes": "支援的預設模式",
+          "hvac_presets": "空調自動預設",
+          "optional_entities": "選用實體"
+        },
+        "sections": {
+          "compatibility_options": {
+            "name": "相容性選項",
+            "data": {
+              "hvac_power_on": "設定空調模式時強制開機",
+              "temp_power_on": "設定溫度時強制開機",
+              "fan_power_on": "設定風速時強制開機",
+              "dry_min_temp": "設定除濕模式的最低溫度",
+              "dry_min_fan": "設定除濕模式的最低風速",
+              "send_off_before_on": "開機前傳送關機指令",
+              "custom_power_on": "自訂開機按鍵或場景（僅在標準開機失敗時使用）"
+            }
+          }
+        }
+      },
+      "remove_climate": {
+        "title": "移除冷氣",
+        "description": "選擇您想從網關中移除的冷氣。",
+        "data": {
+          "climate_id": "冷氣"
+        }
+      },
+      "add_generic": {
+        "title": "新增通用設備",
+        "description": "輸入資料以配對新通用設備。",
+        "data": {
+          "device_id": "設備 ID",
+          "infrared_id": "紅外線網關 ID",
+          "name": "設備名稱"
+        }
+      },
+      "add_sensor": {
+        "title": "新增溫濕度感測器",
+        "description": "輸入資料以配對新溫濕度感測器。",
+        "data": {
+          "device_id": "設備 ID",
+          "name": "設備名稱"
+        }
+      },
+      "hub_settings": {
+        "title": "網關設定",
+        "description": "修改存取憑證與網關選項。",
+        "data": {
+          "access_id": "涂鴉 Access ID",
+          "access_secret": "涂鴉 Access Secret",
+          "country": "涂鴉國家 API",
+          "enable_pulsar": "啟用涂鴉 Pulsar 串流",
+          "climate_update_interval": "冷氣更新間隔",
+          "sensor_update_interval": "溫濕度更新間隔"
+        }
+      },
+      "select_climate": {
+        "title": "選擇冷氣",
+        "description": "選擇您要管理的冷氣。",
+        "data": {
+          "climate_id": "冷氣"
+        }
+      },
+      "select_generic": {
+        "title": "選擇通用設備",
+        "description": "選擇您要管理的通用設備。",
+        "data": {
+          "generic_id": "通用設備"
+        }
+      },
+      "select_sensor": {
+        "title": "選擇溫濕度感測器",
+        "description": "選擇您要管理的溫濕度感測器。",
+        "data": {
+          "sensor_id": "溫濕度感測器"
+        }
+      }
+    },
+    "error": {
+      "cannot_change_access_id": "無法修改現有網關的 Access ID。",
+      "cannot_connect_to_tuya": "連線涂鴉伺服器失敗。請檢查您的網路。",
+      "device_already_configured": "此設備已設定。",
+      "device_already_configured_on_other_hub": "此設備已在其他網關上設定。",
+      "invalid_auth": "驗證失敗：無效的 Access ID 或 Access Secret。",
+      "invalid_data_center": "驗證失敗：無效的數據中心。",
+      "invalid_sensor_type": "所選設備不是有效的溫濕度感測器。",
+      "tuya_api_error": "涂鴉雲端錯誤：{error_info}"
+    },
+    "abort": {
+      "device_not_found": "找不到設備。"
+    }
+  },
+  "exceptions": {
+    "climate_error_turn_on": {
+      "message": "無法開機"
+    },
+    "climate_error_turn_off": {
+      "message": "無法關機"
+    },
+    "climate_error_temperature": {
+      "message": "無法變更溫度"
+    },
+    "climate_error_fan_mode": {
+      "message": "無法變更風速模式"
+    },
+    "climate_error_hvac_mode": {
+      "message": "無法變更空調模式"
+    },
+    "device_error_send_command": {
+      "message": "無法傳送指令"
+    }
+  }
+}
