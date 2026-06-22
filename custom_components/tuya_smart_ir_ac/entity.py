@@ -457,9 +457,9 @@ class TuyaClimateEntity:
             return
 
         domain = self._custom_power_on.split(".", 1)[0]
-        if domain == "scene":
+        if domain == Platform.SCENE:
             service = "turn_on"
-        elif domain == "button":
+        elif domain == Platform.BUTTON:
             service = "press"
         else:
             _LOGGER.error("[%s] Unsupported custom power-on entity domain: %s", self._climate_id, domain)
