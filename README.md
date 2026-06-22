@@ -138,8 +138,3 @@ Home Assistant needs to be restarted after this change.
 
 ## Contributions are welcome!
 If you have ideas to contribute to the project, open a pull request and we will evaluate together how to implement the improvement. Thanks!
-
-## Support me
-I dedicate my free time to the development and support for this integration, if you appreciate my work and want to support me, you can buy me a coffee. Thanks!
-
-<a href="https://www.buymeacoffee.com/enzod86" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
