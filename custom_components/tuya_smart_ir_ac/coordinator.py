@@ -90,19 +90,19 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         await self._send_power_command(infrared_id, climate_id, "0")
         await self._async_force_update_data(climate_id, power=False)
 
-    async def async_set_temperature(self, infrared_id: str, climate_id: str, temperature: float, skip_ensure_off: bool = False):
+    async def async_set_temperature(self, infrared_id: str, climate_id: str, temperature: float):
         """Send IR command to set target temperature and update local cache."""
-        await self._send_temperature_command(infrared_id, climate_id, temperature, skip_ensure_off=skip_ensure_off)
+        await self._send_temperature_command(infrared_id, climate_id, temperature)
         await self._async_force_update_data(climate_id, power=True, temperature=temperature)
 
-    async def async_set_fan_mode(self, infrared_id: str, climate_id: str, fan_mode: str, skip_ensure_off: bool = False):
+    async def async_set_fan_mode(self, infrared_id: str, climate_id: str, fan_mode: str):
         """Send IR command to set fan mode and update local cache."""
-        await self._send_fan_mode_command(infrared_id, climate_id, fan_mode, skip_ensure_off=skip_ensure_off)
+        await self._send_fan_mode_command(infrared_id, climate_id, fan_mode)
         await self._async_force_update_data(climate_id, power=True, fan_mode=fan_mode)
 
-    async def async_set_hvac_mode(self, infrared_id: str, climate_id: str, hvac_mode: HVACMode, temperature: float, fan_mode: str, skip_ensure_off: bool = False):
+    async def async_set_hvac_mode(self, infrared_id: str, climate_id: str, hvac_mode: HVACMode, temperature: float, fan_mode: str):
         """Send a combined multi-command IR packet (Mode, Temp, Fan) and update local cache."""
-        await self._send_combined_command(infrared_id, climate_id, hvac_mode, temperature, fan_mode, skip_ensure_off=skip_ensure_off)
+        await self._send_combined_command(infrared_id, climate_id, hvac_mode, temperature, fan_mode)
         await self._async_force_update_data(climate_id, power=True, hvac_mode=hvac_mode, temperature=temperature, fan_mode=fan_mode)
 
     # =========================================================================
@@ -114,7 +114,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         _LOGGER.debug("[%s] Executing combined power-on and hvac mode configuration flow (%s)", climate_id, hvac_mode)
         
         await self._send_power_command(infrared_id, climate_id, "1")
-        await self._send_combined_command(infrared_id, climate_id, hvac_mode, temperature, fan_mode, skip_ensure_off=True)
+        await self._send_combined_command(infrared_id, climate_id, hvac_mode, temperature, fan_mode)
         
         await self._async_force_update_data(climate_id, power=True, hvac_mode=hvac_mode, temperature=temperature, fan_mode=fan_mode)
 
@@ -123,7 +123,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         _LOGGER.debug("[%s] Executing combined power-on and temperature configuration flow (%s)", climate_id, temperature)
 
         await self._send_power_command(infrared_id, climate_id, "1")
-        await self._send_temperature_command(infrared_id, climate_id, temperature, skip_ensure_off=True)
+        await self._send_temperature_command(infrared_id, climate_id, temperature)
 
         await self._async_force_update_data(climate_id, power=True, temperature=temperature)
 
@@ -132,7 +132,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         _LOGGER.debug("[%s] Executing combined power-on and fan mode configuration flow (%s)", climate_id, fan_mode)
 
         await self._send_power_command(infrared_id, climate_id, "1")
-        await self._send_fan_mode_command(infrared_id, climate_id, fan_mode, skip_ensure_off=True)
+        await self._send_fan_mode_command(infrared_id, climate_id, fan_mode)
 
         await self._async_force_update_data(climate_id, power=True, fan_mode=fan_mode)
 
@@ -152,30 +152,24 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
             translation_key = "climate_error_turn_on" if state == "1" else "climate_error_turn_off"
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key=translation_key)
 
-    async def _send_temperature_command(self, infrared_id: str, climate_id: str, temperature: float, skip_ensure_off: bool = False) -> None:
+    async def _send_temperature_command(self, infrared_id: str, climate_id: str, temperature: float) -> None:
         """Send raw temperature command and handle validation errors."""
-        if not skip_ensure_off:
-            await self._async_ensure_off_before_on(infrared_id, climate_id)
         _LOGGER.debug("[%s] Sending IR command to set temperature to %s°C", climate_id, temperature)
         result = await self._api.async_send_command(infrared_id, climate_id, "temp", tuya_temp(temperature))
         if not result.success:
             _LOGGER.error("Failed to set temperature for climate %s: %s", climate_id, result.error_info)
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="climate_error_temperature")
 
-    async def _send_fan_mode_command(self, infrared_id: str, climate_id: str, fan_mode: str, skip_ensure_off: bool = False) -> None:
+    async def _send_fan_mode_command(self, infrared_id: str, climate_id: str, fan_mode: str) -> None:
         """Send raw fan mode command and handle validation errors."""
-        if not skip_ensure_off:
-            await self._async_ensure_off_before_on(infrared_id, climate_id)
         _LOGGER.debug("[%s] Sending IR command to set fan mode to %s", climate_id, fan_mode)
         result = await self._api.async_send_command(infrared_id, climate_id, "wind", tuya_wind(fan_mode))
         if not result.success:
             _LOGGER.error("Failed to set fan mode for climate %s: %s", climate_id, result.error_info)
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="climate_error_fan_mode")
 
-    async def _send_combined_command(self, infrared_id: str, climate_id: str, hvac_mode: HVACMode, temperature: float, fan_mode: str, skip_ensure_off: bool = False) -> None:
+    async def _send_combined_command(self, infrared_id: str, climate_id: str, hvac_mode: HVACMode, temperature: float, fan_mode: str) -> None:
         """Send multi-command IR packet and handle validation errors."""
-        if not skip_ensure_off:
-            await self._async_ensure_off_before_on(infrared_id, climate_id)
         _LOGGER.debug("[%s] Sending combined IR packet -> Mode: %s, Temp: %s, Fan: %s", climate_id, hvac_mode, temperature, fan_mode)
         result = await self._api.async_send_multiple_command(
             infrared_id, climate_id, "1", tuya_mode(hvac_mode), tuya_temp(temperature), tuya_wind(fan_mode)

@@ -339,7 +339,7 @@ class TuyaClimateEntity:
             await self._async_trigger_custom_on_if_configured()
             if self._is_custom_power_on_scene:
                 await self.coordinator.async_set_hvac_mode(
-                    self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode, skip_ensure_off=True
+                    self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode
                 )
             else:
                 await self.coordinator.async_turn_on_with_hvac_mode(
@@ -362,7 +362,7 @@ class TuyaClimateEntity:
                     await self._async_trigger_custom_on_if_configured()
                     if self._is_custom_power_on_scene:
                         await self.coordinator.async_set_hvac_mode(
-                            self._infrared_id, self._climate_id, hvac_mode, value, fan_mode, skip_ensure_off=True
+                            self._infrared_id, self._climate_id, hvac_mode, value, fan_mode
                         )
                     else:
                         await self.coordinator.async_turn_on_with_hvac_mode(
@@ -377,7 +377,7 @@ class TuyaClimateEntity:
                 await self._async_trigger_custom_on_if_configured()
                 if self._is_custom_power_on_scene:
                     await self.coordinator.async_set_temperature(
-                        self._infrared_id, self._climate_id, value, skip_ensure_off=True
+                        self._infrared_id, self._climate_id, value
                     )
                 else:
                     await self.coordinator.async_turn_on_with_temperature(
@@ -394,7 +394,7 @@ class TuyaClimateEntity:
             await self._async_trigger_custom_on_if_configured()
             if self._is_custom_power_on_scene:
                 await self.coordinator.async_set_fan_mode(
-                    self._infrared_id, self._climate_id, fan_mode, skip_ensure_off=True
+                    self._infrared_id, self._climate_id, fan_mode
                 )
             else:
                 await self.coordinator.async_turn_on_with_fan_mode(
@@ -432,8 +432,7 @@ class TuyaClimateEntity:
                         self._climate_id, 
                         target_mode,
                         target_temp, 
-                        target_fan,
-                        skip_ensure_off=True
+                        target_fan
                     )
                 else:
                     await self.coordinator.async_turn_on_with_hvac_mode(
