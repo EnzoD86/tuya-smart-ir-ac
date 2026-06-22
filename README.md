@@ -1,6 +1,8 @@
 # Tuya Smart IR AC Integration for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
+[![Stable](https://img.shields.io/github/v/release/EnzoD86/tuya-smart-ir-ac)](https://github.com/EnzoD86/tuya-smart-ir-ac/releases/latest)
+[![Donate](https://img.shields.io/badge/donate-BuyMeCoffee-yellow.svg)](https://www.buymeacoffee.com/enzod86)
 
 This integration allows you to control Air Conditioners and generic infrared devices managed via a Tuya Smart IR Hub using the Tuya IoT Cloud Platform. It provides real-time status updates and local-like responsiveness via the Tuya Pulsar messaging service.
 
@@ -25,7 +27,7 @@ The easiest way to install this integration and receive automatic updates is thr
 4. Search for `Tuya Smart IR AC` and click **Download**.
 5. **Restart** Home Assistant to apply the changes.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=cornguo&repository=tuya-smart-ir-ac&category=integration)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=EnzoD86&repository=tuya-smart-ir-ac&category=integration)
 
 ### Method 2: Manual Installation
 1. Download the latest release from the GitHub repository.
@@ -155,3 +157,8 @@ Home Assistant needs to be restarted after this change.
 
 ## Contributions are welcome!
 If you have ideas to contribute to the project, open a pull request and we will evaluate together how to implement the improvement. Thanks!
+
+## Support me
+I dedicate my free time to the development and support for this integration, if you appreciate my work and want to support me, you can buy me a coffee. Thanks!
+
+<a href="https://www.buymeacoffee.com/enzod86" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
