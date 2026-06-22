@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
 import asyncio
-from typing import Any
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.exceptions import ServiceValidationError
