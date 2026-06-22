@@ -57,20 +57,23 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         """Check if the climate device is available in the fetched data."""
         return self.data and self.data.get(climate_id) is not None
 
-    def _get_compatibility_option(self, climate_id: str, option_key: str, default: Any) -> Any:
-        """Get compatibility option value for a specific climate device."""
-        climates = self.entry.options.get(DEVICE_TYPE_CLIMATES, [])
-        for d in climates:
-            if d.get(CONF_DEVICE_ID) == climate_id:
-                return d.get(CONF_COMPATIBILITY_OPTIONS, {}).get(option_key, default)
-        return default
-
     async def _async_ensure_off_before_on(self, infrared_id: str, climate_id: str) -> None:
         """Ensure a power-off command is sent before any command that turns the device on."""
-        send_off_before_on = self._get_compatibility_option(
-            climate_id, CONF_SEND_OFF_BEFORE_ON, DEFAULT_SEND_OFF_BEFORE_ON
-        )
+        climates = self.entry.options.get(DEVICE_TYPE_CLIMATES, [])
+        send_off_before_on = DEFAULT_SEND_OFF_BEFORE_ON
+        for d in climates:
+            if d.get(CONF_DEVICE_ID) == climate_id:
+                send_off_before_on = d.get(CONF_COMPATIBILITY_OPTIONS, {}).get(
+                    CONF_SEND_OFF_BEFORE_ON, DEFAULT_SEND_OFF_BEFORE_ON
+                )
+                break
+
         if not send_off_before_on:
+            return
+
+        # Don't send power-off if the device is already considered ON in our cache
+        current_state = self.data.get(climate_id)
+        if current_state and current_state.power:
             return
 
         _LOGGER.debug("[%s] Sending power-off command before power-on", climate_id)
@@ -114,7 +117,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         _LOGGER.debug("[%s] Executing combined power-on and hvac mode configuration flow (%s)", climate_id, hvac_mode)
         
         await self._send_power_command(infrared_id, climate_id, "1")
-        await self._send_combined_command(infrared_id, climate_id, hvac_mode, temperature, fan_mode)
+        await self._send_combined_command(infrared_id, climate_id, hvac_mode, temperature, fan_mode, skip_ensure_off=True)
         
         await self._async_force_update_data(climate_id, power=True, hvac_mode=hvac_mode, temperature=temperature, fan_mode=fan_mode)
 
@@ -168,8 +171,11 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
             _LOGGER.error("Failed to set fan mode for climate %s: %s", climate_id, result.error_info)
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="climate_error_fan_mode")
 
-    async def _send_combined_command(self, infrared_id: str, climate_id: str, hvac_mode: HVACMode, temperature: float, fan_mode: str) -> None:
+    async def _send_combined_command(self, infrared_id: str, climate_id: str, hvac_mode: HVACMode, temperature: float, fan_mode: str, skip_ensure_off: bool = False) -> None:
         """Send multi-command IR packet and handle validation errors."""
+        if not skip_ensure_off:
+            await self._async_ensure_off_before_on(infrared_id, climate_id)
+
         _LOGGER.debug("[%s] Sending combined IR packet -> Mode: %s, Temp: %s, Fan: %s", climate_id, hvac_mode, temperature, fan_mode)
         result = await self._api.async_send_multiple_command(
             infrared_id, climate_id, "1", tuya_mode(hvac_mode), tuya_temp(temperature), tuya_wind(fan_mode)
