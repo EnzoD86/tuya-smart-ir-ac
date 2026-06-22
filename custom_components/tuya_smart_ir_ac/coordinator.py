@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 import asyncio
+from typing import Any
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.exceptions import ServiceValidationError
@@ -14,7 +15,10 @@ from .const import (
     UPDATE_TIMEOUT,
     CONF_DEVICE_ID,
     DEVICE_TYPE_CLIMATES,
-    DEVICE_TYPE_SENSORS
+    DEVICE_TYPE_SENSORS,
+    CONF_COMPATIBILITY_OPTIONS,
+    CONF_SEND_OFF_BEFORE_ON,
+    DEFAULT_SEND_OFF_BEFORE_ON,
 )
 from .helpers import tuya_temp, tuya_mode, tuya_wind
 from .api import TuyaClimateAPI, TuyaSensorAPI
@@ -52,6 +56,14 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
     def is_available(self, climate_id: str) -> bool:
         """Check if the climate device is available in the fetched data."""
         return self.data and self.data.get(climate_id) is not None
+
+    def _get_compatibility_option(self, climate_id: str, option_key: str, default: Any) -> Any:
+        """Get compatibility option value for a specific climate device."""
+        climates = self.entry.options.get(DEVICE_TYPE_CLIMATES, [])
+        for d in climates:
+            if d.get(CONF_DEVICE_ID) == climate_id:
+                return d.get(CONF_COMPATIBILITY_OPTIONS, {}).get(option_key, default)
+        return default
     
     # =========================================================================
     # PUBLIC ATOMIC COORDINATOR ACTIONS
@@ -119,6 +131,15 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 
     async def _send_power_command(self, infrared_id: str, climate_id: str, state: str) -> None:
         """Send raw power command and handle validation errors."""
+        if state == "1":
+            send_off_before_on = self._get_compatibility_option(
+                climate_id, CONF_SEND_OFF_BEFORE_ON, DEFAULT_SEND_OFF_BEFORE_ON
+            )
+            if send_off_before_on:
+                _LOGGER.debug("[%s] Sending power-off command before power-on", climate_id)
+                await self._api.async_send_command(infrared_id, climate_id, "power", "0")
+                await asyncio.sleep(1)
+
         _LOGGER.debug("[%s] Sending IR command to turn %s climate", climate_id, "ON" if state == "1" else "OFF")
         result = await self._api.async_send_command(infrared_id, climate_id, "power", state)
         if not result.success:

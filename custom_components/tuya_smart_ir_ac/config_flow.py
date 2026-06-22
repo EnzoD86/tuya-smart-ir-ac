@@ -40,6 +40,7 @@ from .const import (
     CONF_CLIMATE_UPDATE_INTERVAL,
     CONF_COMPATIBILITY_OPTIONS,
     CONF_CUSTOM_POWER_ON,
+    CONF_SEND_OFF_BEFORE_ON,
     CONF_DEVICE_ID,
     CONF_DRY_MIN_FAN,
     CONF_DRY_MIN_TEMP,
@@ -66,6 +67,7 @@ from .const import (
     DEFAULT_FAN_MODE,
     DEFAULT_DRY_MIN_FAN,
     DEFAULT_DRY_MIN_TEMP,
+    DEFAULT_SEND_OFF_BEFORE_ON,
     DEFAULT_ENABLE_PULSAR,
     DEFAULT_FAN_POWER_ON,
     DEFAULT_GLOBAL_PRESETS,
@@ -932,6 +934,9 @@ def climate_data() -> dict[vol.Marker, Any]:
                     ): BooleanSelector(),
                     vol.Optional(
                         CONF_DRY_MIN_FAN, default=DEFAULT_DRY_MIN_FAN
+                    ): BooleanSelector(),
+                    vol.Optional(
+                        CONF_SEND_OFF_BEFORE_ON, default=DEFAULT_SEND_OFF_BEFORE_ON
                     ): BooleanSelector(),
                     vol.Optional(CONF_CUSTOM_POWER_ON): EntitySelector(
                         EntitySelectorConfig(
