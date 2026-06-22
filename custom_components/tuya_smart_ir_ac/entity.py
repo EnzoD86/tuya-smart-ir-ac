@@ -226,7 +226,7 @@ class TuyaClimateEntity:
     @property
     def _is_custom_power_on_scene(self) -> bool:
         """Return True if the custom power-on action is a scene."""
-        return bool(self._custom_power_on and self._custom_power_on.startswith("scene."))
+        return bool(self._custom_power_on and self._custom_power_on.startswith(f"{Platform.SCENE}."))
 
     def get_power_on(self, power_on_setting: str, hvac_mode_previous_state: HVACMode) -> bool:
         """Match hardware policy definitions against current machine states to verify power requirements."""
