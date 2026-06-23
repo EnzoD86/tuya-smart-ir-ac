@@ -241,7 +241,8 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 class TuyaSensorCoordinator(DataUpdateCoordinator[dict[str, TuyaSensorData]]):
     """Coordinator for physical Hub sensors, with unified Smart Polling logic."""
 
-    def __init__(self,
+    def __init__(
+        self,
         hass: HomeAssistant, 
         entry: ConfigEntry, 
         sensor_api: TuyaSensorAPI,
