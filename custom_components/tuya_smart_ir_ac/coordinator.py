@@ -72,11 +72,12 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 
         # Don't send power-off if the device is already considered ON in our cache
         current_state = self.data.get(climate_id)
-        if current_state and current_state.power:
+        if current_state and current_state.power == True:
             return
 
         _LOGGER.debug("[%s] Sending power-off command before power-on", climate_id)
         await self._api.async_send_command(infrared_id, climate_id, "power", "0")
+        await self._api.async_send_command(infrared_id, climate_id, "power", "1")
     
     # =========================================================================
     # PUBLIC ATOMIC COORDINATOR ACTIONS
@@ -115,7 +116,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         """Execute a combined flow: turn on the device via cloud and immediately set HVAC parameters, updating cache once."""
         _LOGGER.debug("[%s] Executing combined power-on and hvac mode configuration flow (%s)", climate_id, hvac_mode)
 
-        await self.async_turn_on(infrared_id, climate_id)
+        await self._send_power_command(infrared_id, climate_id, "1")
         await self._send_combined_command(infrared_id, climate_id, hvac_mode, temperature, fan_mode)
 
         await self._async_force_update_data(climate_id, power=True, hvac_mode=hvac_mode, temperature=temperature, fan_mode=fan_mode)
@@ -124,7 +125,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         """Execute a combined flow: turn on the device via cloud and immediately set temperature, updating cache once."""
         _LOGGER.debug("[%s] Executing combined power-on and temperature configuration flow (%s)", climate_id, temperature)
 
-        await self.async_turn_on(infrared_id, climate_id)
+        await self._send_power_command(infrared_id, climate_id, "1")
         await self._send_temperature_command(infrared_id, climate_id, temperature)
 
         await self._async_force_update_data(climate_id, power=True, temperature=temperature)
@@ -133,7 +134,7 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         """Execute a combined flow: turn on the device via cloud and immediately set fan mode, updating cache once."""
         _LOGGER.debug("[%s] Executing combined power-on and fan mode configuration flow (%s)", climate_id, fan_mode)
 
-        await self.async_turn_on(infrared_id, climate_id)
+        await self._send_power_command(infrared_id, climate_id, "1")
         await self._send_temperature_command(infrared_id, climate_id, temperature)
         await self._send_fan_mode_command(infrared_id, climate_id, fan_mode)
 
@@ -145,7 +146,8 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 
     async def _send_power_command(self, infrared_id: str, climate_id: str, state: str) -> None:
         """Send raw power command and handle validation errors."""
-        await self._async_ensure_off_before_on(infrared_id, climate_id)
+        if state == "1":
+            await self._async_ensure_off_before_on(infrared_id, climate_id)
 
         _LOGGER.debug("[%s] Sending IR command to turn %s climate", climate_id, "ON" if state == "1" else "OFF")
         result = await self._api.async_send_command(infrared_id, climate_id, "power", state)
