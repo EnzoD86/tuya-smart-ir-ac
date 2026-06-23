@@ -143,10 +143,9 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
     # PRIVATE LOW-LEVEL COMMAND HELPERS
     # =========================================================================
 
-    async def _send_power_command(self, infrared_id: str, climate_id: str, state: str, skip_ensure_off: bool = False) -> None:
+    async def _send_power_command(self, infrared_id: str, climate_id: str, state: str) -> None:
         """Send raw power command and handle validation errors."""
-        if state == "1" and not skip_ensure_off:
-            await self._async_ensure_off_before_on(infrared_id, climate_id)
+        await self._async_ensure_off_before_on(infrared_id, climate_id)
 
         _LOGGER.debug("[%s] Sending IR command to turn %s climate", climate_id, "ON" if state == "1" else "OFF")
         result = await self._api.async_send_command(infrared_id, climate_id, "power", state)
