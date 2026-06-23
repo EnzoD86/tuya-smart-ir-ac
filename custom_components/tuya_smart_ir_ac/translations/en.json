@@ -212,7 +212,6 @@
               "fan_power_on": "Force power on when setting fan speed",
               "dry_min_temp": "Set minimum temperature in dry mode",
               "dry_min_fan": "Set minimum fan speed in dry mode",
-              "send_off_before_on": "Send power-off command before power-on",
               "custom_power_on": "Custom power-on button or scene (ONLY if standard power-on fails)"
             }
           }
@@ -242,7 +241,6 @@
               "fan_power_on": "Force power on when setting fan speed",
               "dry_min_temp": "Set minimum temperature in dry mode",
               "dry_min_fan": "Set minimum fan speed in dry mode",
-              "send_off_before_on": "Send power-off command before power-on",
               "custom_power_on": "Custom power-on button or scene (ONLY if standard power-on fails)"
             }
           }

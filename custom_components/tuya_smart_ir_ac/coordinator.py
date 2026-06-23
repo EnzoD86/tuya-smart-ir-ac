@@ -15,9 +15,7 @@ from .const import (
     CONF_DEVICE_ID,
     DEVICE_TYPE_CLIMATES,
     DEVICE_TYPE_SENSORS,
-    CONF_COMPATIBILITY_OPTIONS,
-    CONF_SEND_OFF_BEFORE_ON,
-    DEFAULT_SEND_OFF_BEFORE_ON,
+    CONF_COMPATIBILITY_OPTIONS
 )
 from .helpers import tuya_temp, tuya_mode, tuya_wind
 from .api import TuyaClimateAPI, TuyaSensorAPI
@@ -56,29 +54,6 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         """Check if the climate device is available in the fetched data."""
         return self.data and self.data.get(climate_id) is not None
 
-    async def _async_ensure_off_before_on(self, infrared_id: str, climate_id: str) -> None:
-        """Ensure a power-off command is sent before any command that turns the device on."""
-        climates = self.entry.options.get(DEVICE_TYPE_CLIMATES, [])
-        send_off_before_on = DEFAULT_SEND_OFF_BEFORE_ON
-        for d in climates:
-            if d.get(CONF_DEVICE_ID) == climate_id:
-                send_off_before_on = d.get(CONF_COMPATIBILITY_OPTIONS, {}).get(
-                    CONF_SEND_OFF_BEFORE_ON, DEFAULT_SEND_OFF_BEFORE_ON
-                )
-                break
-
-        if not send_off_before_on:
-            return
-
-        # Don't send power-off if the device is already considered ON in our cache
-        current_state = self.data.get(climate_id)
-        if current_state and current_state.power == True:
-            return
-
-        _LOGGER.debug("[%s] Sending power-off command before power-on", climate_id)
-        await self._api.async_send_command(infrared_id, climate_id, "power", "0")
-        await asyncio.sleep(0.5)
-    
     # =========================================================================
     # PUBLIC ATOMIC COORDINATOR ACTIONS
     # =========================================================================
@@ -146,9 +121,6 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 
     async def _send_power_command(self, infrared_id: str, climate_id: str, state: str) -> None:
         """Send raw power command and handle validation errors."""
-        if state == "1":
-            await self._async_ensure_off_before_on(infrared_id, climate_id)
-
         _LOGGER.debug("[%s] Sending IR command to turn %s climate", climate_id, "ON" if state == "1" else "OFF")
         result = await self._api.async_send_command(infrared_id, climate_id, "power", state)
         if not result.success:
@@ -174,8 +146,6 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 
     async def _send_combined_command(self, infrared_id: str, climate_id: str, hvac_mode: HVACMode, temperature: float, fan_mode: str) -> None:
         """Send multi-command IR packet and handle validation errors."""
-        await self._async_ensure_off_before_on(infrared_id, climate_id)
-
         _LOGGER.debug("[%s] Sending combined IR packet -> Mode: %s, Temp: %s, Fan: %s", climate_id, hvac_mode, temperature, fan_mode)
         result = await self._api.async_send_multiple_command(
             infrared_id, climate_id, "1", tuya_mode(hvac_mode), tuya_temp(temperature), tuya_wind(fan_mode)

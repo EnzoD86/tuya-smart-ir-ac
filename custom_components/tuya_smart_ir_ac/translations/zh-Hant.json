@@ -212,7 +212,6 @@
               "fan_power_on": "設定風速時強制開機",
               "dry_min_temp": "設定除濕模式的最低溫度",
               "dry_min_fan": "設定除濕模式的最低風速",
-              "send_off_before_on": "開機前傳送關機指令",
               "custom_power_on": "自訂開機按鍵或場景（僅在標準開機失敗時使用）"
             }
           }
@@ -242,7 +241,6 @@
               "fan_power_on": "設定風速時強制開機",
               "dry_min_temp": "設定除濕模式的最低溫度",
               "dry_min_fan": "設定除濕模式的最低風速",
-              "send_off_before_on": "開機前傳送關機指令",
               "custom_power_on": "自訂開機按鍵或場景（僅在標準開機失敗時使用）"
             }
           }
