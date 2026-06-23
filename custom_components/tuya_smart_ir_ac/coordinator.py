@@ -14,8 +14,7 @@ from .const import (
     UPDATE_TIMEOUT,
     CONF_DEVICE_ID,
     DEVICE_TYPE_CLIMATES,
-    DEVICE_TYPE_SENSORS,
-    CONF_COMPATIBILITY_OPTIONS
+    DEVICE_TYPE_SENSORS
 )
 from .helpers import tuya_temp, tuya_mode, tuya_wind
 from .api import TuyaClimateAPI, TuyaSensorAPI
@@ -263,7 +262,7 @@ class TuyaSensorCoordinator(DataUpdateCoordinator[dict[str, TuyaSensorData]]):
             if (now - last_ts) > threshold:
                 _LOGGER.debug("[%s] DPs code '%s' is outdated. Triggering cloud update.", device_id, code)
                 return True
-        
+
         _LOGGER.debug("[%s] All DPS codes are fresh. Skipping API refresh.", device_id)
         return False
 
@@ -281,10 +280,10 @@ class TuyaSensorCoordinator(DataUpdateCoordinator[dict[str, TuyaSensorData]]):
                 result = await self._api.async_fetch_all_data(devices_to_fetch)
                 if not result.success:
                     raise UpdateFailed(f"Tuya error: {result.error_info}")
-                
+
                 for dev_id, _ in result.data.items():
                     self._update_dps_timestamp(dev_id, TuyaSensorData.get_dps_codes())
-                
+
                 updated_data = self.data.copy()
                 updated_data.update(result.data)
                 return updated_data

@@ -72,7 +72,7 @@ class TuyaClimateEntity:
     def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData, sub_entity_type: str | None = None) -> None:
         """Initialize core configuration boundaries and user preferences."""
         self._runtime_data = runtime_data
-        
+
         self._infrared_id = config_data.get(CONF_INFRARED_ID)
         self._climate_id = config_data.get(CONF_DEVICE_ID)
         self._name = config_data.get(CONF_NAME)
@@ -253,7 +253,7 @@ class TuyaClimateEntity:
         sensor_state = self.hass.states.get(self._temperature_sensor)
         if not valid_sensor_state(sensor_state):
             return None
-        
+
         value = convert_to_float(sensor_state.state)
         if value is None:
             return None
@@ -276,7 +276,7 @@ class TuyaClimateEntity:
         return convert_to_float(sensor_state.state)
 
     def get_preset_modes(self) -> str:
-        """Return the list of available preset modes based on current HVAC mode."""    
+        """Return the list of available preset modes based on current HVAC mode."""
         global_presets = self._runtime_data.global_presets
 
         if not global_presets or not self._preset_modes:
@@ -294,9 +294,9 @@ class TuyaClimateEntity:
                 available_presets.append(preset_name)
 
         return available_presets
-    
+
     def get_preset_mode(self) -> str:
-        """Return the active preset matching real-time device configurations."""        
+        """Return the active preset matching real-time device configurations."""
         if self._current_hvac_mode is HVACMode.OFF:
             return PRESET_NONE
 
@@ -407,7 +407,7 @@ class TuyaClimateEntity:
 
     async def async_handle_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode for the climate device."""
-        
+
         if preset_mode == PRESET_NONE:
             return
 
@@ -480,11 +480,11 @@ class TuyaSensorEntity:
         """Initialize core reporting identities and linked environmental device metadata."""
         self._runtime_data = runtime_data
         self._sensor_type = sensor_type
-        
+
         self._device_id = config_data.get(CONF_DEVICE_ID)
         self._name = config_data.get(CONF_NAME)
         self._unit_of_measurement = config_data.get(CONF_TEMP_UNIT, UnitOfTemperature.CELSIUS)
-        
+
         self._attr_unique_id = f"{self._device_id}_{self._sensor_type}"
         self._attr_device_info = DeviceInfo(
             name=self._name,
@@ -497,24 +497,24 @@ class TuyaSensorEntity:
     def available(self) -> bool:
         """Check environmental sensor availability using the coordinator data cache mapping."""
         return self.coordinator.is_available(self._device_id)
-    
+
     @property
     def _device_sensor_data(self) -> TuyaSensorData | None:
         """Centralized accessor to safely extract the current device's data from the coordinator cache."""
         if self.coordinator.data:
             return self.coordinator.data.get(self._device_id)
         return TuyaSensorData()
-    
+
     @property
     def _current_temperature(self) -> float:
         """Centralized accessor to safely fetch the current temperature."""
         return self._device_sensor_data.temp_current
-    
+
     @property
     def _current_humidity(self) -> float:
         """Centralized accessor to safely fetch the current humidity."""
         return self._device_sensor_data.humidity_value
-    
+
     @property
     def _battery_state(self) -> float:
         """Centralized accessor to safely fetch the battery state."""
