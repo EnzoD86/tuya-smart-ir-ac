@@ -130,9 +130,6 @@ If you ever need to adjust names, IDs, or settings, simply re-run the configurat
 
 To accommodate different types of Air Conditioners and smart home setups, the integration provides advanced compatibility options in the climate configuration step:
 
-### Send Power-Off Before Power-On
-Some AC units require a clean reset sequence to wake up correctly, or their discrete IR codes behave inconsistently. Enabling this option forces the integration to send a standard `power-off` command immediately before transmitting a `power-on` command.
-
 ### Custom Power-On Button or Scene
 If your AC does not respond to standard Tuya IR power commands, or if you want to perform a custom action when turning the AC on, you can configure a custom entity:
 * **Custom Button**: Select a `button` entity. When a power-on is required, the integration will trigger the custom button press followed by the standard IR commands.
