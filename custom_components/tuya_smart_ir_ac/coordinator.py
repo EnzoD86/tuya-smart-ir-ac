@@ -75,8 +75,9 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         if current_state and current_state.power == True:
             return
 
-        _LOGGER.debug("[%s] Sending power-off command before power-on", climate_id)
+        _LOGGER.debug("[%s] Sending additional power-on command with short sleep", climate_id)
         await self._api.async_send_command(infrared_id, climate_id, "power", "1")
+        await asyncio.sleep(0.5)
     
     # =========================================================================
     # PUBLIC ATOMIC COORDINATOR ACTIONS
