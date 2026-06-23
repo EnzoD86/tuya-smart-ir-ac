@@ -109,7 +109,6 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
         _LOGGER.debug("[%s] Executing combined power-on and fan mode configuration flow (%s)", climate_id, fan_mode)
 
         await self._send_power_command(infrared_id, climate_id, "1")
-        await self._send_temperature_command(infrared_id, climate_id, temperature)
         await self._send_fan_mode_command(infrared_id, climate_id, fan_mode)
 
         await self._async_force_update_data(climate_id, power=True, fan_mode=fan_mode)
