@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from homeassistant.helpers.entity import DeviceInfo
@@ -64,6 +65,8 @@ from .helpers import (
     convert_temperature,
     convert_to_float,
 )
+
+_LOGGER = logging.getLogger(__package__)
 
 
 class TuyaClimateEntity:
@@ -264,7 +267,7 @@ class TuyaClimateEntity:
 
         return convert_to_float(sensor_state.state)
 
-    def get_preset_modes(self) -> str:
+    def get_preset_modes(self) -> list[str] | None:
         """Return the list of available preset modes based on current HVAC mode."""    
         global_presets = self._runtime_data.global_presets
 
@@ -272,7 +275,7 @@ class TuyaClimateEntity:
             return None
 
         current_mode = self._real_hvac_mode
-        if self._last_valid_preset_hvac_mode and self.hvac_mode is HVACMode.OFF:
+        if self._last_valid_preset_hvac_mode and self._current_hvac_mode is HVACMode.OFF:
             current_mode = self._last_valid_preset_hvac_mode
 
         available_presets = [PRESET_NONE]
@@ -305,8 +308,16 @@ class TuyaClimateEntity:
 
     async def async_handle_turn_on(self) -> None:
         """Turn on the climate device power via coordinator service."""
-        await self._async_trigger_custom_on_if_configured()
-        await self.coordinator.async_turn_on(self._infrared_id, self._climate_id)
+        if self._custom_power_on:
+            await self._async_trigger_custom_power_on()
+
+        await self.coordinator.async_set_hvac_mode(
+            self._infrared_id, 
+            self._climate_id, 
+            self._real_hvac_mode, 
+            self._current_target_temperature, 
+            self._current_fan_mode
+        )
 
     async def async_handle_turn_off(self) -> None:
         """Turn off the climate device power via coordinator service."""
@@ -321,98 +332,114 @@ class TuyaClimateEntity:
         temperature = self.get_hvac_temperature(hvac_mode)
         fan_mode = self.get_hvac_fan_mode(hvac_mode)
 
-        if self.get_hvac_power_on(self._current_hvac_mode):
-            await self._async_trigger_custom_on_if_configured()
+        if not self._custom_power_on and self.get_hvac_power_on(self._current_hvac_mode):
             await self.coordinator.async_turn_on_with_hvac_mode(
                 self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode
             )
-        else:
-            await self.coordinator.async_set_hvac_mode(
-                self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode
-            )
+            return
+
+        if self._custom_power_on and self.get_hvac_power_on(self._current_hvac_mode):
+            await self._async_trigger_custom_power_on()
+
+        await self.coordinator.async_set_hvac_mode(
+            self._infrared_id, self._climate_id, hvac_mode, temperature, fan_mode
+        )
 
     async def async_handle_set_temperature(self, value: float, hvac_mode: HVACMode | None = None) -> None:
         """Set target temperature for the climate device via coordinator service."""
-        if hvac_mode is not None:
-            if hvac_mode is HVACMode.OFF:
-                await self.coordinator.async_turn_off(self._infrared_id, self._climate_id)
-            else:
-                fan_mode = self.get_hvac_fan_mode(hvac_mode)
+        if hvac_mode is HVACMode.OFF:
+            await self.coordinator.async_turn_off(self._infrared_id, self._climate_id)
+            return
 
-                if self.get_hvac_power_on(self._current_hvac_mode):
-                    await self._async_trigger_custom_on_if_configured()
-                    await self.coordinator.async_turn_on_with_hvac_mode(
-                        self._infrared_id, self._climate_id, hvac_mode, value, fan_mode
-                    )
-                else:
-                    await self.coordinator.async_set_hvac_mode(
-                        self._infrared_id, self._climate_id, hvac_mode, value, fan_mode
-                    )
+        if hvac_mode is not None:
+            fan_mode = self.get_hvac_fan_mode(hvac_mode)
+
+            if not self._custom_power_on and self.get_hvac_power_on(self._current_hvac_mode):
+                await self.coordinator.async_turn_on_with_hvac_mode(
+                    self._infrared_id, self._climate_id, hvac_mode, value, fan_mode
+                )
+                return
+
+            if self._custom_power_on and self.get_hvac_power_on(self._current_hvac_mode):
+                await self._async_trigger_custom_power_on()
+
+            await self.coordinator.async_set_hvac_mode(
+                self._infrared_id, self._climate_id, hvac_mode, value, fan_mode
+            )
         else:
-            if self.get_temp_power_on(self._current_hvac_mode):
-                await self._async_trigger_custom_on_if_configured()
+            if not self._custom_power_on and self.get_temp_power_on(self._current_hvac_mode):
                 await self.coordinator.async_turn_on_with_temperature(
                     self._infrared_id, self._climate_id, value
                 )
-            else:
-                await self.coordinator.async_set_temperature(
-                    self._infrared_id, self._climate_id, value
-                )
+                return
+
+            if self._custom_power_on and self.get_temp_power_on(self._current_hvac_mode):
+                await self._async_trigger_custom_power_on()
+
+            await self.coordinator.async_set_temperature(
+                self._infrared_id, self._climate_id, value
+            )
 
     async def async_handle_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode for the climate device via coordinator service."""
-        if self.get_fan_power_on(self._current_hvac_mode):
-            await self._async_trigger_custom_on_if_configured()
+        if not self._custom_power_on and self.get_fan_power_on(self._current_hvac_mode):
             await self.coordinator.async_turn_on_with_fan_mode(
                 self._infrared_id, self._climate_id, fan_mode
             )
-        else:
-            await self.coordinator.async_set_fan_mode(
-                self._infrared_id, self._climate_id, fan_mode
-            )
+            return
+
+        if self._custom_power_on and self.get_fan_power_on(self._current_hvac_mode):
+            await self._async_trigger_custom_power_on()
+
+        await self.coordinator.async_set_fan_mode(
+            self._infrared_id, self._climate_id, fan_mode
+        )
 
     async def async_handle_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode for the climate device."""
-        
         if preset_mode == PRESET_NONE:
             return
 
-        if (preset_config := self._runtime_data.global_presets.get(preset_mode)) is not None:
-            target_mode = self._real_hvac_mode
-
-            if self._last_valid_preset_hvac_mode and self._current_hvac_mode is HVACMode.OFF:
-                target_mode = self._last_valid_preset_hvac_mode
-
-            if target_mode not in preset_config:
-                return
-
-            mode_config = preset_config.get(target_mode)
-            target_temp = mode_config.get("temp")
-            target_fan = mode_config.get("fan")
-
-            if self.get_hvac_power_on(self._current_hvac_mode):
-                await self._async_trigger_custom_on_if_configured()
-                await self.coordinator.async_turn_on_with_hvac_mode(
-                    self._infrared_id, 
-                    self._climate_id, 
-                    target_mode,
-                    target_temp, 
-                    target_fan
-                )
-            else:
-                await self.coordinator.async_set_hvac_mode(
-                    self._infrared_id, 
-                    self._climate_id, 
-                    target_mode,
-                    target_temp, 
-                    target_fan
-                )
-
-    async def _async_trigger_custom_on_if_configured(self) -> None:
-        """Trigger the custom hardware alternative power-on button if configured."""
-        if not self._custom_power_on:
+        preset_config = self._runtime_data.global_presets.get(preset_mode)
+        if preset_config is None:
             return
 
+        target_mode = self._real_hvac_mode
+
+        if self._last_valid_preset_hvac_mode and self._current_hvac_mode is HVACMode.OFF:
+            target_mode = self._last_valid_preset_hvac_mode
+
+        if target_mode not in preset_config:
+            return
+
+        mode_config = preset_config.get(target_mode)
+        target_temp = mode_config.get("temp")
+        target_fan = mode_config.get("fan")
+
+        if not self._custom_power_on and self.get_hvac_power_on(self._current_hvac_mode):
+            await self.coordinator.async_turn_on_with_hvac_mode(
+                self._infrared_id, 
+                self._climate_id, 
+                target_mode,
+                target_temp, 
+                target_fan
+            )
+            return
+
+        if self._custom_power_on and self.get_hvac_power_on(self._current_hvac_mode):
+            await self._async_trigger_custom_power_on()
+
+        await self.coordinator.async_set_hvac_mode(
+            self._infrared_id, 
+            self._climate_id, 
+            target_mode,
+            target_temp, 
+            target_fan
+        )
+
+    async def _async_trigger_custom_power_on(self) -> None:
+        """Trigger the custom hardware alternative power-on button."""
+        _LOGGER.debug("Triggering custom power-on button: %s", self._custom_power_on)
         await self.hass.services.async_call(
             domain=Platform.BUTTON,
             service="press",
