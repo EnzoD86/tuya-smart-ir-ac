@@ -269,11 +269,6 @@ class TuyaClimateEntity:
 
     def get_preset_modes(self) -> list[str] | None:
         """Return the list of available preset modes based on current HVAC mode."""    
-        global_presets = self._runtime_data.global_presets
-
-        if not global_presets or not self._preset_modes:
-            return None
-
         current_mode = self._real_hvac_mode
         if self._last_valid_preset_hvac_mode and self._current_hvac_mode is HVACMode.OFF:
             current_mode = self._last_valid_preset_hvac_mode
@@ -281,7 +276,7 @@ class TuyaClimateEntity:
         available_presets = [PRESET_NONE]
 
         for preset_name in self._preset_modes:
-            hvac_configs = global_presets.get(preset_name)
+            hvac_configs = self._runtime_data.global_presets.get(preset_name)
             if hvac_configs and current_mode in hvac_configs:
                 available_presets.append(preset_name)
 
