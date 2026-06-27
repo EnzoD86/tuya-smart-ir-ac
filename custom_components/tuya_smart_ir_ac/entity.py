@@ -392,15 +392,10 @@ class TuyaClimateEntity:
 
     async def async_handle_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode for the climate device."""
-        if preset_mode == PRESET_NONE:
-            return
-
-        preset_config = self._runtime_data.global_presets.get(preset_mode)
-        if preset_config is None:
+        if preset_mode == PRESET_NONE or not (preset_config := self._runtime_data.global_presets.get(preset_mode)):
             return
 
         target_mode = self._real_hvac_mode
-
         if self._last_valid_preset_hvac_mode and self._current_hvac_mode is HVACMode.OFF:
             target_mode = self._last_valid_preset_hvac_mode
 
