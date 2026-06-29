@@ -44,6 +44,7 @@ class TuyaOpenPulsar:
         
         self._stop_event = asyncio.Event()
         self._listeners: Set[Callable[[str], Awaitable[None]]] = set()
+        self._task: Optional[asyncio.Task] = None
         
         # Pre-calculate cryptographic assets
         self._access_secret_bytes = access_secret.encode('utf-8')
@@ -83,11 +84,14 @@ class TuyaOpenPulsar:
     async def start(self):
         """Start the asynchronous connection loop."""
         self._stop_event.clear()
-        asyncio.create_task(self._connect_loop())
+        self._task = asyncio.create_task(self._connect_loop())
 
     async def stop(self):
         """Stop the client and close session only if owned."""
         self._stop_event.set()
+        if self._task is not None and not self._task.done():
+            self._task.cancel()
+            self._task = None
         self._listeners.clear()
         if self._owns_session and self._session and not self._session.closed:
             await self._session.close()
