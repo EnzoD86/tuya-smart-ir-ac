@@ -1,5 +1,6 @@
 import logging
 import json
+from collections.abc import Awaitable, Callable
 from homeassistant.core import HomeAssistant
 
 from .tuya_connector import TuyaOpenPulsar
@@ -16,7 +17,7 @@ class TuyaPulsarBridge:
         self._handlers = {}
         self._client.add_message_listener(self._on_message)
 
-    def register_handler(self, dev_id: str, callback: Callable) -> None:
+    def register_handler(self, dev_id: str, callback: Callable[[str, dict], Awaitable[None]]) -> None:
         """Register a callback handler for a specific device."""
         self._handlers[dev_id] = callback
 
