@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.components import persistent_notification
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.ssl import get_default_context
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .tuya_connector import (
@@ -111,7 +112,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
             access_id=data[CONF_ACCESS_ID],
             access_secret=data[CONF_ACCESS_SECRET],
             topic=TuyaCloudPulsarTopic.PROD,
-            session=session
+            session=session,
+            ssl_context=get_default_context()
         )
 
         # Initialize Pulsar bridge

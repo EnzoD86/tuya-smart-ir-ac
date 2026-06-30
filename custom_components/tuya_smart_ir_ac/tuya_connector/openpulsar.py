@@ -28,7 +28,8 @@ class TuyaOpenPulsar:
         access_id: str, 
         access_secret: str, 
         topic: str,
-        session: Optional[aiohttp.ClientSession] = None
+        session: Optional[aiohttp.ClientSession] = None,
+        ssl_context: Optional[ssl.SSLContext] = None
     ):
         """Initialize the Async Pulsar Client."""
         self._ws_endpoint = ws_endpoint
@@ -43,8 +44,8 @@ class TuyaOpenPulsar:
         # Track the live connection state of the WebSocket
         self._is_connected = False
 
-        # SSL context for TLS certificate verification (created once)
-        self._ssl_context = ssl.create_default_context()
+        # SSL context passed from HA, or synchronous fallback (safe outside the event loop)
+        self._ssl_context = ssl_context or ssl.create_default_context()
         
         self._stop_event = asyncio.Event()
         self._listeners: Set[Callable[[str], Awaitable[None]]] = set()
@@ -172,17 +173,6 @@ class TuyaOpenPulsar:
             raw_data_str = data_map.get("data", "")
             raw_encrypted_bytes = base64.b64decode(raw_data_str)
 
-            # Verify v2 envelope signature when present (conservative: only
-            # enforce if a sign field exists, to avoid breaking v1/legacy).
-            if encrypt_version == "v2" and data_map.get("sign") is not None:
-                if not self._verify_v2_sign(
-                    raw_data_str, data_map.get("t"), data_map.get("sign")
-                ):
-                    logger.warning(
-                        "Dropping v2 message with invalid signature."
-                    )
-                    return
-
             # Deterministic routing based on protocol metadata
             if encrypt_version == "v2" and pv == "2.0":
                 #logger.debug("Processing message format: AES-GCM (encryptVersion: v2, pv: 2.0)")
@@ -200,12 +190,6 @@ class TuyaOpenPulsar:
             
         except Exception as e:
             logger.error("Error processing incoming message payload: %s", e)
-
-    def _verify_v2_sign(self, data: str, t: int, received_sign: str) -> bool:
-        """Verify the integrity of a v2 message envelope using official Tuya formula."""
-        target = f"{data}{self._access_secret}{t}".encode('utf-8')
-        calculated_sign = hashlib.md5(target).hexdigest()
-        return calculated_sign == received_sign
 
     def _decrypt_gcm(self, raw_data: bytes) -> str:
         """Decrypt payload using AES-GCM mode (pv 2.0)."""
