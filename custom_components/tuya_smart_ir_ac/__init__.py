@@ -351,7 +351,9 @@ async def _async_migrate_old_entries(hass: HomeAssistant, hub_entry: HubConfigEn
         )
 
 async def async_check_pulsar_connection(hass: HomeAssistant, entry: HubConfigEntry, pulsar_client: TuyaOpenPulsar):
-    for _ in range(5):
+    await asyncio.sleep(30)
+
+    for _ in range(10):
         if pulsar_client.is_connected():
             return True
         await asyncio.sleep(3)
