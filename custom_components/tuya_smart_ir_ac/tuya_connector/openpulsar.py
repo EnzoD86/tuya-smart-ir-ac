@@ -5,6 +5,7 @@ import aiohttp
 import base64
 import hashlib
 import json
+import ssl
 from typing import Callable, Awaitable, Set, Tuple, Optional
 from Crypto.Cipher import AES
 
@@ -41,9 +42,13 @@ class TuyaOpenPulsar:
 
         # Track the live connection state of the WebSocket
         self._is_connected = False
+
+        # SSL context for TLS certificate verification (created once)
+        self._ssl_context = ssl.create_default_context()
         
         self._stop_event = asyncio.Event()
         self._listeners: Set[Callable[[str], Awaitable[None]]] = set()
+        self._task: Optional[asyncio.Task] = None
         
         # Pre-calculate cryptographic assets
         self._access_secret_bytes = access_secret.encode('utf-8')
@@ -83,11 +88,14 @@ class TuyaOpenPulsar:
     async def start(self):
         """Start the asynchronous connection loop."""
         self._stop_event.clear()
-        asyncio.create_task(self._connect_loop())
+        self._task = asyncio.create_task(self._connect_loop())
 
     async def stop(self):
         """Stop the client and close session only if owned."""
         self._stop_event.set()
+        if self._task is not None and not self._task.done():
+            self._task.cancel()
+            self._task = None
         self._listeners.clear()
         if self._owns_session and self._session and not self._session.closed:
             await self._session.close()
@@ -112,7 +120,7 @@ class TuyaOpenPulsar:
                     self._topic_url, 
                     headers=headers,
                     heartbeat=PING_INTERVAL_SECONDS,
-                    ssl=False
+                    ssl=self._ssl_context
                 ) as ws:
                     logger.info("Successfully connected to Tuya WebSocket.")
                     reconnect_delay = 1
@@ -163,7 +171,18 @@ class TuyaOpenPulsar:
             pv = data_map.get("pv")
             raw_data_str = data_map.get("data", "")
             raw_encrypted_bytes = base64.b64decode(raw_data_str)
-            
+
+            # Verify v2 envelope signature when present (conservative: only
+            # enforce if a sign field exists, to avoid breaking v1/legacy).
+            if encrypt_version == "v2" and data_map.get("sign") is not None:
+                if not self._verify_v2_sign(
+                    raw_data_str, data_map.get("t"), data_map.get("sign")
+                ):
+                    logger.warning(
+                        "Dropping v2 message with invalid signature."
+                    )
+                    return
+
             # Deterministic routing based on protocol metadata
             if encrypt_version == "v2" and pv == "2.0":
                 #logger.debug("Processing message format: AES-GCM (encryptVersion: v2, pv: 2.0)")
