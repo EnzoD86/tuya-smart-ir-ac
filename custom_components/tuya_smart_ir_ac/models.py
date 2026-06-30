@@ -180,7 +180,7 @@ class TuyaSensorData:
     temp_unit_convert: str = DEFAULT_TEMP_UNIT
     temp_current: float = DEFAULT_CURRENT_TEMPERATURE
     humidity_value: int = DEFAULT_CURRENT_HUMIDITY
-    battery_state: str | int = DEFAULT_BATTERY_STATE
+    battery_state: int = DEFAULT_BATTERY_STATE
 
     _STATIC_FIELDS: ClassVar[set[str]] = {"temp_unit_convert"}
     _DPS_CODES: ClassVar[list[str]] = []

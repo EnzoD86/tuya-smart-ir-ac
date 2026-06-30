@@ -99,6 +99,7 @@ from .const import (
     UPDATE_INTERVAL,
 )
 from .models import (
+    TuyaClimateData,
     TuyaSensorData,
     TuyaAPIResult
 )
@@ -319,6 +320,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     placeholders["error_info"] = result.error_info
                     _LOGGER.debug("[%s] Tuya API rejection validation failed for climate target %s: %s", name, climate_id, result.error_info)
                 else:
+                    device_data: TuyaClimateData = result.data
+                    
+                    coordinator = self.config_entry.runtime_data.climate_coordinator
+                    coordinator.data[climate_id] = device_data
+
                     current_options = dict(self.config_entry.options)
                     climates = list(current_options.get(DEVICE_TYPE_CLIMATES, []))
                     climates.append(user_input)
@@ -667,20 +673,23 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     placeholders["error_info"] = result.error_info
                     _LOGGER.debug("[%s] Tuya API validation failed for environmental sensor %s: %s", name, device_id, result.error_info)
                 else:
-                    sensor_data: TuyaSensorData = result.data
+                    device_data: TuyaSensorData = result.data
 
-                    if sensor_data.temp_current is None and sensor_data.humidity_value is None:
+                    if device_data.temp_current is None and device_data.humidity_value is None:
                         errors["base"] = "invalid_sensor_type"
                     else:
-                        if sensor_data.temp_unit_convert is not None:
-                            user_input[CONF_TEMP_UNIT] = sensor_data.temp_unit_convert
+                        coordinator = self.config_entry.runtime_data.sensor_coordinator
+                        coordinator.data[device_id] = device_data
+
+                        if device_data.temp_unit_convert is not None:
+                            user_input[CONF_TEMP_UNIT] = device_data.temp_unit_convert
                             
                         user_input[CONF_SENSOR_TYPES] = []
-                        if sensor_data.temp_current is not None:
+                        if device_data.temp_current is not None:
                             user_input[CONF_SENSOR_TYPES].append(ENTITY_SENSOR_TEMPERATURE)
-                        if sensor_data.humidity_value is not None:
+                        if device_data.humidity_value is not None:
                             user_input[CONF_SENSOR_TYPES].append(ENTITY_SENSOR_HUMIDITY)
-                        if sensor_data.battery_state is not None:
+                        if device_data.battery_state is not None:
                             user_input[CONF_SENSOR_TYPES].append(ENTITY_SENSOR_BATTERY)                    
                     
                         current_options = dict(self.config_entry.options)

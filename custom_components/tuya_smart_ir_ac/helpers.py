@@ -65,7 +65,7 @@ def hass_fan_mode(wind: str) -> str | None:
     return TUYA_FAN_MODES.get(wind)
 
 
-def hass_battery_state(battery: str) -> int | str | None:
+def hass_battery_state(battery: str) -> int | None:
     """Map Tuya battery state code to Home Assistant battery level/percentage."""
     return BATTERY_LEVELS.get(battery)
 
