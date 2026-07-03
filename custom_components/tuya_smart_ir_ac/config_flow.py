@@ -32,7 +32,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .api import TuyaClimateAPI, TuyaGenericAPI, TuyaSensorAPI
 from .tuya_connector import TuyaOpenAPI
 from .const import (
     CONF_ACCESS_ID,
@@ -98,11 +97,7 @@ from .const import (
     TUYA_API_ENDPOINTS,
     UPDATE_INTERVAL,
 )
-from .models import (
-    TuyaClimateData,
-    TuyaSensorData,
-    TuyaAPIResult
-)
+from .models import TuyaClimateData, TuyaSensorData
 from .helpers import merge_presets_with_defaults
 
 _LOGGER = logging.getLogger(__package__)
@@ -293,8 +288,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         placeholders: dict[str, str] = {}
 
         if user_input is not None:
-            overwrite_invalid_user_input(user_input)
-
             infrared_id = user_input.get(CONF_INFRARED_ID)
             climate_id = user_input.get(CONF_DEVICE_ID)
             name = user_input.get(CONF_NAME)
@@ -312,8 +305,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     break
 
             if not errors:
-                client = self.config_entry.runtime_data.api_client
-                result = await async_get_climate_device(self.hass, client, infrared_id, climate_id)
+                climate_api = self.config_entry.runtime_data.connector.climate_api
+                result = await climate_api.async_fetch_data(infrared_id, climate_id)
                 
                 if not result.success:
                     errors["base"] = "tuya_api_error"
@@ -321,10 +314,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     _LOGGER.debug("[%s] Tuya API rejection validation failed for climate target %s: %s", name, climate_id, result.error_info)
                 else:
                     device_data: TuyaClimateData = result.data
+
+                    _LOGGER.debug("[%s] Successfully validated climate device %s with Tuya API", name, climate_id)
+                    _LOGGER.debug("[%s] Tuya API returned climate device data: %s", name, device_data)
                     
                     coordinator = self.config_entry.runtime_data.climate_coordinator
                     coordinator.data[climate_id] = device_data
 
+                    overwrite_invalid_user_input(user_input)
                     current_options = dict(self.config_entry.options)
                     climates = list(current_options.get(DEVICE_TYPE_CLIMATES, []))
                     climates.append(user_input)
@@ -561,9 +558,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     break
 
             if not errors:
-                client = self.config_entry.runtime_data.api_client
-                result = await async_get_generic_device(self.hass, client, infrared_id, device_id)
-                
+                generic_api = self.config_entry.runtime_data.connector.generic_api
+                result = await generic_api.async_fetch_data(infrared_id, device_id)
+
                 if not result.success:
                     errors["base"] = "tuya_api_error"
                     placeholders["error_info"] = result.error_info
@@ -665,8 +662,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     break
 
             if not errors:
-                client = self.config_entry.runtime_data.api_client
-                result = await async_get_sensor_device(self.hass, client, device_id)
+                sensor_api = self.config_entry.runtime_data.connector.sensor_api
+                result = await sensor_api.async_fetch_data(device_id)
                 
                 if not result.success:
                     errors["base"] = "tuya_api_error"
@@ -981,26 +978,6 @@ async def async_validate_and_connect(data: dict[str, Any]) -> dict[str, str]:
         await client.close()
 
     return errors
-
-async def async_get_climate_device(
-    hass: HomeAssistant, client: TuyaOpenAPI, infrared_id: str, climate_id: str
-) -> TuyaAPIResult:
-    """Validate external hardware communication for climate targets via central API."""
-    return await TuyaClimateAPI(hass, client).async_fetch_data(infrared_id, climate_id)
-
-
-async def async_get_generic_device(
-    hass: HomeAssistant, client: TuyaOpenAPI, infrared_id: str, device_id: str
-) -> TuyaAPIResult:
-    """Validate external hardware communication for generic device via central API."""
-    return await TuyaGenericAPI(hass, client).async_fetch_data(infrared_id, device_id)
-        
-
-async def async_get_sensor_device(
-    hass: HomeAssistant, client: TuyaOpenAPI, device_id: str
-) -> TuyaAPIResult:
-    """Validate external hardware communication for temperature/humidity sensor via central API."""
-    return await TuyaSensorAPI(hass, client).async_fetch_data(device_id)
 
 
 def prepare_suggested_values(climate_data: dict[str, Any]) -> dict[str, Any]:

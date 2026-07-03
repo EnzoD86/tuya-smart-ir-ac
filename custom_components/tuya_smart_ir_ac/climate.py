@@ -2,20 +2,13 @@ import logging
 from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    ClimateEntityFeature,
-    HVACMode,
-    PRESET_NONE
-)
+from homeassistant.components.climate.const import ClimateEntityFeature,HVACMode
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEVICE_TYPE_CLIMATES
 from .entity import TuyaClimateEntity
-from .models import (
-    HubConfigEntry,
-    RuntimeData,
-)
+from .models import HubConfigEntry, RuntimeData
 
 _LOGGER = logging.getLogger(__package__)
 

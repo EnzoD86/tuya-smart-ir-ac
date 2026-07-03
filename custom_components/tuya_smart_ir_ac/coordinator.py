@@ -4,22 +4,22 @@ import asyncio
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.climate import HVACMode
 
 from .const import (
+    CONF_CLIMATE_UPDATE_INTERVAL,
+    CONF_DEVICE_ID,
+    CONF_SENSOR_UPDATE_INTERVAL,
     DOMAIN,
+    DEVICE_TYPE_CLIMATES,
+    DEVICE_TYPE_SENSORS,
     UPDATE_INTERVAL,
     UPDATE_TIMEOUT,
-    CONF_DEVICE_ID,
-    DEVICE_TYPE_CLIMATES,
-    DEVICE_TYPE_SENSORS
 )
 from .helpers import tuya_temp, tuya_mode, tuya_wind
-from .api import TuyaClimateAPI, TuyaSensorAPI
-from .bridge import TuyaPulsarBridge
-from .models import TuyaClimateData, TuyaSensorData
+from .models import HubConfigEntry, TuyaClimateData, TuyaSensorData
+from .connector import TuyaConnector
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -30,22 +30,20 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
     def __init__(
         self, 
         hass: HomeAssistant, 
-        entry: ConfigEntry, 
-        climate_api: TuyaClimateAPI,
-        pulsar_bridge: TuyaPulsarBridge,
-        custom_update_interval=UPDATE_INTERVAL
+        entry: HubConfigEntry, 
+        connector: TuyaConnector
     ):
         """Initialize the climate coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=f"[{entry.title}] Climate Coordinator",
-            update_interval=timedelta(seconds=custom_update_interval),
+            update_interval=timedelta(seconds=entry.data.get(CONF_CLIMATE_UPDATE_INTERVAL, UPDATE_INTERVAL)),
             always_update=False
         )
         self.entry = entry
-        self._api = climate_api
-        self._pulsar_bridge = pulsar_bridge
+        self._api = connector.climate_api
+        self._pulsar_bridge = connector.pulsar_bridge
         self._register_pulsar_handlers()
         self.data = {}
 
@@ -156,12 +154,15 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
     # PRIVATE COORDINATOR LIFECYCLE & STATE LIFTLINE HANDLERS
     # =========================================================================
 
-    def _register_pulsar_handlers(self):
-        """Register handlers for climate devices."""
+    def _register_pulsar_handlers(self) -> None:
+        """Register handlers for climate devices in Pulsar bridge."""
+        if not self._pulsar_bridge:
+            return
+
         climates = self.entry.options.get(DEVICE_TYPE_CLIMATES, [])
         for d in climates:
             dev_id = d.get(CONF_DEVICE_ID)
-            if self._pulsar_bridge and dev_id:
+            if dev_id:
                 self._pulsar_bridge.register_handler(dev_id, self._async_update_from_pulsar)
 
     async def _async_update_data(self) -> dict[str, TuyaClimateData]:
@@ -176,13 +177,12 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
                 result = await self._api.async_fetch_all_data(climate_ids)
 
                 if not result.success:
-                    raise UpdateFailed(f"Tuya cloud reported an error fetching climates: {result.error_info}")
+                    raise ValueError(result.error_info)
 
                 return result.data
-        except TimeoutError as e:
-            raise UpdateFailed(f"Timeout communicating with Tuya API for climates: {e}")
-        except Exception as e:
-            raise UpdateFailed(f"Error communicating with Tuya API for climates: {e}")
+        except (TimeoutError, ValueError, Exception) as e:
+            _LOGGER.warning("Error or timeout communicating with Tuya API for climates: %s. Keeping fallback cache.", e)
+            return self.data
 
     async def _async_force_update_data(self, climate_id, power=None, hvac_mode=None, temperature=None, fan_mode=None):
         """Optimistically update local state cache after an IR command execution."""
@@ -212,31 +212,32 @@ class TuyaSensorCoordinator(DataUpdateCoordinator[dict[str, TuyaSensorData]]):
 
     def __init__(self,
         hass: HomeAssistant, 
-        entry: ConfigEntry, 
-        sensor_api: TuyaSensorAPI,
-        pulsar_bridge: TuyaPulsarBridge,
-        custom_update_interval=UPDATE_INTERVAL
+        entry: HubConfigEntry, 
+        connector: TuyaConnector
     ):
         super().__init__(
             hass,
             _LOGGER,
             name=f"[{entry.title}] Sensor Coordinator",
-            update_interval=timedelta(seconds=custom_update_interval),
+            update_interval=timedelta(seconds=entry.data.get(CONF_SENSOR_UPDATE_INTERVAL, UPDATE_INTERVAL)),
             always_update=False
         )
         self.entry = entry
-        self._api = sensor_api
-        self._pulsar_bridge = pulsar_bridge
+        self._api = connector.sensor_api
+        self._pulsar_bridge = connector.pulsar_bridge
         self._pulsar_last_updates: dict[str, dict[str, datetime]] = {}
         self.data = {}
         self._register_pulsar_handlers()
 
-    def _register_pulsar_handlers(self):
-        """Register handlers for sensor devices."""
+    def _register_pulsar_handlers(self) -> None:
+        """Register handlers for sensor devices in Pulsar bridge."""
+        if not self._pulsar_bridge:
+            return
+
         sensors = self.entry.options.get(DEVICE_TYPE_SENSORS, [])
         for d in sensors:
             dev_id = d.get(CONF_DEVICE_ID)
-            if self._pulsar_bridge and dev_id:
+            if dev_id:
                 self._pulsar_bridge.register_handler(dev_id, self._async_update_from_pulsar)
 
     def _update_dps_timestamp(self, device_id: str, codes: list[str]):

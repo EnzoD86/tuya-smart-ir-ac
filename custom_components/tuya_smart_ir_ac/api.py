@@ -4,12 +4,7 @@ from typing import Any, Literal
 
 from homeassistant.core import HomeAssistant
 
-from .models import (
-    TuyaAPIResult,
-    TuyaClimateData,
-    TuyaGenericData,
-    TuyaSensorData,
-)
+from .models import TuyaAPIResult, TuyaClimateData, TuyaGenericData, TuyaSensorData
 from .tuya_connector import TuyaOpenAPI
 
 _LOGGER = logging.getLogger(__package__)

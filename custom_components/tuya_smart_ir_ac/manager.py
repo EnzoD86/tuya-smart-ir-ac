@@ -2,12 +2,10 @@ import logging
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.config_entries import ConfigEntry
 
-from .api import TuyaGenericAPI
 from .const import DOMAIN
-from .models import TuyaGenericData
-from .tuya_connector import TuyaOpenAPI
+from .models import HubConfigEntry, TuyaGenericData
+from .connector import TuyaConnector
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -15,10 +13,15 @@ _LOGGER = logging.getLogger(__package__)
 class TuyaIRManager:
     """Manager handling data fetching and command execution for generic IR devices."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: TuyaOpenAPI) -> None:
+    def __init__(
+            self,
+            hass: HomeAssistant,
+            entry: HubConfigEntry,
+            connector: TuyaConnector
+        ) -> None:
         """Initialize the generic IR manager."""
         self._hass = hass
-        self._api = TuyaGenericAPI(hass, client=client, log_prefix=f"[{entry.title}]")
+        self._api = connector.generic_api
 
     async def async_fetch_data(self, infrared_id: str, device_id: str) -> TuyaGenericData | None:
         """Fetch runtime keys configuration for a generic IR remote controller."""

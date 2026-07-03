@@ -21,10 +21,6 @@ from .const import (
     DEFAULT_CURRENT_HUMIDITY,
     DEFAULT_BATTERY_STATE,
 )
-from .tuya_connector import (
-    TuyaOpenAPI,
-    TuyaOpenPulsar,
-)
 from .helpers import (
     hass_battery_state,
     hass_fan_mode,
@@ -38,6 +34,7 @@ from .helpers import (
 if TYPE_CHECKING:
     from .coordinator import TuyaClimateCoordinator, TuyaSensorCoordinator
     from .manager import TuyaIRManager
+    from .connector import TuyaConnector
 
 # Custom type alias linking Home Assistant ConfigEntry to our RuntimeData container
 type HubConfigEntry = ConfigEntry[RuntimeData]
@@ -46,8 +43,7 @@ type HubConfigEntry = ConfigEntry[RuntimeData]
 @dataclass(frozen=True)
 class RuntimeData:
     """Isolated, thread-safe runtime data context unique to each individual Hub ConfigEntry."""
-    api_client: TuyaOpenAPI
-    pulsar_client: TuyaOpenPulsar
+    connector: TuyaConnector
     climate_coordinator: TuyaClimateCoordinator | None = None
     sensor_coordinator: TuyaSensorCoordinator | None = None
     ir_manager: TuyaIRManager | None = None
@@ -83,12 +79,11 @@ class TuyaClimateData:
     @classmethod
     def from_raw_data(cls, data: dict[str, Any]) -> TuyaClimateData:
         """Parse raw single device operational state from Tuya Cloud into domain model."""
-        raw_power = data.get("powerOpen")
+        raw_power = data.get("power")
         raw_hvac_mode = hass_hvac_mode(data.get("mode"))
         raw_temperature = hass_temperature(data.get("temp"))
-        raw_fan_mode = hass_fan_mode(data.get("fan"))
+        raw_fan_mode = hass_fan_mode(data.get("wind"))
 
-        # Use get_val helper to cleanly apply global defaults when parsed values are missing or invalid
         return cls(
             power=get_val(raw_power, DEFAULT_POWER),
             hvac_mode=get_val(raw_hvac_mode, DEFAULT_HVAC_MODE),
@@ -103,7 +98,17 @@ class TuyaClimateData:
         for data in raw_list:
             dev_id = data.get("devId")
             if dev_id:
-                devices[dev_id] = cls.from_raw_data(data)
+                raw_power = data.get("powerOpen")
+                raw_hvac_mode = hass_hvac_mode(data.get("mode"))
+                raw_temperature = hass_temperature(data.get("temp"))
+                raw_fan_mode = hass_fan_mode(data.get("fan"))
+
+                devices[dev_id] = cls(
+                    power=get_val(raw_power, DEFAULT_POWER),
+                    hvac_mode=get_val(raw_hvac_mode, DEFAULT_HVAC_MODE),
+                    temperature=get_val(raw_temperature, DEFAULT_TEMPERATURE),
+                    fan_mode=get_val(raw_fan_mode, DEFAULT_FAN_MODE),
+                )
         return devices
 
     @classmethod
@@ -123,7 +128,7 @@ class TuyaClimateData:
             temperature=get_val(raw_temperature, current_instance.temperature),
             fan_mode=get_val(raw_fan_mode, current_instance.fan_mode),
         )
-    
+
     @classmethod
     def from_optimistic_update(
         cls,

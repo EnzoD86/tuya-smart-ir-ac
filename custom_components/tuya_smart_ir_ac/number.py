@@ -1,14 +1,8 @@
 import logging
 from typing import Any
 
-from homeassistant.components.number import (
-    NumberEntity,
-    RestoreNumber
-)
-from homeassistant.components.number.const import (
-    NumberDeviceClass,
-    NumberMode
-)
+from homeassistant.components.number import NumberEntity, RestoreNumber
+from homeassistant.components.number.const import NumberDeviceClass, NumberMode
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

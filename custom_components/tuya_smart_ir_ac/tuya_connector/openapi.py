@@ -70,7 +70,6 @@ class TuyaOpenAPI:
         self.dev_channel: str = ""
         
         self._session: aiohttp.ClientSession | None = session
-        # Se la sessione viene passata dall'esterno, non ne siamo i proprietari (_owns_session = False)
         self._owns_session: bool = session is None
         self._token_lock = asyncio.Lock()
 
