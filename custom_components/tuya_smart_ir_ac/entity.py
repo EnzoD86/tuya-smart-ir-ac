@@ -306,12 +306,11 @@ class TuyaClimateEntity:
 
     async def async_handle_turn_on(self) -> None:
         """Turn on the climate device power via coordinator service."""
-        force_power_on = self.get_hvac_power_on(self._current_hvac_mode)
         await self._async_dispatch_command(
             self._real_hvac_mode, 
             self._current_target_temperature, 
             self._current_fan_mode, 
-            force_power_on
+            True
         )
 
     async def async_handle_turn_off(self) -> None:
