@@ -306,11 +306,17 @@ class TuyaClimateEntity:
 
     async def async_handle_turn_on(self) -> None:
         """Turn on the climate device power via coordinator service."""
+
+        if self._custom_power_on:
+            force_power_on = True
+        else:
+            force_power_on = self.get_hvac_power_on(self._current_hvac_mode)
+
         await self._async_dispatch_command(
             self._real_hvac_mode, 
             self._current_target_temperature, 
             self._current_fan_mode, 
-            True
+            force_power_on
         )
 
     async def async_handle_turn_off(self) -> None:
@@ -378,15 +384,15 @@ class TuyaClimateEntity:
         target_fan: str, 
         force_power_on: bool
     ) -> None:
-        """Centralize the dispatch logic to avoid code duplication across handlers."""
-        if not self._custom_power_on and force_power_on:
-            await self.coordinator.async_turn_on_with_hvac_mode(
-                self._infrared_id, self._climate_id, target_mode, target_temp, target_fan
-            )
-            return
-
-        if self._custom_power_on and force_power_on:
-            await self._async_trigger_custom_power_on()
+        """Centralize the dispatch logic."""
+        if force_power_on:
+            if self._custom_power_on:
+                await self._async_trigger_custom_power_on()
+            else:
+                await self.coordinator.async_turn_on_with_hvac_mode(
+                    self._infrared_id, self._climate_id, target_mode, target_temp, target_fan
+                )
+                return
 
         await self.coordinator.async_set_hvac_mode(
             self._infrared_id, self._climate_id, target_mode, target_temp, target_fan

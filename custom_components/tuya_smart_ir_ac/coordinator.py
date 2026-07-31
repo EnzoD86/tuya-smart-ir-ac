@@ -86,24 +86,18 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
 
     async def async_turn_on_with_hvac_mode(self, infrared_id: str, climate_id: str, hvac_mode: HVACMode, temperature: float, fan_mode: str):
         """Execute a combined flow: turn on the device via cloud and immediately set HVAC parameters, updating cache once."""
-        _LOGGER.debug("[%s] Executing combined power-on and hvac mode configuration flow (%s)", climate_id, hvac_mode)
-        
         await self._send_power_command(infrared_id, climate_id, "1")
         await self._send_combined_command(infrared_id, climate_id, hvac_mode, temperature, fan_mode)
         await self._async_force_update_data(climate_id, power=True, hvac_mode=hvac_mode, temperature=temperature, fan_mode=fan_mode)
 
     async def async_turn_on_with_temperature(self, infrared_id: str, climate_id: str, temperature: float):
         """Execute a combined flow: turn on the device via cloud and immediately set temperature, updating cache once."""
-        _LOGGER.debug("[%s] Executing combined power-on and temperature configuration flow (%s)", climate_id, temperature)
-
         await self._send_power_command(infrared_id, climate_id, "1")
         await self._send_temperature_command(infrared_id, climate_id, temperature)
         await self._async_force_update_data(climate_id, power=True, temperature=temperature)
 
     async def async_turn_on_with_fan_mode(self, infrared_id: str, climate_id: str, fan_mode: str):
         """Execute a combined flow: turn on the device via cloud and immediately set fan mode, updating cache once."""
-        _LOGGER.debug("[%s] Executing combined power-on and fan mode configuration flow (%s)", climate_id, fan_mode)
-
         await self._send_power_command(infrared_id, climate_id, "1")
         await self._send_fan_mode_command(infrared_id, climate_id, fan_mode)
         await self._async_force_update_data(climate_id, power=True, fan_mode=fan_mode)
