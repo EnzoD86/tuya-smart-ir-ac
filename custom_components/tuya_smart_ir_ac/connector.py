@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.util.ssl import get_default_context
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.components import persistent_notification
@@ -55,10 +55,14 @@ class TuyaConnector:
         )
 
         res = await self.api_client.connect()
+        if res is None:
+            _LOGGER.warning("[%s] Tuya Hub Connection Error: No response received from Tuya Cloud (possible network down). Retrying later...", self.entry.title)
+            raise ConfigEntryNotReady("Tuya Hub Connection Error: No response received from Tuya Cloud during setup")
+        
         if not res.get("success"):
             _LOGGER.error("[%s] Tuya Hub Login Error: %s", self.entry.title, res.get("msg"))
             await self.api_client.close()
-            raise ConfigEntryAuthFailed(f"Tuya authentication failed: {res.get('msg')}")
+            raise ConfigEntryAuthFailed(f"Tuya Hub Login Error: Authentication failed: {res.get('msg')}")
 
         if enable_pulsar:
             self.pulsar_client = TuyaOpenPulsar(
