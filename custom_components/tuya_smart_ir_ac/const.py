@@ -21,7 +21,6 @@ MANUFACTURER = "Tuya"
 CLIMATE_MODEL = "IR Air Conditioning"
 GENERIC_MODEL = "IR Remote Control"
 SENSOR_MODEL = "T & H Sensor"
-TEST_MODE = True
 
 # Platforms supported by this integration
 PLATFORMS = [
@@ -244,8 +243,8 @@ TUYA_PULSAR_ENDPOINTS = {
     "sg": "wss://mqe-sg.iotbing.com:8285/",
 }
 
-# Global normalization mapping for non-standard Tuya Data Point codes
-TUYA_CODE_MAPPING = {
-    "va_temperature": "temp_current",
-    "va_humidity": "humidity_value",
-}
+# Raw Tuya Data Point (DP) code aliases grouped by telemetry type
+TEMP_UNIT_CONVERT_DPS = ("temp_unit_convert",)
+TEMP_CURRENT_DPS = ("temp_current", "va_temperature")
+HUMIDITY_VALUE_DPS = ("humidity_value", "va_humidity", "humidity_current")
+BATTERY_STATE_DPS = ("battery_state",)

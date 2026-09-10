@@ -11,7 +11,6 @@ from .const import(
     TUYA_FAN_MODES,
     TUYA_HVAC_MODES,
     TUYA_TEMP_UNIT,
-    TUYA_CODE_MAPPING
 )
 
 
@@ -110,7 +109,7 @@ def convert_temperature(value: float, from_unit: str, to_unit: str) -> float:
     return TemperatureConverter.convert(value, from_unit, to_unit)
 
 
-def normalize_tuya_payload(raw_list: list[dict[str, Any]], mapping: dict[str, str] = TUYA_CODE_MAPPING) -> dict[str, Any]:
+def normalize_tuya_payload(raw_list: list[dict[str, Any]], mapping: dict[str, str]) -> dict[str, Any]:
     """Normalize Tuya Data Point codes from API properties or Pulsar status lists."""
     normalized_map = {}
     for item in raw_list:
