@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import (
     dataclass,
     field,
-    fields,
     replace,
 )
+from functools import cache
 from typing import Any, ClassVar, TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,6 +20,10 @@ from .const import (
     DEFAULT_CURRENT_TEMPERATURE,
     DEFAULT_CURRENT_HUMIDITY,
     DEFAULT_BATTERY_STATE,
+    TEMP_UNIT_CONVERT_DPS,
+    TEMP_CURRENT_DPS,
+    HUMIDITY_VALUE_DPS,
+    BATTERY_STATE_DPS,
 )
 from .helpers import (
     hass_battery_state,
@@ -184,18 +188,22 @@ class TuyaGenericData:
 @dataclass(frozen=True)
 class TuyaSensorData:
     """Domain model tracking environmental telemetry data from standalone multi-sensors."""
-    temp_unit_convert: str = DEFAULT_TEMP_UNIT
-    temp_current: float = DEFAULT_CURRENT_TEMPERATURE
-    humidity_value: int = DEFAULT_CURRENT_HUMIDITY
-    battery_state: int = DEFAULT_BATTERY_STATE
+    temp_unit_convert: str | None = None
+    temp_current: float | None = None
+    humidity_value: int | None = None
+    battery_state: int | None = None
 
-    _STATIC_FIELDS: ClassVar[set[str]] = {"temp_unit_convert"}
-    _DPS_CODES: ClassVar[list[str]] = []
+    _DPS_MAPPINGS: ClassVar[dict[str, tuple[str, ...]]] = {
+        "temp_unit_convert": TEMP_UNIT_CONVERT_DPS,
+        "temp_current": TEMP_CURRENT_DPS,
+        "humidity_value": HUMIDITY_VALUE_DPS,
+        "battery_state": BATTERY_STATE_DPS,
+    }
 
     @classmethod
     def from_raw_data(cls, data: dict[str, Any]) -> TuyaSensorData:
         """Extract and sanitize variable length property payload arrays into a fixed type schema."""
-        prop_map = normalize_tuya_payload(data.get("properties", []))
+        prop_map = normalize_tuya_payload(data.get("properties", []), mapping=cls.get_flat_map())
 
         raw_temp_unit_convert = hass_temp_unit(prop_map.get("temp_unit_convert"))
         raw_temp_current = hass_temperature(prop_map.get("temp_current"), convert=True)
@@ -203,16 +211,16 @@ class TuyaSensorData:
         raw_battery_state = hass_battery_state(prop_map.get("battery_state"))
 
         return cls(
-            temp_unit_convert=get_val(raw_temp_unit_convert, DEFAULT_TEMP_UNIT),
-            temp_current=get_val(raw_temp_current, DEFAULT_CURRENT_TEMPERATURE),
-            humidity_value=get_val(raw_humidity_value, DEFAULT_CURRENT_HUMIDITY),
-            battery_state=get_val(raw_battery_state, DEFAULT_BATTERY_STATE),
+            temp_unit_convert=raw_temp_unit_convert,
+            temp_current=raw_temp_current,
+            humidity_value=raw_humidity_value,
+            battery_state=raw_battery_state,
         )
 
     @classmethod
     def from_pulsar_data(cls, current_instance: TuyaSensorData, status_list: list) -> TuyaSensorData:
         """Update existing sensor state from raw Pulsar status updates."""
-        updates = normalize_tuya_payload(status_list)
+        updates = normalize_tuya_payload(status_list, mapping=cls.get_flat_map())
 
         raw_temp_current = hass_temperature(updates.get("temp_current"), convert=True)
         raw_humidity_value = updates.get("humidity_value")
@@ -227,11 +235,49 @@ class TuyaSensorData:
         )
 
     @classmethod
-    def get_dps_codes(cls) -> list[str]:
-        """Returns the names of fields that have a value (Cached Optimization)."""
-        return cls._DPS_CODES
+    @cache
+    def get_dps_codes(cls) -> tuple[str, ...]:
+        """Return canonical names of monitored sensor entities."""
+        return tuple(
+            logical_name
+            for logical_name in cls._DPS_MAPPINGS
+            if logical_name != "temp_unit_convert"
+        )
 
-TuyaSensorData._DPS_CODES = [
-    field.name for field in fields(TuyaSensorData) 
-    if field.name not in TuyaSensorData._STATIC_FIELDS
-]
+    @classmethod
+    @cache
+    def get_flat_map(cls) -> dict[str, str]:
+        """Returns the flat mapping for non-standard Tuya DP codes."""
+        return {
+            raw_code: logical_name
+            for logical_name, raw_codes in cls._DPS_MAPPINGS.items()
+            for raw_code in raw_codes
+        }
+
+    @classmethod
+    def normalize_dps_codes(cls, codes: list[str]) -> set[str]:
+        """Normalize raw or logical DPS names to monitored logical names."""
+        flat_map = cls.get_flat_map()
+        normalized_codes = {
+            flat_map.get(code, code)
+            for code in codes
+        }
+        return normalized_codes.intersection(cls.get_dps_codes())
+
+    @classmethod
+    def get_available_dps(cls, data: TuyaSensorData) -> set[str]:
+        """Return monitored DPS names with values available on a sensor."""
+        return {
+            code
+            for code in cls.get_dps_codes()
+            if getattr(data, code) is not None
+        }
+
+    @classmethod
+    def get_dps_from_payload(cls, payload: list[dict[str, Any]]) -> set[str]:
+        """Return monitored logical DPS names found in a raw payload."""
+        normalized_payload = normalize_tuya_payload(
+            payload,
+            mapping=cls.get_flat_map(),
+        )
+        return set(normalized_payload).intersection(cls.get_dps_codes())
