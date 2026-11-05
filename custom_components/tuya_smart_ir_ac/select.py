@@ -71,7 +71,7 @@ class TuyaPresetFanSelect(SelectEntity, RestoreEntity, TuyaClimateEntity):
         self._attr_translation_key = f"{TRANSLATION_KEY_FAN_MODE}"
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_icon = "mdi:fan"
-        self._attr_options = self._fan_modes
+        self._attr_options = self._config.fan_modes
 
     async def async_added_to_hass(self) -> None:
         """Handle entity registry and restore previous state."""
@@ -103,12 +103,12 @@ class TuyaHvacModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = f"{TRANSLATION_KEY_HVAC_MODE}"
         self._attr_icon = "mdi:hvac"
-        self._attr_options = self._hvac_modes
+        self._attr_options = self._config.hvac_modes
 
     @property
     def current_option(self) -> str | None:
         """Return the current HVAC mode option directly from coordinator cache."""
-        return self._current_hvac_mode.value
+        return self._get_climate_data().current_hvac_mode.value
 
     async def async_select_option(self, option: str) -> None:
         """Forward the selected option to the central execution logic."""
@@ -126,12 +126,12 @@ class TuyaFanModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = f"{TRANSLATION_KEY_FAN_MODE}"
         self._attr_icon = "mdi:fan"
-        self._attr_options = self._fan_modes
+        self._attr_options = self._config.fan_modes
 
     @property
     def current_option(self) -> str | None:
         """Return the current fan mode option directly from the coordinator cache data."""
-        return self._current_fan_mode
+        return self._get_climate_data().fan_mode
 
     async def async_select_option(self, option: str) -> None:
         """Forward the selected option to the central execution logic."""

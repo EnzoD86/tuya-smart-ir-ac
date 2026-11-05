@@ -50,6 +50,10 @@ class TuyaClimateCoordinator(DataUpdateCoordinator[dict[str, TuyaClimateData]]):
     def is_available(self, climate_id: str) -> bool:
         """Check if the climate device is available in the fetched data."""
         return self.data and self.data.get(climate_id) is not None
+
+    def get_climate_data(self, climate_id: str) -> TuyaClimateData:
+        """Return the latest climate data for a device, or its default state."""
+        return self.data.get(climate_id, TuyaClimateData())
     
     # =========================================================================
     # PUBLIC ATOMIC COORDINATOR ACTIONS

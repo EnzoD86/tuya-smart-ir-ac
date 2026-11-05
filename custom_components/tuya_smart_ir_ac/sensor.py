@@ -96,7 +96,7 @@ class TuyaClimateTemperatureSensor(SensorEntity, TuyaClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register state tracker listener upon entity addition to Home Assistant."""
-        self.async_track_sensor_states([self._temperature_sensor])
+        self.async_track_sensor_states([self._config.temperature_sensor])
 
     @callback
     def _handle_sensor_state_change(self, event) -> None:
@@ -124,7 +124,7 @@ class TuyaClimateHumiditySensor(SensorEntity, TuyaClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register state tracker listener upon entity addition to Home Assistant."""
-        self.async_track_sensor_states([self._humidity_sensor])
+        self.async_track_sensor_states([self._config.humidity_sensor])
 
     @callback
     def _handle_sensor_state_change(self, event) -> None:
@@ -144,7 +144,7 @@ class TuyaSensorTemperatureSensor(SensorEntity, CoordinatorEntity, TuyaSensorEnt
         self._attr_has_entity_name = True
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_native_unit_of_measurement = self._unit_of_measurement
+        self._attr_native_unit_of_measurement = self._config.temperature_unit
 
     @property
     def native_value(self) -> float | None:

@@ -48,12 +48,12 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
         self._attr_has_entity_name = True
         self._attr_temperature_unit = self._temperature_unit
         self._attr_icon = "mdi:air-conditioner"
-        self._attr_min_temp = self._min_temp
-        self._attr_max_temp = self._max_temp
-        self._attr_target_temperature_step = self._temp_step
-        self._attr_hvac_modes = self._hvac_modes
-        self._attr_fan_modes = self._fan_modes
-        self._attr_preset_modes = self._preset_modes
+        self._attr_min_temp = self._config.min_temperature
+        self._attr_max_temp = self._config.max_temperature
+        self._attr_target_temperature_step = self._config.temperature_step
+        self._attr_hvac_modes = self._config.hvac_modes
+        self._attr_fan_modes = self._config.fan_modes
+        self._attr_preset_modes = self._config.preset_modes
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
@@ -65,7 +65,7 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
             | ClimateEntityFeature.FAN_MODE
         )
         
-        if self._preset_modes:
+        if self._config.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
             
         return features
@@ -83,17 +83,17 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return current hvac operation mode."""
-        return self._current_hvac_mode
+        return self._get_climate_data().current_hvac_mode
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self._current_target_temperature
+        return self._get_climate_data().temperature
 
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        return self._current_fan_mode
+        return self._get_climate_data().fan_mode
 
     @property
     def preset_modes(self) -> list[str] | None:
@@ -108,7 +108,9 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
     async def async_added_to_hass(self) -> None:
         """Restore previous entity state and track source sensors."""
         await super().async_added_to_hass()
-        self.async_track_sensor_states([self._temperature_sensor, self._humidity_sensor])
+        self.async_track_sensor_states(
+            [self._config.temperature_sensor, self._config.humidity_sensor]
+        )
         self.update_preset_history()
 
     @callback

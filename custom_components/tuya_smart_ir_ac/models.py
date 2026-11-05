@@ -10,12 +10,44 @@ from typing import Any, ClassVar, TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.climate.const import HVACMode
+from homeassistant.const import CONF_NAME, UnitOfTemperature
 
 from .const import (
+    CONF_COMPATIBILITY_OPTIONS,
+    CONF_CUSTOM_POWER_ON,
+    CONF_DEVICE_ID,
+    CONF_DRY_MIN_FAN,
+    CONF_DRY_MIN_TEMP,
+    CONF_FAN_MODES,
+    CONF_FAN_POWER_ON,
+    CONF_HUMIDITY_SENSOR,
+    CONF_HVAC_MODES,
+    CONF_HVAC_PRESETS,
+    CONF_HVAC_POWER_ON,
+    CONF_INFRARED_ID,
+    CONF_PRESET_MODES,
+    CONF_TEMP_MAX,
+    CONF_TEMP_MIN,
+    CONF_TEMP_POWER_ON,
+    CONF_TEMP_STEP,
+    CONF_TEMP_UNIT,
+    CONF_TEMPERATURE_SENSOR,
+    DEFAULT_DRY_MIN_FAN,
+    DEFAULT_DRY_MIN_TEMP,
+    DEFAULT_FAN_POWER_ON,
+    DEFAULT_HVAC_POWER_ON,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
+    DEFAULT_PRECISION,
+    DEFAULT_TEMP_POWER_ON,
     DEFAULT_POWER,
     DEFAULT_HVAC_MODE,
     DEFAULT_TEMPERATURE,
     DEFAULT_FAN_MODE,
+    PRESET_FAN_HVAC_MODE,
+    PRESET_TEMP_HVAC_MODE,
+    SUPPORTED_FAN_MODES,
+    SUPPORTED_HVAC_MODES,
     TEMP_UNIT_CONVERT_DPS,
     TEMP_CURRENT_DPS,
     HUMIDITY_VALUE_DPS,
@@ -44,9 +76,9 @@ type HubConfigEntry = ConfigEntry[RuntimeData]
 class RuntimeData:
     """Isolated, thread-safe runtime data context unique to each individual Hub ConfigEntry."""
     connector: TuyaConnector
-    climate_coordinator: TuyaClimateCoordinator | None = None
-    sensor_coordinator: TuyaSensorCoordinator | None = None
-    ir_manager: TuyaIRManager | None = None
+    climate_coordinator: TuyaClimateCoordinator
+    sensor_coordinator: TuyaSensorCoordinator
+    ir_manager: TuyaIRManager
     global_presets: dict[str, dict[str, Any]] = field(default_factory=dict)
     hvac_presets: dict[str, Any] = field(default_factory=dict)
 
@@ -75,6 +107,11 @@ class TuyaClimateData:
     hvac_mode: HVACMode = DEFAULT_HVAC_MODE
     temperature: float = DEFAULT_TEMPERATURE
     fan_mode: str = DEFAULT_FAN_MODE
+
+    @property
+    def current_hvac_mode(self) -> HVACMode:
+        """Return the active mode, or OFF when the device is powered down."""
+        return self.hvac_mode if self.power else HVACMode.OFF
 
     @classmethod
     def from_raw_data(cls, data: dict[str, Any]) -> TuyaClimateData:
@@ -277,3 +314,83 @@ class TuyaSensorData:
             mapping=cls.get_flat_map(),
         )
         return set(normalized_payload).intersection(cls.get_dps_codes())
+
+
+@dataclass(frozen=True)
+class TuyaClimateConfig:
+    """Parsed climate device configuration shared by its entities and command handler."""
+
+    infrared_id: str
+    climate_id: str
+    name: str | None
+    temperature_sensor: str | None
+    humidity_sensor: str | None
+    min_temperature: float
+    max_temperature: float
+    temperature_step: float
+    hvac_modes: list[HVACMode]
+    fan_modes: list[str]
+    preset_modes: list[str]
+    use_preset_temperature: bool
+    use_preset_fan: bool
+    hvac_power_on: str
+    temperature_power_on: str
+    fan_power_on: str
+    dry_min_temperature: bool
+    dry_min_fan: bool
+    custom_power_on: str | None
+
+    @classmethod
+    def from_config_data(cls, config_data: dict[str, Any]) -> TuyaClimateConfig:
+        """Parse the climate configuration entry and apply integration defaults."""
+        compatibility = config_data.get(CONF_COMPATIBILITY_OPTIONS, {})
+        hvac_presets = config_data.get(CONF_HVAC_PRESETS, [])
+        return cls(
+            infrared_id=config_data.get(CONF_INFRARED_ID),
+            climate_id=config_data.get(CONF_DEVICE_ID),
+            name=config_data.get(CONF_NAME),
+            temperature_sensor=config_data.get(CONF_TEMPERATURE_SENSOR),
+            humidity_sensor=config_data.get(CONF_HUMIDITY_SENSOR),
+            min_temperature=config_data.get(CONF_TEMP_MIN, DEFAULT_MIN_TEMP),
+            max_temperature=config_data.get(CONF_TEMP_MAX, DEFAULT_MAX_TEMP),
+            temperature_step=config_data.get(CONF_TEMP_STEP, DEFAULT_PRECISION),
+            hvac_modes=config_data.get(CONF_HVAC_MODES, SUPPORTED_HVAC_MODES),
+            fan_modes=config_data.get(CONF_FAN_MODES, SUPPORTED_FAN_MODES),
+            preset_modes=config_data.get(CONF_PRESET_MODES, []),
+            use_preset_temperature=PRESET_TEMP_HVAC_MODE in hvac_presets,
+            use_preset_fan=PRESET_FAN_HVAC_MODE in hvac_presets,
+            hvac_power_on=compatibility.get(CONF_HVAC_POWER_ON, DEFAULT_HVAC_POWER_ON),
+            temperature_power_on=compatibility.get(
+                CONF_TEMP_POWER_ON, DEFAULT_TEMP_POWER_ON
+            ),
+            fan_power_on=compatibility.get(CONF_FAN_POWER_ON, DEFAULT_FAN_POWER_ON),
+            dry_min_temperature=compatibility.get(
+                CONF_DRY_MIN_TEMP, DEFAULT_DRY_MIN_TEMP
+            ),
+            dry_min_fan=compatibility.get(CONF_DRY_MIN_FAN, DEFAULT_DRY_MIN_FAN),
+            custom_power_on=compatibility.get(CONF_CUSTOM_POWER_ON),
+        )
+
+
+@dataclass(frozen=True)
+class TuyaSensorConfig:
+    """Parsed standalone sensor configuration shared by its entities."""
+
+    device_id: str
+    name: str | None
+    temperature_unit: str
+    entity_type: str
+
+    @classmethod
+    def from_config_data(
+        cls, config_data: dict[str, Any], entity_type: str
+    ) -> TuyaSensorConfig:
+        """Parse standalone sensor configuration and apply its defaults."""
+        return cls(
+            device_id=config_data.get(CONF_DEVICE_ID),
+            name=config_data.get(CONF_NAME),
+            temperature_unit=config_data.get(
+                CONF_TEMP_UNIT, UnitOfTemperature.CELSIUS
+            ),
+            entity_type=entity_type,
+        )

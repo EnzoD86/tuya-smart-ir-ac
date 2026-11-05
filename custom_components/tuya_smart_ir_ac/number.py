@@ -75,9 +75,9 @@ class TuyaPresetTemperatureNumber(RestoreNumber, TuyaClimateEntity):
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_class = NumberDeviceClass.TEMPERATURE
         self._attr_mode = NumberMode.SLIDER
-        self._attr_native_min_value = self._min_temp
-        self._attr_native_max_value = self._max_temp
-        self._attr_native_step = self._temp_step
+        self._attr_native_min_value = self._config.min_temperature
+        self._attr_native_max_value = self._config.max_temperature
+        self._attr_native_step = self._config.temperature_step
         self._attr_native_unit_of_measurement = self._temperature_unit
 
     async def async_added_to_hass(self) -> None:
@@ -86,10 +86,20 @@ class TuyaPresetTemperatureNumber(RestoreNumber, TuyaClimateEntity):
         
         if valid_number_data(last_number):
             restored_value = last_number.native_value
-            self._attr_native_value = clamp_to_boundaries(restored_value, self._min_temp, self._max_temp)
+            self._attr_native_value = clamp_to_boundaries(
+                restored_value,
+                self._config.min_temperature,
+                self._config.max_temperature,
+            )
         else:
-            calculated_fallback = (self._min_temp + self._max_temp) / 2
-            self._attr_native_value = clamp_to_boundaries(calculated_fallback, self._min_temp, self._max_temp)
+            calculated_fallback = (
+                self._config.min_temperature + self._config.max_temperature
+            ) / 2
+            self._attr_native_value = clamp_to_boundaries(
+                calculated_fallback,
+                self._config.min_temperature,
+                self._config.max_temperature,
+            )
 
         self.set_hvac_preset_temperature(self._temp_hvac_mode, self._attr_native_value)
 
@@ -111,15 +121,15 @@ class TuyaTemperatureSetPointNumber(NumberEntity, CoordinatorEntity, TuyaClimate
         self._attr_has_entity_name = True
         self._attr_device_class = NumberDeviceClass.TEMPERATURE
         self._attr_mode = NumberMode.BOX
-        self._attr_native_min_value = self._min_temp
-        self._attr_native_max_value = self._max_temp
-        self._attr_native_step = self._temp_step
+        self._attr_native_min_value = self._config.min_temperature
+        self._attr_native_max_value = self._config.max_temperature
+        self._attr_native_step = self._config.temperature_step
         self._attr_native_unit_of_measurement = self._temperature_unit
 
     @property
     def native_value(self) -> float | None:
         """Return target climate temperature setpoint value fetched from coordinator cache data."""
-        return self._current_target_temperature
+        return self._get_climate_data().temperature
 
     async def async_set_native_value(self, value: float) -> None:
         """Transmit new target temperature setpoint using central execution logic."""
