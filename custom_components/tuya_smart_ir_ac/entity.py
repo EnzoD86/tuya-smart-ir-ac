@@ -133,33 +133,6 @@ class TuyaClimateEntity:
 
         return convert_to_float(sensor_state.state)
 
-    async def async_handle_turn_on(self) -> None:
-        """Delegate turning on the climate device."""
-        await self._command_handler.async_handle_turn_on()
-
-    async def async_handle_turn_off(self) -> None:
-        """Delegate turning off the climate device."""
-        await self._command_handler.async_handle_turn_off()
-
-    async def async_handle_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Delegate setting the HVAC mode."""
-        await self._command_handler.async_handle_set_hvac_mode(hvac_mode)
-
-    async def async_handle_set_temperature(self, temperature: float, hvac_mode: HVACMode | None = None) -> None:
-        """Delegate setting the target temperature."""
-        await self._command_handler.async_handle_set_temperature(temperature, hvac_mode)
-
-    async def async_handle_set_fan_mode(self, fan_mode: str) -> None:
-        """Delegate setting the fan mode."""
-        await self._command_handler.async_handle_set_fan_mode(fan_mode)
-
-    async def async_handle_set_preset_mode(self, preset_mode: str) -> None:
-        """Delegate applying the selected preset."""
-        await self._command_handler.async_handle_set_preset_mode(
-            preset_mode, self._last_valid_preset_hvac_mode
-        )
-
-
 class TuyaSensorEntity:
     """Base class for standalone environmental Temperature/Humidity sensor devices managed by this integration."""
 

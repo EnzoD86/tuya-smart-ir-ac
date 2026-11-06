@@ -116,7 +116,7 @@ class TuyaHvacModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Forward the selected option to the central execution logic."""
-        await self.async_handle_set_hvac_mode(HVACMode(option))
+        await self._command_handler.async_handle_set_hvac_mode(HVACMode(option))
 
 
 class TuyaFanModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
@@ -139,4 +139,4 @@ class TuyaFanModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Forward the selected option to the central execution logic."""
-        await self.async_handle_set_fan_mode(option)
+        await self._command_handler.async_handle_set_fan_mode(option)

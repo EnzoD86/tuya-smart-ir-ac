@@ -140,4 +140,4 @@ class TuyaTemperatureSetPointNumber(NumberEntity, CoordinatorEntity, TuyaClimate
 
     async def async_set_native_value(self, value: float) -> None:
         """Transmit new target temperature setpoint using central execution logic."""
-        await self.async_handle_set_temperature(value)
+        await self._command_handler.async_handle_set_temperature(value)

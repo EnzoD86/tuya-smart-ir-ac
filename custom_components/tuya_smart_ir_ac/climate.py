@@ -127,15 +127,15 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn on the climate."""
-        await self.async_handle_turn_on()
+        await self._command_handler.async_handle_turn_on()
 
     async def async_turn_off(self) -> None:
         """Turn off the climate."""
-        await self.async_handle_turn_off()
+        await self._command_handler.async_handle_turn_off()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode for the climate."""
-        await self.async_handle_set_hvac_mode(hvac_mode=hvac_mode)
+        await self._command_handler.async_handle_set_hvac_mode(hvac_mode)
         
     async def async_set_temperature(self, **kwargs) -> None:
         """Set target temperature for the climate."""
@@ -143,15 +143,19 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
         hvac_mode = kwargs.get("hvac_mode", None)
         
         if temperature is not None:
-            await self.async_handle_set_temperature(temperature, hvac_mode)
+            await self._command_handler.async_handle_set_temperature(
+                temperature, hvac_mode
+            )
         elif hvac_mode is not None:
-            await self.async_handle_set_hvac_mode(hvac_mode)
+            await self._command_handler.async_handle_set_hvac_mode(hvac_mode)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode for the climate."""
-        await self.async_handle_set_fan_mode(fan_mode)
+        await self._command_handler.async_handle_set_fan_mode(fan_mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode for the climate."""
-        await self.async_handle_set_preset_mode(preset_mode)
+        await self._command_handler.async_handle_set_preset_mode(
+            preset_mode, self._last_valid_preset_hvac_mode
+        )
         self.async_write_ha_state()
