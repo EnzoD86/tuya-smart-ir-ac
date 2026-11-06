@@ -353,8 +353,8 @@ class TuyaClimateConfig:
     hvac_modes: list[HVACMode]
     fan_modes: list[str]
     preset_modes: list[str]
-    use_preset_temperature: bool
-    use_preset_fan: bool
+    temperature_hvac_preset_enabled: bool
+    fan_hvac_preset_enabled: bool
     hvac_power_on: str
     temperature_power_on: str
     fan_power_on: str
@@ -379,8 +379,8 @@ class TuyaClimateConfig:
             hvac_modes=config_data.get(CONF_HVAC_MODES, SUPPORTED_HVAC_MODES),
             fan_modes=config_data.get(CONF_FAN_MODES, SUPPORTED_FAN_MODES),
             preset_modes=config_data.get(CONF_PRESET_MODES, []),
-            use_preset_temperature=PRESET_TEMP_HVAC_MODE in hvac_presets,
-            use_preset_fan=PRESET_FAN_HVAC_MODE in hvac_presets,
+            temperature_hvac_preset_enabled=PRESET_TEMP_HVAC_MODE in hvac_presets,
+            fan_hvac_preset_enabled=PRESET_FAN_HVAC_MODE in hvac_presets,
             hvac_power_on=compatibility.get(CONF_HVAC_POWER_ON, DEFAULT_HVAC_POWER_ON),
             temperature_power_on=compatibility.get(
                 CONF_TEMP_POWER_ON, DEFAULT_TEMP_POWER_ON

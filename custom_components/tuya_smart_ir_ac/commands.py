@@ -1,22 +1,16 @@
 import logging
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.climate.const import FAN_AUTO, FAN_LOW
 from homeassistant.const import Platform
 
-from .const import (
-    DEFAULT_MIN_TEMP,
-    POWER_ON_ALWAYS,
-    POWER_ON_NEVER,
-    POWER_ON_ONLY_OFF,
-)
+from .compatibility import ClimateCompatibilityPolicy
 from .models import RuntimeData, TuyaClimateConfig
 
 _LOGGER = logging.getLogger(__package__)
 
 
 class ClimateCommandHandler:
-    """Apply HVAC command rules using explicit services, configuration and state."""
+    """Build and dispatch climate commands using state and compatibility policy."""
 
     def __init__(
         self,
@@ -26,18 +20,16 @@ class ClimateCommandHandler:
         """Initialize the handler with runtime data and device configuration."""
         self._runtime_data = runtime_data
         self._config = config
+        self._compatibility_policy = ClimateCompatibilityPolicy(config)
 
     async def async_handle_turn_on(self) -> None:
         """Turn on the climate device using its configured power-on behavior."""
         climate_data = self._runtime_data.climate_coordinator.get_climate_data(
             self._config.climate_id
         )
-        force_power_on = (
-            True
-            if self._config.custom_power_on
-            else self._requires_power_on(
-                self._config.hvac_power_on, climate_data.current_hvac_mode
-            )
+        # Determine whether the HVAC command needs a separate power-on action.
+        force_power_on = self._compatibility_policy.should_power_on_before_hvac_command(
+            climate_data.current_hvac_mode
         )
         await self._async_dispatch_command(
             climate_data.hvac_mode,
@@ -63,10 +55,12 @@ class ClimateCommandHandler:
         )
         temperature = self._get_hvac_temperature(hvac_mode, climate_data.temperature)
         fan_mode = self._get_hvac_fan_mode(hvac_mode, climate_data.fan_mode)
-        force_power_on = self._requires_power_on(
-            self._config.hvac_power_on, climate_data.current_hvac_mode
+        force_power_on = self._compatibility_policy.should_force_hvac_power_on(
+            climate_data.current_hvac_mode
         )
-        await self._async_dispatch_command(hvac_mode, temperature, fan_mode, force_power_on)
+        await self._async_dispatch_command(
+            hvac_mode, temperature, fan_mode, force_power_on
+        )
 
     async def async_handle_set_temperature(
         self,
@@ -83,8 +77,9 @@ class ClimateCommandHandler:
         )
         target_hvac_mode = hvac_mode if hvac_mode is not None else climate_data.hvac_mode
         fan_mode = self._get_hvac_fan_mode(target_hvac_mode, climate_data.fan_mode)
-        force_power_on = self._requires_power_on(
-            self._config.temperature_power_on, climate_data.current_hvac_mode
+        # Temperature changes may have a different power-on compatibility rule.
+        force_power_on = self._compatibility_policy.should_force_temperature_power_on(
+            climate_data.current_hvac_mode
         )
         await self._async_dispatch_command(
             target_hvac_mode, temperature, fan_mode, force_power_on
@@ -95,8 +90,9 @@ class ClimateCommandHandler:
         climate_data = self._runtime_data.climate_coordinator.get_climate_data(
             self._config.climate_id
         )
-        force_power_on = self._requires_power_on(
-            self._config.fan_power_on, climate_data.current_hvac_mode
+        # Fan changes may have a different power-on compatibility rule.
+        force_power_on = self._compatibility_policy.should_force_fan_power_on(
+            climate_data.current_hvac_mode
         )
         await self._async_dispatch_command(
             climate_data.hvac_mode,
@@ -124,8 +120,9 @@ class ClimateCommandHandler:
         if preset_selection is None:
             return
 
-        force_power_on = self._requires_power_on(
-            self._config.hvac_power_on, climate_data.current_hvac_mode
+        # Presets use the HVAC power-on compatibility rule.
+        force_power_on = self._compatibility_policy.should_force_hvac_power_on(
+            climate_data.current_hvac_mode
         )
         await self._async_dispatch_command(
             preset_selection.hvac_mode,
@@ -143,7 +140,8 @@ class ClimateCommandHandler:
     ) -> None:
         """Dispatch the selected settings, including any required power-on action."""
         if force_power_on:
-            if self._config.custom_power_on:
+            if self._compatibility_policy.has_custom_power_on_button:
+                # Use the configured button instead of the regular power-on command.
                 await self._async_trigger_custom_power_on()
             else:
                 await self._runtime_data.climate_coordinator.async_turn_on_with_hvac_mode(
@@ -165,12 +163,15 @@ class ClimateCommandHandler:
 
     async def _async_trigger_custom_power_on(self) -> None:
         """Press the configured custom power-on button."""
-        custom_power_on = self._config.custom_power_on
-        _LOGGER.debug("Triggering custom power-on button: %s", custom_power_on)
+        button_entity_id = self._compatibility_policy.custom_power_on_button
+        _LOGGER.debug(
+            "Triggering custom power-on button: %s",
+            button_entity_id,
+        )
         await self._runtime_data.climate_coordinator.hass.services.async_call(
             domain=Platform.BUTTON,
             service="press",
-            service_data={"entity_id": custom_power_on},
+            service_data={"entity_id": button_entity_id},
             blocking=True,
         )
 
@@ -178,17 +179,17 @@ class ClimateCommandHandler:
         self, hvac_mode: HVACMode, current_temperature: float
     ) -> float:
         """Choose the target temperature for an HVAC mode."""
-        if self._config.use_preset_temperature:
-            preset_temperature = (
-                self._runtime_data.hvac_mode_preset_manager.get_temperature(
-                    self._config.climate_id, hvac_mode
-                )
+        # Compatibility may override the temperature for the target HVAC mode.
+        override_temperature = self._compatibility_policy.override_temperature(hvac_mode)
+        if override_temperature is not None:
+            return override_temperature
+
+        if self._config.temperature_hvac_preset_enabled:
+            preset_temperature = self._runtime_data.hvac_mode_preset_manager.get_temperature(
+                self._config.climate_id, hvac_mode
             )
             if preset_temperature is not None:
                 return preset_temperature
-
-        if hvac_mode is HVACMode.DRY and self._config.dry_min_temperature:
-            return DEFAULT_MIN_TEMP
 
         return max(current_temperature, self._config.min_temperature)
 
@@ -196,25 +197,16 @@ class ClimateCommandHandler:
         self, hvac_mode: HVACMode, current_fan_mode: str
     ) -> str:
         """Choose the fan mode for an HVAC mode."""
-        if hvac_mode is HVACMode.DRY:
-            return FAN_LOW if self._config.dry_min_fan else FAN_AUTO
+        # Compatibility may override the fan mode for the target HVAC mode.
+        override_fan_mode = self._compatibility_policy.override_fan_mode(hvac_mode)
+        if override_fan_mode is not None:
+            return override_fan_mode
 
-        if self._config.use_preset_fan:
-            preset_fan_mode = (
-                self._runtime_data.hvac_mode_preset_manager.get_fan_mode(
-                    self._config.climate_id
-                )
+        if self._config.fan_hvac_preset_enabled:
+            preset_fan_mode = self._runtime_data.hvac_mode_preset_manager.get_fan_mode(
+                self._config.climate_id
             )
             if preset_fan_mode is not None:
                 return preset_fan_mode
 
         return current_fan_mode
-
-    @staticmethod
-    def _requires_power_on(power_on_setting: str, previous_mode: HVACMode) -> bool:
-        """Determine whether the device must be explicitly powered on."""
-        if power_on_setting == POWER_ON_NEVER:
-            return False
-        if power_on_setting == POWER_ON_ALWAYS:
-            return True
-        return power_on_setting == POWER_ON_ONLY_OFF and previous_mode is HVACMode.OFF

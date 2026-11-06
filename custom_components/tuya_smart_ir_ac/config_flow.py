@@ -905,7 +905,7 @@ def climate_data() -> dict[vol.Marker, Any]:
                         SelectSelectorConfig(
                             options=SUPPORTED_POWER_ON_MODES,
                             multiple=False,
-                            mode=SelectSelectorMode.LIST,
+                            mode=SelectSelectorMode.DROPDOWN,
                             translation_key=TRANSLATION_KEY_POWER_ON_MODES,
                         )
                     ),
@@ -915,7 +915,7 @@ def climate_data() -> dict[vol.Marker, Any]:
                         SelectSelectorConfig(
                             options=SUPPORTED_POWER_ON_MODES,
                             multiple=False,
-                            mode=SelectSelectorMode.LIST,
+                            mode=SelectSelectorMode.DROPDOWN,
                             translation_key=TRANSLATION_KEY_POWER_ON_MODES,
                         )
                     ),
@@ -925,7 +925,7 @@ def climate_data() -> dict[vol.Marker, Any]:
                         SelectSelectorConfig(
                             options=SUPPORTED_POWER_ON_MODES,
                             multiple=False,
-                            mode=SelectSelectorMode.LIST,
+                            mode=SelectSelectorMode.DROPDOWN,
                             translation_key=TRANSLATION_KEY_POWER_ON_MODES,
                         )
                     ),
