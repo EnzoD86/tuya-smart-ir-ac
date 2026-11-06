@@ -355,7 +355,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             overwrite_invalid_user_input(user_input)
-            climates[index] = {**climates[index], **user_input}
+            updated_climate = {**climates[index], **user_input}
+
+            for sensor_key in (CONF_TEMPERATURE_SENSOR, CONF_HUMIDITY_SENSOR):
+                if not user_input.get(sensor_key):
+                    updated_climate.pop(sensor_key, None)
+                    
+            climates[index] = updated_climate
             self._selected_device_id = None
             return self.async_create_entry(
                 title="",
