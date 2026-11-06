@@ -98,7 +98,6 @@ from .const import (
     UPDATE_INTERVAL,
 )
 from .models import TuyaClimateData, TuyaSensorData
-from .helpers import merge_presets_with_defaults
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -471,12 +470,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
             
             if self.config_entry.runtime_data:
-                updated_presets = merge_presets_with_defaults(
-                    saved_presets=preset_data,
-                    defaults=DEFAULT_GLOBAL_PRESETS
+                self.config_entry.runtime_data.global_preset_manager.update_from_config_entry(
+                    self.config_entry
                 )
-                self.config_entry.runtime_data.global_presets.clear()
-                self.config_entry.runtime_data.global_presets.update(updated_presets)
                 
             return await self.async_step_init()
 
@@ -1017,4 +1013,3 @@ def overwrite_invalid_user_input(user_input: dict[str, Any]) -> None:
             updated_presets = list(preset_modes)
             updated_presets.insert(0, PRESET_NONE)
             user_input[CONF_PRESET_MODES] = updated_presets
-

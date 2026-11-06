@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import (
-    dataclass,
-    field,
-    replace,
-)
+from dataclasses import dataclass, field, replace
 from functools import cache
 from typing import Any, ClassVar, TYPE_CHECKING
 
@@ -67,9 +63,10 @@ if TYPE_CHECKING:
     from .coordinator import TuyaClimateCoordinator, TuyaSensorCoordinator
     from .manager import TuyaIRManager
     from .connector import TuyaConnector
+    from .presets import GlobalPresetManager, HvacModePresetManager
 
-# Custom type alias linking Home Assistant ConfigEntry to our RuntimeData container
 type HubConfigEntry = ConfigEntry[RuntimeData]
+type GlobalPresets = dict[str, dict[HVACMode, GlobalClimatePresetData]]
 
 
 @dataclass(frozen=True)
@@ -79,8 +76,33 @@ class RuntimeData:
     climate_coordinator: TuyaClimateCoordinator
     sensor_coordinator: TuyaSensorCoordinator
     ir_manager: TuyaIRManager
-    global_presets: dict[str, dict[str, Any]] = field(default_factory=dict)
-    hvac_presets: dict[str, Any] = field(default_factory=dict)
+    global_preset_manager: GlobalPresetManager
+    hvac_mode_preset_manager: HvacModePresetManager
+
+
+@dataclass(frozen=True)
+class GlobalClimatePresetData:
+    """Typed settings for one HVAC mode within a global preset."""
+
+    temperature: float
+    fan_mode: str
+
+
+@dataclass(frozen=True)
+class GlobalPresetSelectionData:
+    """Resolved global preset settings for the applicable HVAC mode."""
+
+    hvac_mode: HVACMode
+    temperature: float
+    fan_mode: str
+
+
+@dataclass
+class HvacModePresetData:
+    """Default temperature and fan settings for HVAC mode changes."""
+
+    temperatures: dict[HVACMode, float] = field(default_factory=dict)
+    fan_mode: str | None = None
 
 
 @dataclass(frozen=True)

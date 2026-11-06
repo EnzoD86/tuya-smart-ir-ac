@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.number import NumberEntity, RestoreNumber
 from homeassistant.components.number.const import NumberDeviceClass, NumberMode
 from homeassistant.const import EntityCategory
@@ -64,7 +65,7 @@ async def async_setup_entry(
 class TuyaPresetTemperatureNumber(RestoreNumber, TuyaClimateEntity):
     """Representation of a Tuya preset temperature configuration entity."""
 
-    def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData, temp_hvac_mode: str) -> None:
+    def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData, temp_hvac_mode: HVACMode) -> None:
         """Initialize the preset temperature entity."""
         TuyaClimateEntity.__init__(self, config_data, runtime_data, f"{PRESET_TEMP_HVAC_MODE}_{temp_hvac_mode}")
         RestoreNumber.__init__(self)
@@ -101,12 +102,18 @@ class TuyaPresetTemperatureNumber(RestoreNumber, TuyaClimateEntity):
                 self._config.max_temperature,
             )
 
-        self.set_hvac_preset_temperature(self._temp_hvac_mode, self._attr_native_value)
+        self._runtime_data.hvac_mode_preset_manager.set_temperature(
+            self._config.climate_id,
+            self._temp_hvac_mode,
+            self._attr_native_value,
+        )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new local preset temperature and commit the state change to RuntimeData."""
         self._attr_native_value = value
-        self.set_hvac_preset_temperature(self._temp_hvac_mode, value)
+        self._runtime_data.hvac_mode_preset_manager.set_temperature(
+            self._config.climate_id, self._temp_hvac_mode, value
+        )
         self.async_write_ha_state()
 
 

@@ -12,20 +12,18 @@ from .const import (
     CONF_ACCESS_SECRET,
     CONF_ENABLE_PULSAR,
     CONF_TUYA_COUNTRY,
-    CONF_GLOBAL_PRESETS,
     UPDATE_INTERVAL,
     TUYA_API_ENDPOINTS,
     DEFAULT_ENABLE_PULSAR,
-    DEFAULT_GLOBAL_PRESETS,
     DEVICE_TYPE_CLIMATES,
     DEVICE_TYPE_SENSORS,
     DEVICE_TYPE_GENERICS
 )
-from .helpers import merge_presets_with_defaults
 from .coordinator import TuyaClimateCoordinator, TuyaSensorCoordinator
 from .manager import TuyaIRManager
 from .models import HubConfigEntry, RuntimeData
 from .connector import TuyaConnector
+from .presets import GlobalPresetManager, HvacModePresetManager
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -77,17 +75,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         await climate_coordinator.async_config_entry_first_refresh()
         await sensor_coordinator.async_config_entry_first_refresh()
 
-        runtime_presets = merge_presets_with_defaults(
-            saved_presets=entry.options.get(CONF_GLOBAL_PRESETS, {}),
-            defaults=DEFAULT_GLOBAL_PRESETS
-        )
+        global_preset_manager = GlobalPresetManager(entry)
+        hvac_mode_preset_manager = HvacModePresetManager()
 
         entry.runtime_data = RuntimeData(
             connector=connector,
             climate_coordinator=climate_coordinator,
             sensor_coordinator=sensor_coordinator,
             ir_manager=TuyaIRManager(hass, entry, connector),
-            global_presets=runtime_presets
+            global_preset_manager=global_preset_manager,
+            hvac_mode_preset_manager=hvac_mode_preset_manager,
         )
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -135,17 +132,16 @@ async def async_update_entry(hass: HomeAssistant, entry: HubConfigEntry) -> None
 
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    runtime_presets = merge_presets_with_defaults(
-        saved_presets=entry.options.get(CONF_GLOBAL_PRESETS, {}),
-        defaults=DEFAULT_GLOBAL_PRESETS
-    )
+    global_preset_manager = GlobalPresetManager(entry)
+    hvac_mode_preset_manager = HvacModePresetManager()
 
     entry.runtime_data = RuntimeData(
         connector=connector,
         climate_coordinator=current_data.climate_coordinator,
         sensor_coordinator=current_data.sensor_coordinator,
         ir_manager=current_data.ir_manager,
-        global_presets=runtime_presets
+        global_preset_manager=global_preset_manager,
+        hvac_mode_preset_manager=hvac_mode_preset_manager,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

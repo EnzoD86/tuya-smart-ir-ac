@@ -83,12 +83,16 @@ class TuyaPresetFanSelect(SelectEntity, RestoreEntity, TuyaClimateEntity):
             self._attr_current_option = self._attr_options[0] if self._attr_options else None
 
         if self._attr_current_option:
-            self.set_hvac_preset_fan_mode(self._attr_current_option)
+            self._runtime_data.hvac_mode_preset_manager.set_fan_mode(
+                self._config.climate_id, self._attr_current_option
+            )
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected preset option."""
         self._attr_current_option = option
-        self.set_hvac_preset_fan_mode(option)
+        self._runtime_data.hvac_mode_preset_manager.set_fan_mode(
+            self._config.climate_id, option
+        )
         self.async_write_ha_state()
 
 

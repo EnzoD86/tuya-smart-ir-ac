@@ -1,7 +1,7 @@
 import logging
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.climate.const import FAN_AUTO, FAN_LOW, PRESET_NONE
+from homeassistant.components.climate.const import FAN_AUTO, FAN_LOW
 from homeassistant.const import Platform
 
 from .const import (
@@ -11,7 +11,6 @@ from .const import (
     POWER_ON_ONLY_OFF,
 )
 from .models import RuntimeData, TuyaClimateConfig
-from .storage import ClimatePresetStore
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -23,12 +22,10 @@ class ClimateCommandHandler:
         self,
         runtime_data: RuntimeData,
         config: TuyaClimateConfig,
-        preset_store: ClimatePresetStore,
     ) -> None:
         """Initialize the handler with runtime data and device configuration."""
         self._runtime_data = runtime_data
         self._config = config
-        self._preset_store = preset_store
 
     async def async_handle_turn_on(self) -> None:
         """Turn on the climate device using its configured power-on behavior."""
@@ -114,31 +111,27 @@ class ClimateCommandHandler:
         last_valid_preset_hvac_mode: HVACMode | None,
     ) -> None:
         """Apply the selected global preset to the current or last active mode."""
-        preset_config = self._runtime_data.global_presets.get(preset_mode)
-        if preset_mode == PRESET_NONE or not preset_config:
-            return
-
+        preset_manager = self._runtime_data.global_preset_manager
         climate_data = self._runtime_data.climate_coordinator.get_climate_data(
             self._config.climate_id
         )
-        target_mode = climate_data.hvac_mode
-        if (
-            last_valid_preset_hvac_mode
-            and climate_data.current_hvac_mode is HVACMode.OFF
-        ):
-            target_mode = last_valid_preset_hvac_mode
-
-        mode_config = preset_config.get(target_mode)
-        if mode_config is None:
+        preset_selection = preset_manager.get_preset_selection(
+            preset_mode,
+            climate_data.hvac_mode,
+            climate_data.current_hvac_mode,
+            last_valid_preset_hvac_mode,
+        )
+        if preset_selection is None:
             return
 
-        target_temperature = mode_config.get("temp")
-        target_fan_mode = mode_config.get("fan")
         force_power_on = self._requires_power_on(
             self._config.hvac_power_on, climate_data.current_hvac_mode
         )
         await self._async_dispatch_command(
-            target_mode, target_temperature, target_fan_mode, force_power_on
+            preset_selection.hvac_mode,
+            preset_selection.temperature,
+            preset_selection.fan_mode,
+            force_power_on,
         )
 
     async def _async_dispatch_command(
@@ -186,7 +179,11 @@ class ClimateCommandHandler:
     ) -> float:
         """Choose the target temperature for an HVAC mode."""
         if self._config.use_preset_temperature:
-            preset_temperature = self._preset_store.get_temperature(hvac_mode)
+            preset_temperature = (
+                self._runtime_data.hvac_mode_preset_manager.get_temperature(
+                    self._config.climate_id, hvac_mode
+                )
+            )
             if preset_temperature is not None:
                 return preset_temperature
 
@@ -203,7 +200,11 @@ class ClimateCommandHandler:
             return FAN_LOW if self._config.dry_min_fan else FAN_AUTO
 
         if self._config.use_preset_fan:
-            preset_fan_mode = self._preset_store.get_fan_mode()
+            preset_fan_mode = (
+                self._runtime_data.hvac_mode_preset_manager.get_fan_mode(
+                    self._config.climate_id
+                )
+            )
             if preset_fan_mode is not None:
                 return preset_fan_mode
 

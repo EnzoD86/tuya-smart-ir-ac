@@ -7,10 +7,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     ATTR_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.components.climate.const import (
-    PRESET_NONE,
-    HVACMode,
-)
+from homeassistant.components.climate.const import HVACMode
 from .const import (
     DOMAIN,
     MANUFACTURER,
@@ -32,9 +29,6 @@ from .helpers import (
 from .commands import (
     ClimateCommandHandler,
 )
-from .storage import ClimatePresetStore
-
-
 class TuyaClimateEntity:
     """Base class for Tuya Climate entities supplying shared configuration and state logics."""
 
@@ -44,9 +38,6 @@ class TuyaClimateEntity:
         """Initialize core configuration boundaries and user preferences."""
         self._runtime_data = runtime_data
         self._config = TuyaClimateConfig.from_config_data(config_data)
-        self._preset_store = ClimatePresetStore(
-            runtime_data.hvac_presets, self._config.climate_id
-        )
 
         base_id = f"{self._config.infrared_id}_{self._config.climate_id}"
         self._attr_unique_id = f"{base_id}_{sub_entity_type}" if sub_entity_type else base_id
@@ -61,7 +52,6 @@ class TuyaClimateEntity:
         self._command_handler = ClimateCommandHandler(
             runtime_data=runtime_data,
             config=self._config,
-            preset_store=self._preset_store,
         )
 
     @property
@@ -73,21 +63,25 @@ class TuyaClimateEntity:
         """Return this device's latest data from the coordinator."""
         return self.coordinator.get_climate_data(self._config.climate_id)
 
-    def get_hvac_preset_temperature(self, hvac_mode: HVACMode) -> float | None:
-        """Extract the target temperature value stored for a specific operational mode."""
-        return self._preset_store.get_temperature(hvac_mode)
+    def get_preset_modes(self) -> list[str]:
+        """Return the global presets available for this climate's current state."""
+        climate_data = self._get_climate_data()
+        return self._runtime_data.global_preset_manager.get_available_presets(
+            self._config.preset_modes,
+            climate_data.hvac_mode,
+            climate_data.current_hvac_mode,
+            self._last_valid_preset_hvac_mode,
+        )
 
-    def set_hvac_preset_temperature(self, hvac_mode: str, value: float) -> None:
-        """Commit a target temperature value for a specific operational mode."""
-        self._preset_store.set_temperature(hvac_mode, value)
-
-    def get_hvac_preset_fan_mode(self) -> str | None:
-        """Extract the fallback ventilation option stored for the device."""
-        return self._preset_store.get_fan_mode()
-
-    def set_hvac_preset_fan_mode(self, option: str) -> None:
-        """Commit a fallback ventilation option for the device."""
-        self._preset_store.set_fan_mode(option)
+    def get_preset_mode(self) -> str:
+        """Return the global preset matching this climate's current state."""
+        climate_data = self._get_climate_data()
+        return self._runtime_data.global_preset_manager.get_current_preset(
+            climate_data.hvac_mode,
+            climate_data.current_hvac_mode,
+            climate_data.temperature,
+            climate_data.fan_mode,
+        )
 
     def async_track_sensor_states(self, sensors: Iterable[str] = ()) -> None:
         """Establish state tracking listeners on external reference entities."""
@@ -138,44 +132,6 @@ class TuyaClimateEntity:
             return None
 
         return convert_to_float(sensor_state.state)
-
-    def get_preset_modes(self) -> list[str] | None:
-        """Return the list of available preset modes based on current HVAC mode."""    
-        climate_data = self._get_climate_data()
-        current_mode = climate_data.hvac_mode
-        if (
-            self._last_valid_preset_hvac_mode
-            and climate_data.current_hvac_mode is HVACMode.OFF
-        ):
-            current_mode = self._last_valid_preset_hvac_mode
-
-        available_presets = [PRESET_NONE]
-
-        for preset_name in self._config.preset_modes:
-            hvac_configs = self._runtime_data.global_presets.get(preset_name)
-            if hvac_configs and current_mode in hvac_configs:
-                available_presets.append(preset_name)
-
-        return available_presets
-    
-    def get_preset_mode(self) -> str:
-        """Return the active preset matching real-time device configurations."""        
-        climate_data = self._get_climate_data()
-        if climate_data.current_hvac_mode is HVACMode.OFF:
-            return PRESET_NONE
-
-        for preset_name, mode_configs in self._runtime_data.global_presets.items():
-            if climate_data.hvac_mode not in mode_configs:
-                continue
-
-            if mode_config := mode_configs.get(climate_data.hvac_mode):
-                if (
-                    mode_config.get("temp") == climate_data.temperature
-                    and mode_config.get("fan") == climate_data.fan_mode
-                ):
-                    return preset_name
-
-        return PRESET_NONE
 
     async def async_handle_turn_on(self) -> None:
         """Delegate turning on the climate device."""
