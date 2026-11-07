@@ -99,6 +99,12 @@
         "always": "Always",
         "only_off": "Only if turned off (not recommended)"
       }
+    },
+    "command_types": {
+      "options": {
+        "single": "Single commands",
+        "multiple": "Combined command"
+      }
     }
   },
   "config": {
@@ -207,6 +213,7 @@
           "compatibility_options": {
             "name": "Compatibility options",
             "data": {
+              "command_type": "Command sending mode",
               "hvac_power_on": "Force power on when setting hvac mode",
               "temp_power_on": "Force power on when setting temperature",
               "fan_power_on": "Force power on when setting fan speed",
@@ -236,6 +243,7 @@
           "compatibility_options": {
             "name": "Compatibility options",
             "data": {
+              "command_type": "Command sending mode",
               "hvac_power_on": "Force power on when setting hvac mode",
               "temp_power_on": "Force power on when setting temperature",
               "fan_power_on": "Force power on when setting fan speed",

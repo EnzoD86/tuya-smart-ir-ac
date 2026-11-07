@@ -99,6 +99,12 @@
         "always": "總是",
         "only_off": "僅在關閉時（不推薦）"
       }
+    },
+    "command_types": {
+      "options": {
+        "single": "個別命令",
+        "multiple": "組合命令"
+      }
     }
   },
   "config": {
@@ -207,6 +213,7 @@
           "compatibility_options": {
             "name": "相容性選項",
             "data": {
+              "command_type": "命令傳送模式",
               "hvac_power_on": "設定空調模式時強制開機",
               "temp_power_on": "設定溫度時強制開機",
               "fan_power_on": "設定風速時強制開機",
@@ -236,6 +243,7 @@
           "compatibility_options": {
             "name": "相容性選項",
             "data": {
+              "command_type": "命令傳送模式",
               "hvac_power_on": "設定空調模式時強制開機",
               "temp_power_on": "設定溫度時強制開機",
               "fan_power_on": "設定風速時強制開機",

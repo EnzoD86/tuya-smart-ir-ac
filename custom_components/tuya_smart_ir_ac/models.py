@@ -10,6 +10,7 @@ from homeassistant.const import CONF_NAME, UnitOfTemperature
 
 from .const import (
     CONF_COMPATIBILITY_OPTIONS,
+    CONF_COMMAND_TYPE,
     CONF_CUSTOM_POWER_ON,
     CONF_DEVICE_ID,
     CONF_DRY_MIN_FAN,
@@ -30,6 +31,7 @@ from .const import (
     CONF_TEMPERATURE_SENSOR,
     DEFAULT_DRY_MIN_FAN,
     DEFAULT_DRY_MIN_TEMP,
+    DEFAULT_COMMAND_TYPE,
     DEFAULT_FAN_POWER_ON,
     DEFAULT_HVAC_POWER_ON,
     DEFAULT_MAX_TEMP,
@@ -355,6 +357,7 @@ class TuyaClimateConfig:
     preset_modes: list[str]
     temperature_hvac_preset_enabled: bool
     fan_hvac_preset_enabled: bool
+    command_type: str
     hvac_power_on: str
     temperature_power_on: str
     fan_power_on: str
@@ -381,6 +384,7 @@ class TuyaClimateConfig:
             preset_modes=config_data.get(CONF_PRESET_MODES, []),
             temperature_hvac_preset_enabled=PRESET_TEMP_HVAC_MODE in hvac_presets,
             fan_hvac_preset_enabled=PRESET_FAN_HVAC_MODE in hvac_presets,
+            command_type=compatibility.get(CONF_COMMAND_TYPE, DEFAULT_COMMAND_TYPE),
             hvac_power_on=compatibility.get(CONF_HVAC_POWER_ON, DEFAULT_HVAC_POWER_ON),
             temperature_power_on=compatibility.get(
                 CONF_TEMP_POWER_ON, DEFAULT_TEMP_POWER_ON

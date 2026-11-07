@@ -29,12 +29,6 @@ class ClimateCompatibilityPolicy:
         """Return whether a custom power-on button is configured."""
         return bool(self._config.custom_power_on)
 
-    def should_force_hvac_power_on(self, current_hvac_mode: HVACMode) -> bool:
-        """Return whether HVAC commands require an explicit power-on action."""
-        return self._should_force_power_on(
-            self._config.hvac_power_on, current_hvac_mode
-        )
-
     def should_power_on_before_hvac_command(
         self, current_hvac_mode: HVACMode
     ) -> bool:
@@ -42,6 +36,12 @@ class ClimateCompatibilityPolicy:
         if self._config.custom_power_on:
             return True
         return self.should_force_hvac_power_on(current_hvac_mode)
+
+    def should_force_hvac_power_on(self, current_hvac_mode: HVACMode) -> bool:
+        """Return whether HVAC commands require an explicit power-on action."""
+        return self._should_force_power_on(
+            self._config.hvac_power_on, current_hvac_mode
+        )
 
     def should_force_temperature_power_on(
         self, current_hvac_mode: HVACMode

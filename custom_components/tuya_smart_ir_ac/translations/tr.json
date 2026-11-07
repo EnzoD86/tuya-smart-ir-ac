@@ -99,6 +99,12 @@
         "always": "Her zaman",
         "only_off": "Yalnızca kapalıysa (önerilmez)"
       }
+    },
+    "command_types": {
+      "options": {
+        "single": "Tekli komutlar",
+        "multiple": "Birleşik komut"
+      }
     }
   },
   "config": {
@@ -207,6 +213,7 @@
           "compatibility_options": {
             "name": "Uyumluluk seçenekleri",
             "data": {
+              "command_type": "Komut gönderme türü",
               "hvac_power_on": "HVAC modu ayarlanırken gücü açmaya zorla",
               "temp_power_on": "Sıcaklığı ayarlarken açmaya zorlayın",
               "fan_power_on": "Fan hızını ayarlarken gücü açmaya zorlayın",
@@ -236,6 +243,7 @@
           "compatibility_options": {
             "name": "Uyumluluk seçenekleri",
             "data": {
+              "command_type": "Komut gönderme türü",
               "hvac_power_on": "HVAC modu ayarlanırken gücü açmaya zorla",
               "temp_power_on": "Sıcaklığı ayarlarken açmaya zorlayın",
               "fan_power_on": "Fan hızını ayarlarken gücü açmaya zorlayın",

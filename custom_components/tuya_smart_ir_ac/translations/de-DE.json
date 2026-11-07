@@ -99,6 +99,12 @@
         "always": "Immer",
         "only_off": "Nur wenn ausgeschaltet (nicht empfohlen)"
       }
+    },
+    "command_types": {
+      "options": {
+        "single": "Einzelne Befehle",
+        "multiple": "Kombinierter Befehl"
+      }
     }
   },
   "config": {
@@ -207,6 +213,7 @@
           "compatibility_options": {
             "name": "Kompatibilitätsoptionen",
             "data": {
+              "command_type": "Befehlsmodus",
               "hvac_power_on": "Beim Einstellen des HVAC-Modus einschalten erzwingen",
               "temp_power_on": "Beim Einstellen der Temperatur einschalten erzwingen",
               "fan_power_on": "Beim Einstellen der Ventilatorgeschwindigkeit einschalten erzwingen",
@@ -236,6 +243,7 @@
           "compatibility_options": {
             "name": "Kompatibilitätsoptionen",
             "data": {
+              "command_type": "Befehlsmodus",
               "hvac_power_on": "Beim Einstellen des HVAC-Modus einschalten erzwingen",
               "temp_power_on": "Beim Einstellen der Temperatur einschalten erzwingen",
               "fan_power_on": "Beim Einstellen der Ventilatorgeschwindigkeit einschalten erzwingen",

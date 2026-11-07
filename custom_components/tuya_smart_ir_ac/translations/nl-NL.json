@@ -99,6 +99,12 @@
         "always": "Altijd",
         "only_off": "Alleen indien uitgeschakeld (niet aanbevolen)"
       }
+    },
+    "command_types": {
+      "options": {
+        "single": "Afzonderlijke opdrachten",
+        "multiple": "Gecombineerde opdracht"
+      }
     }
   },
   "config": {
@@ -207,6 +213,7 @@
           "compatibility_options": {
             "name": "Compatibiliteitsopties",
             "data": {
+              "command_type": "Verzendmodus opdrachten",
               "hvac_power_on": "Forceren inschakelen bij instellen HVAC-modus",
               "temp_power_on": "Forceren inschakelen bij instellen temperatuur",
               "fan_power_on": "Forceren inschakelen bij instellen ventilatorsnelheid",
@@ -236,6 +243,7 @@
           "compatibility_options": {
             "name": "Compatibiliteitsopties",
             "data": {
+              "command_type": "Verzendmodus opdrachten",
               "hvac_power_on": "Forceren inschakelen bij instellen HVAC-modus",
               "temp_power_on": "Forceren inschakelen bij instellen temperatuur",
               "fan_power_on": "Forceren inschakelen bij instellen ventilatorsnelheid",

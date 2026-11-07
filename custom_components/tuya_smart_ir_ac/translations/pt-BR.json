@@ -99,6 +99,12 @@
         "always": "Sempre",
         "only_off": "Somente se estiver desligado (não recomendado)"
       }
+    },
+    "command_types": {
+      "options": {
+        "single": "Comandos individuais",
+        "multiple": "Comando combinado"
+      }
     }
   },
   "config": {
@@ -207,6 +213,7 @@
           "compatibility_options": {
             "name": "Opções de compatibilidade",
             "data": {
+              "command_type": "Modo de envio de comandos",
               "hvac_power_on": "Forçar ligar ao definir o modo HVAC",
               "temp_power_on": "Forçar ligar ao definir a temperatura",
               "fan_power_on": "Forçar ligar ao definir a velocidade do ventilador",
@@ -236,6 +243,7 @@
           "compatibility_options": {
             "name": "Opções de compatibilidade",
             "data": {
+              "command_type": "Modo de envio de comandos",
               "hvac_power_on": "Forçar ligar ao definir o modo HVAC",
               "temp_power_on": "Forçar ligar ao definir a temperatura",
               "fan_power_on": "Forçar ligar ao definir a velocidade do ventilador",

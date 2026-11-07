@@ -99,6 +99,12 @@
         "always": "Toujours",
         "only_off": "Uniquement si éteint (non recommandé)"
       }
+    },
+    "command_types": {
+      "options": {
+        "single": "Commandes individuelles",
+        "multiple": "Commande combinée"
+      }
     }
   },
   "config": {
@@ -207,6 +213,7 @@
           "compatibility_options": {
             "name": "Options de compatibilité",
             "data": {
+              "command_type": "Mode d’envoi des commandes",
               "hvac_power_on": "Forcer l'allumage lors du réglage du mode HVAC",
               "temp_power_on": "Forcer l'allumage lors du réglage de la température",
               "fan_power_on": "Forcer l'allumage lors du réglage de la vitesse du ventilateur",
@@ -236,6 +243,7 @@
           "compatibility_options": {
             "name": "Options de compatibilité",
             "data": {
+              "command_type": "Mode d’envoi des commandes",
               "hvac_power_on": "Forcer l'allumage lors du réglage du mode HVAC",
               "temp_power_on": "Forcer l'allumage lors du réglage de la température",
               "fan_power_on": "Forcer l'allumage lors du réglage de la vitesse du ventilateur",

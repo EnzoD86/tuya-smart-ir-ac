@@ -4,6 +4,7 @@ from homeassistant.components.climate import HVACMode
 from homeassistant.const import Platform
 
 from .compatibility import ClimateCompatibilityPolicy
+from .const import COMMAND_TYPE_MULTIPLE, COMMAND_TYPE_SINGLE
 from .models import RuntimeData, TuyaClimateConfig
 
 _LOGGER = logging.getLogger(__package__)
@@ -40,9 +41,11 @@ class ClimateCommandHandler:
 
     async def async_handle_turn_off(self) -> None:
         """Turn off the climate device."""
-        await self._runtime_data.climate_coordinator.async_turn_off(
-            self._config.infrared_id, self._config.climate_id
+        coordinator = self._runtime_data.climate_coordinator
+        await coordinator.async_send_power_command(
+            self._config.infrared_id, self._config.climate_id, False
         )
+        coordinator.update_climate_cache(self._config.climate_id, power=False)
 
     async def async_handle_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode and its corresponding target settings."""
@@ -139,27 +142,63 @@ class ClimateCommandHandler:
         force_power_on: bool,
     ) -> None:
         """Dispatch the selected settings, including any required power-on action."""
-        if force_power_on:
-            if self._compatibility_policy.has_custom_power_on_button:
-                # Use the configured button instead of the regular power-on command.
-                await self._async_trigger_custom_power_on()
-            else:
-                await self._runtime_data.climate_coordinator.async_turn_on_with_hvac_mode(
+        coordinator = self._runtime_data.climate_coordinator
+        climate_data = coordinator.get_climate_data(self._config.climate_id)
+        has_custom_power_on_button = self._compatibility_policy.has_custom_power_on_button
+        if force_power_on and has_custom_power_on_button:
+            # Use the configured button instead of the regular power-on command.
+            await self._async_trigger_custom_power_on()
+        elif force_power_on:
+            await coordinator.async_send_power_command(
+                self._config.infrared_id, self._config.climate_id, True
+            )
+
+        if self._config.command_type == COMMAND_TYPE_SINGLE:
+            hvac_mode_changed = target_mode != climate_data.hvac_mode
+            temperature_changed = target_temperature != climate_data.temperature
+            fan_mode_changed = target_fan_mode != climate_data.fan_mode
+
+            if fan_mode_changed:
+                await coordinator.async_send_fan_mode_command(
                     self._config.infrared_id,
                     self._config.climate_id,
-                    target_mode,
-                    target_temperature,
                     target_fan_mode,
                 )
-                return
+            if hvac_mode_changed:
+                await coordinator.async_send_hvac_mode_command(
+                    self._config.infrared_id, self._config.climate_id, target_mode
+                )
+            if temperature_changed:
+                await coordinator.async_send_temperature_command(
+                    self._config.infrared_id,
+                    self._config.climate_id,
+                    target_temperature,
+                )
 
-        await self._runtime_data.climate_coordinator.async_set_hvac_mode(
-            self._config.infrared_id,
-            self._config.climate_id,
-            target_mode,
-            target_temperature,
-            target_fan_mode,
-        )
+            if force_power_on or hvac_mode_changed or temperature_changed or fan_mode_changed:
+                coordinator.update_climate_cache(
+                    self._config.climate_id,
+                    power=True,
+                    hvac_mode=target_mode if hvac_mode_changed else None,
+                    temperature=target_temperature if temperature_changed else None,
+                    fan_mode=target_fan_mode if fan_mode_changed else None,
+                )
+        elif self._config.command_type == COMMAND_TYPE_MULTIPLE:
+            await coordinator.async_send_combined_command(
+                self._config.infrared_id,
+                self._config.climate_id,
+                target_mode,
+                target_temperature,
+                target_fan_mode,
+            )
+
+            coordinator.update_climate_cache(
+                self._config.climate_id,
+                power=True,
+                hvac_mode=target_mode,
+                temperature=target_temperature,
+                fan_mode=target_fan_mode,
+            )
 
     async def _async_trigger_custom_power_on(self) -> None:
         """Press the configured custom power-on button."""

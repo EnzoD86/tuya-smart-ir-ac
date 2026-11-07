@@ -38,6 +38,7 @@ from .const import (
     CONF_ACCESS_SECRET,
     CONF_CLIMATE_UPDATE_INTERVAL,
     CONF_COMPATIBILITY_OPTIONS,
+    CONF_COMMAND_TYPE,
     CONF_CUSTOM_POWER_ON,
     CONF_DEVICE_ID,
     CONF_DRY_MIN_FAN,
@@ -67,6 +68,7 @@ from .const import (
     DEFAULT_DRY_MIN_TEMP,
     DEFAULT_ENABLE_PULSAR,
     DEFAULT_FAN_POWER_ON,
+    DEFAULT_COMMAND_TYPE,
     DEFAULT_GLOBAL_PRESETS,
     DEFAULT_HVAC_POWER_ON,
     DEFAULT_MAX_TEMP,
@@ -84,10 +86,12 @@ from .const import (
     SUPPORTED_FAN_MODES,
     SUPPORTED_HVAC_MODES,
     SUPPORTED_HVAC_PRESETS,
+    SUPPORTED_COMMAND_TYPES,
     SUPPORTED_OPTIONAL_ENTITIES,
     SUPPORTED_POWER_ON_MODES,
     SUPPORTED_PRESET_MODES,
     TRANSLATION_KEY_COUNTRIES,
+    TRANSLATION_KEY_COMMAND_TYPES,
     TRANSLATION_KEY_FAN_MODES,
     TRANSLATION_KEY_HVAC_MODES,
     TRANSLATION_KEY_HVAC_PRESETS,
@@ -905,6 +909,16 @@ def climate_data() -> dict[vol.Marker, Any]:
         vol.Required(CONF_COMPATIBILITY_OPTIONS): data_entry_flow.section(
             vol.Schema(
                 {
+                    vol.Optional(
+                        CONF_COMMAND_TYPE, default=DEFAULT_COMMAND_TYPE
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=SUPPORTED_COMMAND_TYPES,
+                            multiple=False,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key=TRANSLATION_KEY_COMMAND_TYPES,
+                        )
+                    ),
                     vol.Optional(
                         CONF_HVAC_POWER_ON, default=DEFAULT_HVAC_POWER_ON
                     ): SelectSelector(
