@@ -46,7 +46,7 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
         super().__init__(runtime_data.climate_coordinator)
 
         self._attr_has_entity_name = True
-        self._attr_temperature_unit = self._temperature_unit
+        self._attr_native_temperature_unit = self._temperature_unit
         self._attr_icon = "mdi:air-conditioner"
         self._attr_min_temp = self._config.min_temperature
         self._attr_max_temp = self._config.max_temperature
@@ -71,7 +71,7 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
         return features
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature value from the linked tracking sensor."""
         return self.get_temperature_value(convert=True)
     
@@ -86,7 +86,7 @@ class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
         return self._get_climate_data().current_hvac_mode
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._get_climate_data().temperature
 
