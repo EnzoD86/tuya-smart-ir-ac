@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from typing import Any
+from datetime import datetime, timezone
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import State
@@ -119,3 +120,15 @@ def normalize_tuya_payload(raw_list: list[dict[str, Any]], mapping: dict[str, st
             normalized_code = mapping.get(raw_code, raw_code)
             normalized_map[normalized_code] = item.get("value")
     return normalized_map
+
+
+def extract_max_timestamp(properties: list[dict[str, Any]]) -> datetime | None:
+    """Extract the latest native DP timestamp from property arrays."""
+    max_ts: datetime | None = None
+    for prop in properties:
+        dp_time_ms = prop.get("time")
+        if dp_time_ms:
+            dt = datetime.fromtimestamp(dp_time_ms / 1000.0, tz=timezone.utc)
+            if max_ts is None or dt > max_ts:
+                max_ts = dt
+    return max_ts

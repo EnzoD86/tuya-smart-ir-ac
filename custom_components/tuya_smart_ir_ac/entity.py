@@ -29,10 +29,15 @@ from .helpers import (
 from .commands import (
     ClimateCommandHandler,
 )
+from .coordinator import (
+    TuyaClimateCoordinator,
+    TuyaSensorCoordinator,
+)
+
 class TuyaClimateEntity:
     """Base class for Tuya Climate entities supplying shared configuration and state logics."""
 
-    coordinator: Any
+    coordinator: TuyaClimateCoordinator
 
     def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData, sub_entity_type: str | None = None) -> None:
         """Initialize core configuration boundaries and user preferences."""
@@ -136,7 +141,7 @@ class TuyaClimateEntity:
 class TuyaSensorEntity:
     """Base class for standalone environmental Temperature/Humidity sensor devices managed by this integration."""
 
-    coordinator: Any
+    coordinator: TuyaSensorCoordinator
 
     def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData, sensor_type: str) -> None:
         """Initialize core reporting identities and linked environmental device metadata."""

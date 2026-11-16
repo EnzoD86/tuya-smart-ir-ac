@@ -133,13 +133,13 @@ class TuyaClimateHumiditySensor(SensorEntity, TuyaClimateEntity):
             self.async_write_ha_state()
             
 
-class TuyaSensorTemperatureSensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity):
+class TuyaSensorTemperatureSensor(SensorEntity, TuyaSensorEntity, CoordinatorEntity):
     """Temperature sensor entity updated via standalone Temperature/Humidity coordinator."""
 
     def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
         """Initialize the physical environmental temperature sensor."""
         TuyaSensorEntity.__init__(self, config_data, runtime_data, ENTITY_SENSOR_TEMPERATURE)
-        super().__init__(runtime_data.sensor_coordinator)
+        CoordinatorEntity.__init__(self, runtime_data.sensor_coordinator)
 
         self._attr_has_entity_name = True
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -157,13 +157,13 @@ class TuyaSensorTemperatureSensor(SensorEntity, CoordinatorEntity, TuyaSensorEnt
         self.async_write_ha_state()
 
 
-class TuyaSensorHumiditySensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity):
+class TuyaSensorHumiditySensor(SensorEntity, TuyaSensorEntity, CoordinatorEntity):
     """Humidity sensor entity updated via standalone Temperature/Humidity coordinator."""
 
     def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
         """Initialize the physical environmental humidity sensor."""
         TuyaSensorEntity.__init__(self, config_data, runtime_data, ENTITY_SENSOR_HUMIDITY)
-        super().__init__(runtime_data.sensor_coordinator)
+        CoordinatorEntity.__init__(self, runtime_data.sensor_coordinator)
 
         self._attr_has_entity_name = True
         self._attr_device_class = SensorDeviceClass.HUMIDITY
@@ -181,13 +181,13 @@ class TuyaSensorHumiditySensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity
         self.async_write_ha_state()
 
 
-class TuyaSensorBatterySensor(SensorEntity, CoordinatorEntity, TuyaSensorEntity):
+class TuyaSensorBatterySensor(SensorEntity, TuyaSensorEntity, CoordinatorEntity):
     """Battery diagnostic sensor entity updated via standalone Temperature/Humidity coordinator."""
 
     def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
         """Initialize the physical environmental battery diagnostic sensor."""
         TuyaSensorEntity.__init__(self, config_data, runtime_data, ENTITY_SENSOR_BATTERY)
-        super().__init__(runtime_data.sensor_coordinator)
+        CoordinatorEntity.__init__(self, runtime_data.sensor_coordinator)
 
         self._attr_has_entity_name = True
         self._attr_device_class = SensorDeviceClass.BATTERY

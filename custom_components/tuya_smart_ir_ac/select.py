@@ -96,13 +96,13 @@ class TuyaPresetFanSelect(SelectEntity, RestoreEntity, TuyaClimateEntity):
         self.async_write_ha_state()
 
 
-class TuyaHvacModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
+class TuyaHvacModeSelect(SelectEntity, TuyaClimateEntity, CoordinatorEntity):
     """Representation of a select entity linked dynamically to the climate hvac state."""
 
     def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
         """Initialize the hvac mode select entity."""
         TuyaClimateEntity.__init__(self, config_data, runtime_data, ENTITY_HVAC_MODE)
-        super().__init__(runtime_data.climate_coordinator)
+        CoordinatorEntity.__init__(self, runtime_data.climate_coordinator)
 
         self._attr_has_entity_name = True
         self._attr_translation_key = f"{TRANSLATION_KEY_HVAC_MODE}"
@@ -119,13 +119,13 @@ class TuyaHvacModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
         await self._command_handler.async_handle_set_hvac_mode(HVACMode(option))
 
 
-class TuyaFanModeSelect(SelectEntity, CoordinatorEntity, TuyaClimateEntity):
+class TuyaFanModeSelect(SelectEntity, TuyaClimateEntity, CoordinatorEntity):
     """Representation of a select entity linked dynamically to the climate fan state."""
 
     def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
         """Initialize the fan mode select entity."""
         TuyaClimateEntity.__init__(self, config_data, runtime_data, ENTITY_FAN_MODE)
-        super().__init__(runtime_data.climate_coordinator)
+        CoordinatorEntity.__init__(self, runtime_data.climate_coordinator)
 
         self._attr_has_entity_name = True
         self._attr_translation_key = f"{TRANSLATION_KEY_FAN_MODE}"

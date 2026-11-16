@@ -36,14 +36,14 @@ async def async_setup_entry(
         async_add_entities(active_entities)
 
 
-class TuyaClimate(ClimateEntity, CoordinatorEntity, TuyaClimateEntity):
+class TuyaClimate(ClimateEntity, TuyaClimateEntity, CoordinatorEntity):
     """Representation of a Tuya climate entity managed via IR."""
 
     def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
         """Initialize the climate entity and assign central shared boundaries."""
         self._runtime_data = runtime_data
         TuyaClimateEntity.__init__(self, config_data, runtime_data)
-        super().__init__(runtime_data.climate_coordinator)
+        CoordinatorEntity.__init__(self, runtime_data.climate_coordinator)
 
         self._attr_has_entity_name = True
         self._attr_native_temperature_unit = self._temperature_unit

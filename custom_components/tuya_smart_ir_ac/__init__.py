@@ -75,6 +75,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
         await climate_coordinator.async_config_entry_first_refresh()
         await sensor_coordinator.async_config_entry_first_refresh()
 
+        climate_coordinator.sync_devices()
+        sensor_coordinator.sync_devices()
+
         global_preset_manager = GlobalPresetManager(entry)
         hvac_mode_preset_manager = HvacModePresetManager()
 
@@ -131,6 +134,9 @@ async def async_update_entry(hass: HomeAssistant, entry: HubConfigEntry) -> None
             device_registry.async_remove_device(device_entry.id)
 
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    current_data.climate_coordinator.sync_devices()
+    current_data.sensor_coordinator.sync_devices()
 
     global_preset_manager = GlobalPresetManager(entry)
     hvac_mode_preset_manager = HvacModePresetManager()

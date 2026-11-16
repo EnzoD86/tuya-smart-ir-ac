@@ -117,13 +117,13 @@ class TuyaPresetTemperatureNumber(RestoreNumber, TuyaClimateEntity):
         self.async_write_ha_state()
 
 
-class TuyaTemperatureSetPointNumber(NumberEntity, CoordinatorEntity, TuyaClimateEntity):
+class TuyaTemperatureSetPointNumber(NumberEntity, TuyaClimateEntity, CoordinatorEntity):
     """Representation of a Tuya temperature setpoint dynamic entity linked to the coordinator."""
 
     def __init__(self, config_data: dict[str, Any], runtime_data: RuntimeData) -> None:
         """Initialize the temperature setpoint entity."""
         TuyaClimateEntity.__init__(self, config_data, runtime_data, ENTITY_TEMPERATURE_SETPOINT)
-        super().__init__(runtime_data.climate_coordinator)
+        CoordinatorEntity.__init__(self, runtime_data.climate_coordinator)
 
         self._attr_has_entity_name = True
         self._attr_device_class = NumberDeviceClass.TEMPERATURE

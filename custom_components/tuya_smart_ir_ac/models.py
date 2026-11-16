@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
+from datetime import datetime, timezone
 from functools import cache
 from typing import Any, ClassVar, TYPE_CHECKING
 
@@ -59,6 +60,7 @@ from .helpers import (
     hass_temperature,
     get_val,
     normalize_tuya_payload,
+    extract_max_timestamp,
 )
 
 if TYPE_CHECKING:
@@ -249,6 +251,7 @@ class TuyaSensorData:
     temp_current: float | None = None
     humidity_value: int | None = None
     battery_state: int | None = None
+    last_updated: datetime | None = None
 
     _DPS_MAPPINGS: ClassVar[dict[str, tuple[str, ...]]] = {
         "temp_unit_convert": TEMP_UNIT_CONVERT_DPS,
@@ -259,8 +262,9 @@ class TuyaSensorData:
 
     @classmethod
     def from_raw_data(cls, data: dict[str, Any]) -> TuyaSensorData:
-        """Extract and sanitize variable length property payload arrays into a fixed type schema."""
-        prop_map = normalize_tuya_payload(data.get("properties", []), mapping=cls.get_flat_map())
+        """Extract variable length property arrays and track the latest native DP timestamp."""
+        properties = data.get("properties", [])
+        prop_map = normalize_tuya_payload(properties, mapping=cls.get_flat_map())
 
         raw_temp_unit_convert = hass_temp_unit(prop_map.get("temp_unit_convert"))
         raw_temp_current = hass_temperature(prop_map.get("temp_current"), convert=True)
@@ -272,11 +276,12 @@ class TuyaSensorData:
             temp_current=raw_temp_current,
             humidity_value=raw_humidity_value,
             battery_state=raw_battery_state,
+            last_updated=extract_max_timestamp(properties),
         )
 
     @classmethod
     def from_pulsar_data(cls, current_instance: TuyaSensorData, status_list: list) -> TuyaSensorData:
-        """Update existing sensor state from raw Pulsar status updates."""
+        """Update existing sensor state from raw Pulsar status updates (real-time = now)."""
         updates = normalize_tuya_payload(status_list, mapping=cls.get_flat_map())
 
         raw_temp_current = hass_temperature(updates.get("temp_current"), convert=True)
@@ -288,7 +293,8 @@ class TuyaSensorData:
             temp_unit_convert=current_instance.temp_unit_convert,
             temp_current=get_val(raw_temp_current, current_instance.temp_current),
             humidity_value=get_val(raw_humidity_value, current_instance.humidity_value),
-            battery_state=get_val(raw_battery_state, current_instance.battery_state)
+            battery_state=get_val(raw_battery_state, current_instance.battery_state),
+            last_updated=datetime.now(timezone.utc),
         )
 
     @classmethod
@@ -312,16 +318,6 @@ class TuyaSensorData:
         }
 
     @classmethod
-    def normalize_dps_codes(cls, codes: list[str]) -> set[str]:
-        """Normalize raw or logical DPS names to monitored logical names."""
-        flat_map = cls.get_flat_map()
-        normalized_codes = {
-            flat_map.get(code, code)
-            for code in codes
-        }
-        return normalized_codes.intersection(cls.get_dps_codes())
-
-    @classmethod
     def get_available_dps(cls, data: TuyaSensorData) -> set[str]:
         """Return monitored DPS names with values available on a sensor."""
         return {
@@ -329,15 +325,6 @@ class TuyaSensorData:
             for code in cls.get_dps_codes()
             if getattr(data, code) is not None
         }
-
-    @classmethod
-    def get_dps_from_payload(cls, payload: list[dict[str, Any]]) -> set[str]:
-        """Return monitored logical DPS names found in a raw payload."""
-        normalized_payload = normalize_tuya_payload(
-            payload,
-            mapping=cls.get_flat_map(),
-        )
-        return set(normalized_payload).intersection(cls.get_dps_codes())
 
 
 @dataclass(frozen=True)

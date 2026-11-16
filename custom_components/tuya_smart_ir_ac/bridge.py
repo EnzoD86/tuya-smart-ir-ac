@@ -1,8 +1,8 @@
 import logging
 import json
 from collections.abc import Awaitable, Callable
-from homeassistant.core import HomeAssistant
 
+from homeassistant.core import HomeAssistant
 from .tuya_connector import TuyaOpenPulsar
 
 _LOGGER = logging.getLogger(__package__)
@@ -14,14 +14,18 @@ class TuyaPulsarBridge:
         """Initialize the Pulsar bridge."""
         self.hass = hass
         self._client = client
-        self._handlers: dict[str, list[Callable[[str, dict], Awaitable[None]]]] = {}
+        self._handlers: dict[str, set[Callable[[str, dict], Awaitable[None]]]] = {}
         self._client.add_message_listener(self._on_message)
 
     def register_handler(
         self, dev_id: str, callback: Callable[[str, dict], Awaitable[None]]
     ) -> None:
-        """Register a callback handler for a specific device."""
-        self._handlers.setdefault(dev_id, []).append(callback)
+        """Register a callback handler for a specific device safely and idempotently."""
+        self._handlers.setdefault(dev_id, set()).add(callback)
+
+    def unregister_handler(self, dev_id: str) -> None:
+        """Remove a callback handler for a specific device."""
+        self._handlers.pop(dev_id, None)
 
     async def _on_message(self, decrypt_data: str) -> None:
         """Handle incoming Pulsar messages and dispatch to handlers safely."""
